@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-import Logging_tab, Settings_tab
+import Logging_tab, Settings_tab, Trigger_tab
 
 class Application(tk.Tk):
     connection_string = ""
@@ -14,9 +14,11 @@ class Application(tk.Tk):
         notebook = ttk.Notebook(self)
         notebook.pack(expand=True, fill='both')
 
+        trig_tab = Trigger_tab.Trigger_tab(notebook)
         log_tab = Logging_tab.Logging_tab(notebook)
         set_tab = Settings_tab.Settings_tab(notebook)
 
+        notebook.add(trig_tab, text="Triggers")
         notebook.add(log_tab, text="Logs")
         notebook.add(set_tab, text="Settings")
 
