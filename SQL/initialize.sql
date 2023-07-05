@@ -3,6 +3,12 @@ CREATE TABLE Log_Level (
     level_text  VARCHAR(10)     NOT NULL
 );
 
+INSERT INTO Log_Level
+VALUES 
+    (0, 'Trace'),
+    (1, 'Info'),
+    (2, 'Error');
+
 CREATE TABLE Logs (
     id              UNIQUEIDENTIFIER    NOT NULL    PRIMARY KEY,
     log_time        DATETIME            NOT NULL,
