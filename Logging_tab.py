@@ -6,7 +6,7 @@ import pyodbc
 # TODO: Grid layout
 class Logging_tab(ttk.Frame):
     def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
+        super().__init__(parent)
         self.pack(pady=20, padx=10, fill='both', expand=True)
       
     #Table frame
