@@ -22,8 +22,16 @@ CREATE TABLE Trigger_Status (
     status_text     VARCHAR(10)     NOT NULL
 );
 
+INSERT INTO Trigger_Status
+VALUES
+    (0, 'Idle'),
+    (1, 'Running'),
+    (2, 'Failed'),
+    (3, 'Done');
+
 CREATE TABLE Scheduled_Triggers (
     id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
+    process_name    VARCHAR(100)         NOT NULL,
     cron_expr       VARCHAR(200)         NOT NULL,
     last_run        DATETIME             NOT NULL,
     next_run        DATETIME             NOT NULL,
@@ -38,6 +46,7 @@ CREATE TABLE Single_Triggers (
     id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
     last_run        DATETIME             NOT NULL,
     next_run        DATETIME             NOT NULL,
+    process_name    VARCHAR(100)         NOT NULL,
     process_path    VARCHAR(250)         NOT NULL,
     process_status  TINYINT              NOT NULL    FOREIGN KEY REFERENCES Trigger_Status(id),
     is_git_repo     BIT                  NOT NULL,
@@ -49,6 +58,7 @@ CREATE TABLE Email_Triggers (
     id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
     email_folder    VARCHAR(250)         NOT NULL,
     last_run        DATETIME             NOT NULL,
+    process_name    VARCHAR(100)         NOT NULL,
     process_path    VARCHAR(250)         NOT NULL,
     process_status  TINYINT              NOT NULL    FOREIGN KEY REFERENCES Trigger_Status(id),
     is_git_repo     BIT                  NOT NULL,
