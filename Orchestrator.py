@@ -12,7 +12,7 @@ class Application(tk.Tk):
         style.theme_use('vista')
 
         notebook = ttk.Notebook(self)
-        notebook.pack()
+        notebook.pack(expand=True, fill='both')
 
         log_tab = Logging_tab.Logging_tab(notebook)
         set_tab = Settings_tab.Settings_tab(notebook)
