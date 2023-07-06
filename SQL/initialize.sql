@@ -33,7 +33,7 @@ CREATE TABLE Scheduled_Triggers (
     id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
     process_name    VARCHAR(100)         NOT NULL,
     cron_expr       VARCHAR(200)         NOT NULL,
-    last_run        DATETIME             NOT NULL,
+    last_run        DATETIME,
     next_run        DATETIME             NOT NULL,
     process_path    VARCHAR(250)         NOT NULL,
     process_status  TINYINT              NOT NULL    FOREIGN KEY REFERENCES Trigger_Status(id),
@@ -44,7 +44,7 @@ CREATE TABLE Scheduled_Triggers (
 
 CREATE TABLE Single_Triggers (
     id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
-    last_run        DATETIME             NOT NULL,
+    last_run        DATETIME,
     next_run        DATETIME             NOT NULL,
     process_name    VARCHAR(100)         NOT NULL,
     process_path    VARCHAR(250)         NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE Single_Triggers (
 CREATE TABLE Email_Triggers (
     id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
     email_folder    VARCHAR(250)         NOT NULL,
-    last_run        DATETIME             NOT NULL,
+    last_run        DATETIME,
     process_name    VARCHAR(100)         NOT NULL,
     process_path    VARCHAR(250)         NOT NULL,
     process_status  TINYINT              NOT NULL    FOREIGN KEY REFERENCES Trigger_Status(id),
