@@ -1,11 +1,12 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import Logging_tab, Settings_tab, Trigger_tab
 import pyodbc
 
 class Application(tk.Tk):
     def __init__(self):
-        self.connection_string = ""
+        self._connection_string = ""
+        self._connection = None
 
         tk.Tk.__init__(self)
         self.geometry("850x600")
@@ -25,8 +26,19 @@ class Application(tk.Tk):
 
         self.mainloop()
     
-    def connect_to_db(self):
-        return pyodbc.connect(self.connection_string)
+    def get_db_connection(self):
+        if self._connection:
+            try:
+                self._connection.cursor()
+                return self._connection
+            except pyodbc.ProgrammingError as e:
+                if str(e) != 'Attempt to use a closed connection.':
+                    messagebox.showerror("Connection Error", str(e))
+
+        try:
+            return pyodbc.connect(self._connection_string)
+        except pyodbc.InterfaceError as e:
+            messagebox.showerror("Error", f"Connection failed.\nGo to settings and enter a valid connection string.\n{e}")
     
 if __name__=='__main__':
     Application()
