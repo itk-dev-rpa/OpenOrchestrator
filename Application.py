@@ -34,9 +34,10 @@ class Application(tk.Tk):
             except pyodbc.ProgrammingError as e:
                 if str(e) != 'Attempt to use a closed connection.':
                     messagebox.showerror("Connection Error", str(e))
-
+        
         try:
-            return pyodbc.connect(self._connection_string)
+            self._connection = pyodbc.connect(self._connection_string)
+            return self._connection
         except pyodbc.InterfaceError as e:
             messagebox.showerror("Error", f"Connection failed.\nGo to settings and enter a valid connection string.\n{e}")
     
