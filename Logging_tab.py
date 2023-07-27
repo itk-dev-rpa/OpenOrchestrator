@@ -3,9 +3,11 @@ from tkinter import ttk, font, messagebox
 from datetime import datetime
 import os
 import pyodbc
+from DB_util import catch_db_error
+
 # TODO: Grid layout
 class Logging_tab(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, app):
         super().__init__(parent)
         self.pack(pady=20, padx=10, fill='both', expand=True)
       
@@ -50,7 +52,7 @@ class Logging_tab(ttk.Frame):
         to_date_entry.pack(side='left')
 
     #Buttons
-        update_button = ttk.Button(self, text="Update", command=lambda: update_table(parent, table, from_date_entry, to_date_entry))
+        update_button = ttk.Button(self, text="Update", command=lambda: update_table(app, table, from_date_entry, to_date_entry))
         update_button.pack(side='left')
 
 def validate_date(entry: ttk.Entry):
@@ -81,12 +83,9 @@ def resize_table(table):
     table.column("Message", width=max_length+20, stretch=False)
     #TODO: Row height on multiline strings / repr()
 
+@catch_db_error
 def update_table(app, table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.Entry):
-    try:
-        conn = pyodbc.connect(app.connection_string)   
-    except:
-        messagebox.showerror("Error", "Connection failed! Go to settings and enter a valid connection string.")
-        return
+    conn = app.get_db_connection()
     
     with open('SQL/Get_Logs.sql') as file:
         command = file.read()
@@ -99,13 +98,7 @@ def update_table(app, table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_e
     command = command.replace('{fetch}', str(fetch))
     command = command.replace('{filter}', filter)
 
-    print(command)
-
-    try:
-        cursor = conn.execute(command)
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
-        return
+    cursor = conn.execute(command)
     
     #Clear table
     for c in table.get_children():
