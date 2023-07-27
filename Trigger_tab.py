@@ -44,9 +44,9 @@ class Trigger_tab(ttk.Frame):
         update_button.pack()
     
     # Bindings
-        sc_table.bind('<Button-1>', lambda t: deselect_tables(e_table, si_table))
-        e_table.bind('<Button-1>', lambda t: deselect_tables(sc_table, si_table))
-        si_table.bind('<Button-1>', lambda t: deselect_tables(sc_table, e_table))
+        sc_table.bind('<FocusIn>', lambda t: deselect_tables(e_table, si_table))
+        e_table.bind('<FocusIn>', lambda t: deselect_tables(sc_table, si_table))
+        si_table.bind('<FocusIn>', lambda t: deselect_tables(sc_table, e_table))
 
 
 def deselect_tables(*tables):
