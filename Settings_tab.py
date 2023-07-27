@@ -12,6 +12,7 @@ class Settings_tab(tkinter.Frame):
         conn_label.pack()
 
         conn_entry = ttk.Entry(self)
+        # TEMPORARY
         conn_entry.insert(0, "Driver={ODBC Driver 17 for SQL Server};Server=SRVSQLHOTEL03;Database=MKB-ITK-RPA;Trusted_Connection=yes;")
         conn_entry.pack(fill='x')
 
@@ -20,6 +21,9 @@ class Settings_tab(tkinter.Frame):
 
         init_button = ttk.Button(self, text='Initialize Database', command=lambda: initialize_database(app))
         init_button.pack()
+
+        # TEMPORARY
+        connect(app, conn_entry, conn_button)
 
 def connect(app, conn_entry: ttk.Entry, conn_button: ttk.Button):
     conn_string = conn_entry.get()
