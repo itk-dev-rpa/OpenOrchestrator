@@ -38,10 +38,13 @@ class Trigger_tab(ttk.Frame):
     
     # Controls
         controls_frame = ttk.Frame(self)
-        controls_frame.grid(row=6, column=0, sticky='nsew')
+        controls_frame.grid(row=6, column=0)
 
         update_button = ttk.Button(controls_frame, text='Update', command=lambda: update_tables(app, sc_table, e_table, si_table))
-        update_button.pack()
+        update_button.pack(side='left')
+
+        delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(app, sc_table, e_table, si_table))
+        delete_button.pack(side='left')
     
     # Bindings
         sc_table.bind('<FocusIn>', lambda t: deselect_tables(e_table, si_table))
@@ -52,7 +55,6 @@ class Trigger_tab(ttk.Frame):
 def deselect_tables(*tables):
     for table in tables:
         table.selection_remove(table.selection())
-
 
 def create_table(parent, columns):
     table = ttk.Treeview(parent, show='headings', selectmode='browse')
@@ -96,5 +98,38 @@ def update_table(app, table: ttk.Treeview, sql_path):
         row = [str(d) for d in row]
         table.insert('', 'end', values=row)
 
+@catch_db_error
+def delete_trigger(app, sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview):
+    if sc_table.selection():
+        table = sc_table
+    elif e_table.selection():
+        table = e_table
+    elif si_table.selection():
+        table = si_table
+    else:
+        return
+
+    UUID = table.item(table.selection()[0])['values'][-1]
+
+    if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{UUID}'?"):
+        return
     
+    with open('SQL/Delete_Trigger.sql') as file:
+        commands = file.read()
+    
+    commands = commands.replace('{UUID}', UUID)
+    commands = commands.split(';')
+
+    conn = app.get_db_connection()
+
+    for command in commands:
+        if command:
+            conn.execute(command)
+    
+    conn.commit()
+
+    update_tables(app, sc_table, e_table, si_table)
+
+
+
     
