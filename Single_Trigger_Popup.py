@@ -81,7 +81,7 @@ def create_trigger(app, window,
     command = command.replace('{GIT}', str(git))
     command = command.replace('{BLOCKING}', str(blocking))
 
-    conn.execute(command)
+    conn.execute(command).commit()
 
     window.destroy()
 

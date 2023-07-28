@@ -49,7 +49,7 @@ class Trigger_tab(ttk.Frame):
         delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(app, sc_table, e_table, si_table))
         delete_button.pack(side='left')
 
-        new_button = ttk.Button(controls_frame, text='New trigger', command=lambda: show_single_trigger_popup(app, ut))
+        new_button = ttk.Button(controls_frame, text='New single trigger', command=lambda: show_single_trigger_popup(app, ut))
         new_button.pack(side='left')
     
     # Bindings
