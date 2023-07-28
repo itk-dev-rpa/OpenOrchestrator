@@ -1,7 +1,7 @@
 from tkinter import ttk, messagebox
 import pyodbc
 from DB_util import catch_db_error
-import Single_Trigger_Popup
+import Single_Trigger_Popup, Email_Trigger_Popup
 
 class Trigger_tab(ttk.Frame):
     def __init__(self, parent, app):
@@ -11,7 +11,7 @@ class Trigger_tab(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure((0,2,4), weight=1, uniform='a')
         self.rowconfigure((1,3,5), weight=6, uniform='a')
-        self.rowconfigure(6, weight=1, uniform='a')
+        self.rowconfigure((6,7), weight=1, uniform='a')
 
     #Scheduled table
         ttk.Label(self, text="Scheduled Triggers").grid(row=0, column=0)
@@ -37,7 +37,7 @@ class Trigger_tab(ttk.Frame):
 
         si_table = create_table(si_table_frame, ('Process Name', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
     
-    # Controls
+    # Controls 1
         controls_frame = ttk.Frame(self)
         controls_frame.grid(row=6, column=0)
 
@@ -49,8 +49,13 @@ class Trigger_tab(ttk.Frame):
         delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(app, sc_table, e_table, si_table))
         delete_button.pack(side='left')
 
-        new_button = ttk.Button(controls_frame, text='New single trigger', command=lambda: show_single_trigger_popup(app, ut))
-        new_button.pack(side='left')
+    # Controls 2
+        controls_frame2 = ttk.Frame(self)
+        controls_frame2.grid(row=7, column=0)
+
+        ttk.Button(controls_frame2, text='New email trigger', command=lambda: show_email_trigger_popup(app, ut)).pack(side='left')
+
+        ttk.Button(controls_frame2, text='New single trigger', command=lambda: show_single_trigger_popup(app, ut)).pack(side='left')
     
     # Bindings
         sc_table.bind('<FocusIn>', lambda t: deselect_tables(e_table, si_table))
@@ -59,6 +64,10 @@ class Trigger_tab(ttk.Frame):
 
 def show_single_trigger_popup(app, on_close: callable):
     popup = Single_Trigger_Popup.show_popup(app)
+    popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
+
+def show_email_trigger_popup(app, on_close: callable):
+    popup = Email_Trigger_Popup.show_popup(app)
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 def deselect_tables(*tables):
