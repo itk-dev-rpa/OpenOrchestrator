@@ -1,7 +1,7 @@
 from tkinter import ttk, messagebox
 import pyodbc
 from DB_util import catch_db_error
-import Single_Trigger_Popup, Email_Trigger_Popup
+import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
 
 
 def create_tab(parent, app):
@@ -38,9 +38,12 @@ def create_tab(parent, app):
     update_button.pack(side='left')
     delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(app, sc_table, e_table, si_table))
     delete_button.pack(side='left')
+
     # Controls 2
     controls_frame2 = ttk.Frame(tab)
     controls_frame2.grid(row=7, column=0)
+
+    ttk.Button(controls_frame2, text='New scheduled trigger', command=lambda: show_scheduled_trigger_popup(app, ut)).pack(side='left')
     ttk.Button(controls_frame2, text='New email trigger', command=lambda: show_email_trigger_popup(app, ut)).pack(side='left')
     ttk.Button(controls_frame2, text='New single trigger', command=lambda: show_single_trigger_popup(app, ut)).pack(side='left')
 
@@ -50,6 +53,10 @@ def create_tab(parent, app):
     si_table.bind('<FocusIn>', lambda t: deselect_tables(sc_table, e_table))
 
     return tab
+
+def show_scheduled_trigger_popup(app, on_close: callable):
+    popup = Scheduled_Trigger_Popup.show_popup(app)
+    popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 def show_single_trigger_popup(app, on_close: callable):
     popup = Single_Trigger_Popup.show_popup(app)
