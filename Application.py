@@ -9,6 +9,7 @@ class Application(tk.Tk):
         self._connection = None
 
         tk.Tk.__init__(self)
+        self.title("OpenOrchestrator")
         self.geometry("850x600")
         style = ttk.Style(self)
         style.theme_use('vista')
