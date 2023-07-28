@@ -6,54 +6,55 @@ import pyodbc
 from DB_util import catch_db_error
 
 # TODO: Grid layout
-class Logging_tab(ttk.Frame):
-    def __init__(self, parent, app):
-        super().__init__(parent)
-        self.pack(pady=20, padx=10, fill='both', expand=True)
+def create_tab(parent, app):
+    tab = ttk.Frame(parent)
+    tab.pack(fill='both', expand=True)
       
     #Table frame
-        table_frame = tkinter.Frame(self, bg='red')
-        table_frame.pack(fill='both')
+    table_frame = tkinter.Frame(tab, bg='red')
+    table_frame.pack(fill='both')
 
-        table = ttk.Treeview(table_frame, show="headings")
+    table = ttk.Treeview(table_frame, show="headings")
         
-        table['columns'] = ("Time", "Level", "Process", "Message")
-        table.column("Time", width=120, stretch=False)
-        table.column("Level", width=50, stretch=False)
-        table.column("Process", width=150, stretch=False)
-        for c in table['columns']:
-            table.heading(c, text=c, anchor='w')
+    table['columns'] = ("Time", "Level", "Process", "Message")
+    table.column("Time", width=120, stretch=False)
+    table.column("Level", width=50, stretch=False)
+    table.column("Process", width=150, stretch=False)
+    for c in table['columns']:
+        table.heading(c, text=c, anchor='w')
 
-        table_yscroll = ttk.Scrollbar(table_frame, orient='vertical', command=table.yview)
-        table_yscroll.pack(side='left', fill='y')
-        table.configure(yscrollcommand=table_yscroll.set)
+    table_yscroll = ttk.Scrollbar(table_frame, orient='vertical', command=table.yview)
+    table_yscroll.pack(side='left', fill='y')
+    table.configure(yscrollcommand=table_yscroll.set)
 
-        table_xscroll = ttk.Scrollbar(table_frame, orient='horizontal', command=table.xview)
-        table_xscroll.pack(side='bottom', fill='x')
-        table.configure(xscrollcommand=table_xscroll.set)
+    table_xscroll = ttk.Scrollbar(table_frame, orient='horizontal', command=table.xview)
+    table_xscroll.pack(side='bottom', fill='x')
+    table.configure(xscrollcommand=table_xscroll.set)
 
-        table.pack(expand=True, fill='both')
+    table.pack(expand=True, fill='both')
 
-        table.bind("<Control-c>", lambda e: copy_rows(table))
+    table.bind("<Control-c>", lambda e: copy_rows(table))
     
     #Filters
-        ttk.Label(self, text="Date from:").pack(side='left')
-        from_date_entry = ttk.Entry(self, width=21, validate='key')
-        reg = self.register(validate_date(from_date_entry))
-        from_date_entry.configure(validatecommand=(reg, '%P'))
-        from_date_entry.insert(0, 'dd-mm-yyyy hh:mm:ss')
-        from_date_entry.pack(side='left')
+    ttk.Label(tab, text="Date from:").pack(side='left')
+    from_date_entry = ttk.Entry(tab, width=21, validate='key')
+    reg = tab.register(validate_date(from_date_entry))
+    from_date_entry.configure(validatecommand=(reg, '%P'))
+    from_date_entry.insert(0, 'dd-mm-yyyy hh:mm:ss')
+    from_date_entry.pack(side='left')
 
-        ttk.Label(self, text='Date to:').pack(side='left')
-        to_date_entry = ttk.Entry(self, width=21, validate='key')
-        reg = self.register(validate_date(to_date_entry))
-        to_date_entry.configure(validatecommand=(reg, '%P'))
-        to_date_entry.insert(0, 'dd-mm-yyyy hh:mm:ss')
-        to_date_entry.pack(side='left')
+    ttk.Label(tab, text='Date to:').pack(side='left')
+    to_date_entry = ttk.Entry(tab, width=21, validate='key')
+    reg = tab.register(validate_date(to_date_entry))
+    to_date_entry.configure(validatecommand=(reg, '%P'))
+    to_date_entry.insert(0, 'dd-mm-yyyy hh:mm:ss')
+    to_date_entry.pack(side='left')
 
     #Buttons
-        update_button = ttk.Button(self, text="Update", command=lambda: update_table(app, table, from_date_entry, to_date_entry))
-        update_button.pack(side='left')
+    update_button = ttk.Button(tab, text="Update", command=lambda: update_table(app, table, from_date_entry, to_date_entry))
+    update_button.pack(side='left')
+
+    return tab
 
 def validate_date(entry: ttk.Entry):
     def inner(text: str):

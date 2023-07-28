@@ -17,9 +17,9 @@ class Application(tk.Tk):
         notebook = ttk.Notebook(self)
         notebook.pack(expand=True, fill='both')
 
-        trig_tab = Trigger_tab.Trigger_tab(notebook, self)
-        log_tab = Logging_tab.Logging_tab(notebook, self)
-        set_tab = Settings_tab.Settings_tab(notebook, self)
+        trig_tab = Trigger_tab.create_tab(notebook, self)
+        log_tab = Logging_tab.create_tab(notebook, self)
+        set_tab = Settings_tab.create_tab(notebook, self)
 
         notebook.add(trig_tab, text="Triggers")
         notebook.add(log_tab, text="Logs")

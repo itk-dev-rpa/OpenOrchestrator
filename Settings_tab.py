@@ -3,27 +3,29 @@ from tkinter import ttk, messagebox
 import pyodbc
 from DB_util import catch_db_error
 
-class Settings_tab(tkinter.Frame):
-    def __init__(self, parent, app):
-        ttk.Frame.__init__(self, parent)
-        self.pack(pady=20, padx=10, fill='both', expand=True)
+
+def create_tab(parent, app):
+    tab = ttk.Frame(parent)
+    tab.pack(fill='both', expand=True)
       
-        conn_label = ttk.Label(self, text="Connection string:")
-        conn_label.pack()
+    conn_label = ttk.Label(tab, text="Connection string:")
+    conn_label.pack()
 
-        conn_entry = ttk.Entry(self)
-        # TEMPORARY
-        conn_entry.insert(0, "Driver={ODBC Driver 17 for SQL Server};Server=SRVSQLHOTEL03;Database=MKB-ITK-RPA;Trusted_Connection=yes;")
-        conn_entry.pack(fill='x')
+    conn_entry = ttk.Entry(tab)
+    # TEMPORARY
+    conn_entry.insert(0, "Driver={ODBC Driver 17 for SQL Server};Server=SRVSQLHOTEL03;Database=MKB-ITK-RPA;Trusted_Connection=yes;")
+    conn_entry.pack(fill='x')
 
-        conn_button = ttk.Button(self, text="Connect", command=lambda: connect(app, conn_entry, conn_button))
-        conn_button.pack()
+    conn_button = ttk.Button(tab, text="Connect", command=lambda: connect(app, conn_entry, conn_button))
+    conn_button.pack()
 
-        init_button = ttk.Button(self, text='Initialize Database', command=lambda: initialize_database(app))
-        init_button.pack()
+    init_button = ttk.Button(tab, text='Initialize Database', command=lambda: initialize_database(app))
+    init_button.pack()
 
-        # TEMPORARY
-        connect(app, conn_entry, conn_button)
+    # TEMPORARY
+    connect(app, conn_entry, conn_button)
+
+    return tab
 
 def connect(app, conn_entry: ttk.Entry, conn_button: ttk.Button):
     conn_string = conn_entry.get()
