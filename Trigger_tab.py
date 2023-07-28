@@ -1,6 +1,7 @@
 from tkinter import ttk, messagebox
 import pyodbc
 from DB_util import catch_db_error
+import Single_Trigger_Popup
 
 class Trigger_tab(ttk.Frame):
     def __init__(self, parent, app):
@@ -18,7 +19,7 @@ class Trigger_tab(ttk.Frame):
         sc_table_frame = ttk.Frame(self)
         sc_table_frame.grid(row=1, column=0, sticky='nsew')
 
-        sc_table = create_table(sc_table_frame, ('Process Name', 'Cron', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Force update?', 'Blocking?', 'UUID'))
+        sc_table = create_table(sc_table_frame, ('Process Name', 'Cron', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
     
     #Email table
         ttk.Label(self, text="Email Triggers").grid(row=2, column=0)
@@ -26,7 +27,7 @@ class Trigger_tab(ttk.Frame):
         e_table_frame = ttk.Frame(self)
         e_table_frame.grid(row=3, column=0, sticky='nsew')
 
-        e_table = create_table(e_table_frame, ('Process Name', 'Folder', 'Last run', 'Path', 'Status', 'Is GIT?', 'Force update?', 'Blocking?', 'UUID'))
+        e_table = create_table(e_table_frame, ('Process Name', 'Folder', 'Last run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
     
     #Single table
         ttk.Label(self, text="Single Triggers").grid(row=4, column=0)
@@ -34,7 +35,7 @@ class Trigger_tab(ttk.Frame):
         si_table_frame = ttk.Frame(self)
         si_table_frame.grid(row=5, column=0, sticky='nsew')
 
-        si_table = create_table(si_table_frame, ('Process Name', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Force update?', 'Blocking?', 'UUID'))
+        si_table = create_table(si_table_frame, ('Process Name', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
     
     # Controls
         controls_frame = ttk.Frame(self)
@@ -45,6 +46,9 @@ class Trigger_tab(ttk.Frame):
 
         delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(app, sc_table, e_table, si_table))
         delete_button.pack(side='left')
+
+        new_button = ttk.Button(controls_frame, text='New trigger', command=Single_Trigger_Popup.show_popup)
+        new_button.pack(side='left')
     
     # Bindings
         sc_table.bind('<FocusIn>', lambda t: deselect_tables(e_table, si_table))
