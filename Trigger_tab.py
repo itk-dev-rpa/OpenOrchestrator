@@ -41,13 +41,15 @@ class Trigger_tab(ttk.Frame):
         controls_frame = ttk.Frame(self)
         controls_frame.grid(row=6, column=0)
 
-        update_button = ttk.Button(controls_frame, text='Update', command=lambda: update_tables(app, sc_table, e_table, si_table))
+        ut = lambda: update_tables(app, sc_table, e_table, si_table)
+
+        update_button = ttk.Button(controls_frame, text='Update', command=ut)
         update_button.pack(side='left')
 
         delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(app, sc_table, e_table, si_table))
         delete_button.pack(side='left')
 
-        new_button = ttk.Button(controls_frame, text='New trigger', command=Single_Trigger_Popup.show_popup)
+        new_button = ttk.Button(controls_frame, text='New trigger', command=lambda: show_single_trigger_popup(app, ut))
         new_button.pack(side='left')
     
     # Bindings
@@ -55,6 +57,9 @@ class Trigger_tab(ttk.Frame):
         e_table.bind('<FocusIn>', lambda t: deselect_tables(sc_table, si_table))
         si_table.bind('<FocusIn>', lambda t: deselect_tables(sc_table, e_table))
 
+def show_single_trigger_popup(app, on_close: callable):
+    popup = Single_Trigger_Popup.show_popup(app)
+    popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 def deselect_tables(*tables):
     for table in tables:
