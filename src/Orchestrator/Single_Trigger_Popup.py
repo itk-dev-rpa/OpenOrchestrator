@@ -2,7 +2,7 @@ import tkinter
 from tkinter import ttk, messagebox
 import tkcalendar
 from datetime import datetime
-from DB_util import catch_db_error
+from src.DB_util import catch_db_error
 
 def show_popup(app):
     window = tkinter.Toplevel()

@@ -1,7 +1,7 @@
 import tkinter
 from tkinter import ttk, messagebox
 import pyodbc
-from DB_util import catch_db_error
+from src.DB_util import catch_db_error
 
 
 def create_tab(parent, app):
