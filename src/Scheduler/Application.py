@@ -1,7 +1,7 @@
 import tkinter
 from tkinter import ttk, messagebox
 import pyodbc
-import Main_frame
+import Settings_tab, Run_tab
 
 class Application(tkinter.Tk):
     def __init__(self):
@@ -14,8 +14,15 @@ class Application(tkinter.Tk):
         style = ttk.Style(self)
         style.theme_use('vista')
 
-        main_frame = Main_frame.create_tab(self, self)
+        notebook = ttk.Notebook(self)
+        notebook.pack(expand=True, fill='both')
 
+        run_tab = Run_tab.create_tab(notebook, self)
+        settings_tab = Settings_tab.create_tab(notebook, self)
+
+        notebook.add(run_tab, text='Run')
+        notebook.add(settings_tab, text="Settings")
+        
         self.mainloop()
     
     def get_db_connection(self):
