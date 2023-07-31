@@ -8,7 +8,7 @@ class Application(tk.Tk):
         self._connection_string = ""
         self._connection = None
 
-        tk.Tk.__init__(self)
+        super().__init__()
         self.title("OpenOrchestrator")
         self.geometry("850x600")
         style = ttk.Style(self)
