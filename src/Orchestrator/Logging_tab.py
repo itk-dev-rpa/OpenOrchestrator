@@ -3,7 +3,7 @@ from tkinter import ttk, font, messagebox
 from datetime import datetime
 import os
 import pyodbc
-from src.DB_util import catch_db_error
+from DB_util import catch_db_error
 
 # TODO: Grid layout
 def create_tab(parent, app):

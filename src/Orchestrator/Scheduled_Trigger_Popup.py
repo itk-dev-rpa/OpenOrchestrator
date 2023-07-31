@@ -2,7 +2,7 @@ import tkinter
 from tkinter import ttk, messagebox
 import croniter
 from datetime import datetime
-from src.DB_util import catch_db_error
+from DB_util import catch_db_error
 import webbrowser
 
 def show_popup(app):

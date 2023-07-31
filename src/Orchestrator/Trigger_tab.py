@@ -1,6 +1,6 @@
 from tkinter import ttk, messagebox
 import pyodbc
-from src.DB_util import catch_db_error
+from DB_util import catch_db_error
 import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
 
 
