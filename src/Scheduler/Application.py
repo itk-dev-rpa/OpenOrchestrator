@@ -7,6 +7,9 @@ class Application(tkinter.Tk):
     def __init__(self):
         self._connection_string = ""
         self._connection = None
+        self.running_jobs = []
+        self.running = False
+        self.next_loop = None
 
         super().__init__()
         self.title("OpenOrchestrator - Scheduler")
