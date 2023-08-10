@@ -12,6 +12,7 @@ def create_tab(parent, app):
 
     ttk.Button(tab, text="Run", command=lambda: run(app, status_label)).pack()
     ttk.Button(tab, text="Pause", command=lambda: pause(app, status_label)).pack()
+    ttk.Button(tab, text="Finish", command=lambda: print('Not implemented')).pack()
 
     # Text area
     text_frame = tkinter.Frame(tab)
