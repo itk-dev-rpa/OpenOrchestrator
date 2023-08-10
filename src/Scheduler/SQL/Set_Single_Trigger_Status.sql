@@ -1,5 +1,5 @@
 UPDATE Single_Triggers
 SET
-    process_status = 3
+    process_status = {STATUS}
 
 WHERE id = '{UUID}'
