@@ -60,6 +60,16 @@ def begin_single_trigger(UUID):
     conn.execute(command)
     conn.commit()
 
+def set_single_trigger_status(UUID, status):
+    conn = _get_connection()
+    command = _load_sql_file('Set_Single_Trigger_Status.sql')
+    command = command.replace('{STATUS}', status)
+    command = command.replace('{UUID}', UUID)
+    conn.execute(command)
+    conn.commit()
+
+
+
 def get_next_single_trigger():
     conn = _get_connection()
     command = _load_sql_file('Get_Next_Single_Trigger.sql')

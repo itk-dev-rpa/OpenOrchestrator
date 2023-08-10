@@ -3,11 +3,12 @@ from datetime import datetime
 import subprocess
 
 class Job():
-    def __init__(self, process, trigger_id, process_name, blocking):
+    def __init__(self, process, trigger_id, process_name, blocking, type):
         self.process = process
         self.trigger_id = trigger_id
         self.process_name = process_name
         self.blocking = blocking
+        self.type = type
 
 def poll_triggers(app):
 
@@ -44,8 +45,23 @@ def run_single_trigger(app, name, id, process_path, is_git_repo, blocking):
     else:
         process = subprocess.Popen(process_path, shell=True)
 
-    return Job(process, id, name, blocking)
+    return Job(process, id, name, blocking, 'Single')
 
 def grab_git_repo(path):
     ...
 
+def end_job(job: Job):
+    if job.type == 'Single':
+        DB_util.set_single_trigger_status(job.trigger_id, '3')
+    elif job.type == 'Scheduled':
+        ...
+    elif job.type == 'Queue':
+        ...
+
+def fail_job(job: Job):
+    if job.type == 'Single':
+        DB_util.set_single_trigger_status(job.trigger_id, '2')
+    elif job.type == 'Scheduled':
+        ...
+    elif job.type == 'Queue':
+        ...
