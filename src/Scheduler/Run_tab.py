@@ -1,5 +1,5 @@
 import tkinter
-from tkinter import ttk, messagebox
+from tkinter import ttk
 import sys
 import Scheduler
 
@@ -45,8 +45,6 @@ def pause(app, status_label: ttk.Label):
         print('Paused...\n')
         app.running = False
         app.after_cancel(app.next_loop)
-
-
 
 def print_text(print_text: tkinter.Text, string: str):
     print_text.configure(state='normal')
