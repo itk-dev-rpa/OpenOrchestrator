@@ -1,6 +1,7 @@
 import pyodbc
 import os
 from tkinter import messagebox
+from datetime import datetime
 
 _connection_string = None
 _connection = None
@@ -46,6 +47,7 @@ def _get_connection():
     except pyodbc.InterfaceError as e:
         messagebox.showerror("Error", f"Connection failed.\nGo to settings and enter a valid connection string.\n{e}")
 
+@catch_db_error
 def _load_sql_file(file_name):
     dir = os.path.dirname(__file__)
     path = os.path.join(dir, 'SQL', file_name)
@@ -53,25 +55,51 @@ def _load_sql_file(file_name):
         command = file.read()
     return command
 
-def begin_single_trigger(UUID):
+@catch_db_error
+def begin_single_trigger(UUID: str):
     conn = _get_connection()
     command = _load_sql_file('Begin_Single_Trigger.sql')
     command = command.replace('{UUID}', UUID)
     conn.execute(command)
     conn.commit()
 
-def set_single_trigger_status(UUID, status):
+@catch_db_error
+def set_single_trigger_status(UUID: str, status: int):
     conn = _get_connection()
     command = _load_sql_file('Set_Single_Trigger_Status.sql')
-    command = command.replace('{STATUS}', status)
+    command = command.replace('{STATUS}', str(status))
     command = command.replace('{UUID}', UUID)
     conn.execute(command)
     conn.commit()
 
-
-
+@catch_db_error
 def get_next_single_trigger():
     conn = _get_connection()
     command = _load_sql_file('Get_Next_Single_Trigger.sql')
     cursor = conn.execute(command)
     return cursor.fetchone()
+
+@catch_db_error
+def get_next_scheduled_trigger():
+    conn = _get_connection()
+    command = _load_sql_file('Get_Next_Scheduled_Trigger.sql')
+    cursor = conn.execute(command)
+    return cursor.fetchone()
+
+@catch_db_error
+def begin_scheduled_trigger(UUID: str, next_run: datetime):
+    conn = _get_connection()
+    command = _load_sql_file('Begin_Scheduled_Trigger.sql')
+    command = command.replace('{UUID}', UUID)
+    command = command.replace('{NEXT_RUN}', next_run.strftime('%d-%m-%Y %H:%M:%S'))
+    conn.execute(command)
+    conn.commit()
+
+@catch_db_error
+def set_scheduled_trigger_status(UUID: str, status: int):
+    conn = _get_connection()
+    command = _load_sql_file('Set_Scheduled_Trigger_Status.sql')
+    command = command.replace('{STATUS}', str(status))
+    command = command.replace('{UUID}', UUID)
+    conn.execute(command)
+    conn.commit()
