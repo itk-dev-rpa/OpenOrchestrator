@@ -81,9 +81,14 @@ def check_heartbeats(app):
     print('Checking heartbeats...')
     for j in app.running_jobs:
         if j.process.poll() is not None:
-            print(f"Process '{j.process_name}' is done")
             app.running_jobs.remove(j)
-            ...
-            # Finish process
+
+            if j.process.returncode == 0:
+                print(f"Process '{j.process_name}' is done")
+                Scheduler.end_job(j)
+            else:
+                print(f"Process '{j.process_name}' failed")
+                Scheduler.fail_job(j)
+
         else:
             print(f"Process '{j.process_name}' is still running")
