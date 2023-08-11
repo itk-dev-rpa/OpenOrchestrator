@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import Logging_tab, Settings_tab, Trigger_tab
+import Logging_tab, Settings_tab, Trigger_tab, Constants_tab
 import pyodbc
 
 class Application(tk.Tk):
@@ -16,10 +16,12 @@ class Application(tk.Tk):
 
         trig_tab = Trigger_tab.create_tab(notebook)
         log_tab = Logging_tab.create_tab(notebook)
+        const_tab = Constants_tab.create_tab(notebook)
         set_tab = Settings_tab.create_tab(notebook)
 
         notebook.add(trig_tab, text="Triggers")
         notebook.add(log_tab, text="Logs")
+        notebook.add(const_tab, text="Constants")
         notebook.add(set_tab, text="Settings")
 
         self.mainloop()
