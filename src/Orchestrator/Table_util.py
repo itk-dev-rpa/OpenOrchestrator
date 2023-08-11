@@ -29,3 +29,17 @@ def copy_selected_rows_to_clipboard(table):
     string = string.rstrip("& ")
     string += ")"
     os.system(f"{string} | clip")
+
+def update_table(table: ttk.Treeview, rows):
+    #Clear table
+    for c in table.get_children():
+        table.delete(c)
+
+    #Update table
+    for row in rows:
+        row = [str(d) for d in row]
+        table.insert('', 'end', values=row)
+
+def deselect_tables(*tables):
+    for table in tables:
+        table.selection_remove(table.selection())
