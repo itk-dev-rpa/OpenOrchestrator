@@ -1,6 +1,6 @@
 from tkinter import ttk, messagebox
 import DB_util, Table_util
-import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
+from Popups import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
 
 
 def create_tab(parent):
