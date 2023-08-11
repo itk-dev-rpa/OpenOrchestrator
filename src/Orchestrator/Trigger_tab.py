@@ -49,9 +49,9 @@ def create_tab(parent):
     ttk.Button(controls_frame2, text='New single trigger', command=lambda: show_single_trigger_popup(ut)).pack(side='left')
 
     # Bindings
-    sc_table.bind('<FocusIn>', lambda e: deselect_tables(e_table, si_table))
-    e_table.bind('<FocusIn>', lambda e: deselect_tables(sc_table, si_table))
-    si_table.bind('<FocusIn>', lambda e: deselect_tables(sc_table, e_table))
+    sc_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(e_table, si_table))
+    e_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(sc_table, si_table))
+    si_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(sc_table, e_table))
 
     return tab
 
@@ -67,24 +67,10 @@ def show_email_trigger_popup(on_close: callable):
     popup = Email_Trigger_Popup.show_popup()
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
-def deselect_tables(*tables):
-    for table in tables:
-        table.selection_remove(table.selection())
-
 def update_tables(sc_table, e_table, si_table):
-    update_table(sc_table, DB_util.get_scheduled_triggers())
-    update_table(e_table, DB_util.get_email_triggers())
-    update_table(si_table, DB_util.get_single_triggers())
-
-def update_table(table: ttk.Treeview, rows):
-    #Clear table
-    for c in table.get_children():
-        table.delete(c)
-
-    #Update table
-    for row in rows:
-        row = [str(d) for d in row]
-        table.insert('', 'end', values=row)
+    Table_util.update_table(sc_table, DB_util.get_scheduled_triggers())
+    Table_util.update_table(e_table, DB_util.get_email_triggers())
+    Table_util.update_table(si_table, DB_util.get_single_triggers())
 
 def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview):
     if sc_table.selection():
