@@ -3,7 +3,7 @@ from tkinter import ttk, font, messagebox
 from datetime import datetime
 import os
 import pyodbc
-import DB_util
+import DB_util, Table_util
 
 # TODO: Grid layout
 def create_tab(parent):
@@ -14,26 +14,10 @@ def create_tab(parent):
     table_frame = tkinter.Frame(tab, bg='red')
     table_frame.pack(fill='both')
 
-    table = ttk.Treeview(table_frame, show="headings")
-        
-    table['columns'] = ("Time", "Level", "Process", "Message")
+    table = Table_util.create_table(table_frame, ("Time", "Level", "Process", "Message"))
     table.column("Time", width=120, stretch=False)
     table.column("Level", width=50, stretch=False)
     table.column("Process", width=150, stretch=False)
-    for c in table['columns']:
-        table.heading(c, text=c, anchor='w')
-
-    table_yscroll = ttk.Scrollbar(table_frame, orient='vertical', command=table.yview)
-    table_yscroll.pack(side='left', fill='y')
-    table.configure(yscrollcommand=table_yscroll.set)
-
-    table_xscroll = ttk.Scrollbar(table_frame, orient='horizontal', command=table.xview)
-    table_xscroll.pack(side='bottom', fill='x')
-    table.configure(xscrollcommand=table_xscroll.set)
-
-    table.pack(expand=True, fill='both')
-
-    table.bind("<Control-c>", lambda e: copy_rows_to_clipboard(table))
     # TODO: Double click log to open pop-up
     
     #Filters
@@ -65,14 +49,6 @@ def validate_date(entry: ttk.Entry):
             entry.configure(foreground='red')
         return True
     return inner
-
-def copy_rows_to_clipboard(table):
-    string = "("
-    for item in table.selection():
-        string += f"echo {str(table.item(item)['values'])} & " 
-    string = string.rstrip("& ")
-    string += ")"
-    os.system(f"{string} | clip")
 
 def resize_table(table):
     max_length = 0

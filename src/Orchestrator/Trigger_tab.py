@@ -1,5 +1,5 @@
 from tkinter import ttk, messagebox
-import DB_util
+import DB_util, Table_util
 import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
 
 
@@ -15,19 +15,19 @@ def create_tab(parent):
     ttk.Label(tab, text="Scheduled Triggers").grid(row=0, column=0)
     sc_table_frame = ttk.Frame(tab)
     sc_table_frame.grid(row=1, column=0, sticky='nsew')
-    sc_table = create_table(sc_table_frame, ('Process Name', 'Cron', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
+    sc_table = Table_util.create_table(sc_table_frame, ('Process Name', 'Cron', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
 
     #Email table
     ttk.Label(tab, text="Email Triggers").grid(row=2, column=0)
     e_table_frame = ttk.Frame(tab)
     e_table_frame.grid(row=3, column=0, sticky='nsew')
-    e_table = create_table(e_table_frame, ('Process Name', 'Folder', 'Last run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
+    e_table = Table_util.create_table(e_table_frame, ('Process Name', 'Folder', 'Last run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
 
     #Single table
     ttk.Label(tab, text="Single Triggers").grid(row=4, column=0)
     si_table_frame = ttk.Frame(tab)
     si_table_frame.grid(row=5, column=0, sticky='nsew')
-    si_table = create_table(si_table_frame, ('Process Name', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
+    si_table = Table_util.create_table(si_table_frame, ('Process Name', 'Last run', 'Next run', 'Path', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
 
     # Controls 1
     controls_frame = ttk.Frame(tab)
@@ -70,25 +70,6 @@ def show_email_trigger_popup(on_close: callable):
 def deselect_tables(*tables):
     for table in tables:
         table.selection_remove(table.selection())
-
-def create_table(parent, columns):
-    table = ttk.Treeview(parent, show='headings', selectmode='browse')
-    table['columns'] = columns
-    for c in table['columns']:
-        table.heading(c, text=c, anchor='w')
-        table.column(c, stretch=False)
-    
-    yscroll = ttk.Scrollbar(parent, orient='vertical', command=table.yview)
-    yscroll.pack(side='left', fill='y')
-    table.configure(yscrollcommand=yscroll.set)
-
-    xscroll = ttk.Scrollbar(parent, orient='horizontal', command=table.xview)
-    xscroll.pack(side='bottom', fill='x')
-    table.configure(xscrollcommand=xscroll.set)
-
-    table.pack(expand=True, fill='both')
-
-    return table
 
 def update_tables(sc_table, e_table, si_table):
     update_table(sc_table, DB_util.get_scheduled_triggers())
