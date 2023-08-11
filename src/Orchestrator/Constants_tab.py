@@ -1,6 +1,7 @@
 import tkinter
 from tkinter import ttk, messagebox
 import DB_util, Table_util
+from Popups import Constant_Popup, Credential_Popup
 
 def create_tab(parent):
     tab = ttk.Frame(parent)
@@ -43,7 +44,12 @@ def create_tab(parent):
 
     # Bindings
     const_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(cred_table))
+    const_table.bind('<Double-1>', lambda e: double_click_constant_table(e, const_table, ut))
+
     cred_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(const_table))
+    cred_table.bind('<Double-1>', lambda e: double_click_credential_table(e, cred_table, ut))
+
+    tab.bind_all('<Delete>', lambda e: delete_selected(const_table, cred_table))
 
     return tab
    
@@ -53,13 +59,13 @@ def update_tables(const_table:ttk.Treeview, cred_table:ttk.Treeview):
 
 def delete_selected(const_table:ttk.Treeview, cred_table:ttk.Treeview):
     if const_table.selection():
-        name = const_table.item(const_table.selection()[0])['values'][0]
+        name = const_table.item(const_table.selection()[0], 'values')[0]
         if not messagebox.askyesno('Delete constant?', f"Are you sure you want to delete constant '{name}'?"):
             return
         DB_util.delete_constant(name)
 
     elif cred_table.selection():
-        name = cred_table.item(cred_table.selection()[0])['values'][0]
+        name = cred_table.item(cred_table.selection()[0], 'values')[0]
         if not messagebox.askyesno('Delete credential?', f"Are you sure you want to delete credential '{name}'?"):
             return
         DB_util.delete_credential(name)
@@ -70,8 +76,22 @@ def delete_selected(const_table:ttk.Treeview, cred_table:ttk.Treeview):
     update_tables(const_table, cred_table)
     
 
-def show_constant_popup(on_close:callable):
-    ...
+def show_constant_popup(on_close:callable, name=None, value=None):
+    popup = Constant_Popup.show_popup(name, value)
+    popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
-def show_credential_popup(on_close:callable):
-    ...
+def double_click_constant_table(event, const_table:ttk.Treeview, on_close:callable):
+    row = const_table.identify_row(event.y)
+    if row:
+        name, value = const_table.item(row, 'values')
+        show_constant_popup(on_close, name, value)
+
+def double_click_credential_table(event, cred_table:ttk.Treeview, on_close:callable):
+    row = cred_table.identify_row(event.y)
+    if row:
+        name, value, password = cred_table.item(row, 'values')
+        show_credential_popup(on_close, name, value)
+
+def show_credential_popup(on_close:callable, name=None, username=None):
+    popup = Credential_Popup.show_popup(name, username)
+    popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)

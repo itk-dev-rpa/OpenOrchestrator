@@ -22,10 +22,13 @@ def create_table(parent, columns):
 
     return table
 
-def copy_selected_rows_to_clipboard(table):
+def copy_selected_rows_to_clipboard(table:ttk.Treeview):
+    if len(table.selection()) == 0:
+        return
+
     string = "("
     for item in table.selection():
-        string += f'echo "{str(table.item(item)["values"])}" & '
+        string += f'echo "{str(table.item(item, "values"))}" & '
     string = string.rstrip("& ")
     string += ")"
     os.system(f"{string} | clip")
