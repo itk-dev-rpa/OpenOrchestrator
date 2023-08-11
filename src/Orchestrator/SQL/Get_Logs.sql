@@ -1,6 +1,6 @@
 SELECT log_time, log_level, process_name, log_message 
 FROM Logs
-{filter}
+WHERE '{FROM_DATE}' <= log_time and log_time <= '{TO_DATE}'
 ORDER BY log_time DESC
-OFFSET {offset} ROWS
-FETCH NEXT {fetch} ROWS ONLY
+OFFSET {OFFSET} ROWS
+FETCH NEXT {FETCH} ROWS ONLY
