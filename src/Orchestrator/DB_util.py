@@ -153,3 +153,31 @@ def create_email_trigger(name:str, folder:str, path:str, is_git:bool, is_blockin
 
     conn.execute(command)
     conn.commit()
+
+@catch_db_error
+def get_constants():
+    return _fetch_all('Get_Constants.sql')
+
+@catch_db_error
+def get_credentials():
+    return _fetch_all('Get_Credentials.sql')
+
+@catch_db_error
+def delete_constant(name: str):
+    conn = _get_connection()
+    command = _load_sql_file('Delete_Constant.sql')
+
+    command = command.replace('{NAME}', str(name))
+
+    conn.execute(command)
+    conn.commit()
+
+@catch_db_error
+def delete_credential(name: str):
+    conn = _get_connection()
+    command = _load_sql_file('Delete_Credential.sql')
+
+    command = command.replace('{NAME}', str(name))
+
+    conn.execute(command)
+    conn.commit()
