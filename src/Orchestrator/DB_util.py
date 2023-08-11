@@ -26,8 +26,8 @@ def catch_db_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except pyodbc.ProgrammingError as e:
-            messagebox.showerror("Error", f"Query failed:\n{e}")
+        except pyodbc.DatabaseError as e:
+            messagebox.showerror("Database Error", f"Query failed:\n{e}")
     return inner
 
 def _get_connection():
@@ -178,6 +178,29 @@ def delete_credential(name: str):
     command = _load_sql_file('Delete_Credential.sql')
 
     command = command.replace('{NAME}', str(name))
+
+    conn.execute(command)
+    conn.commit()
+
+@catch_db_error
+def create_constant(name:str, value:str):
+    conn = _get_connection()
+    command = _load_sql_file('Create_Constant.sql')
+
+    command = command.replace('{NAME}', str(name))
+    command = command.replace('{VALUE}', str(value))
+
+    conn.execute(command)
+    conn.commit()
+
+@catch_db_error
+def create_credential(name:str, username:str, password:str):
+    conn = _get_connection()
+    command = _load_sql_file('Create_Credential.sql')
+
+    command = command.replace('{NAME}', str(name))
+    command = command.replace('{USERNAME}', str(username))
+    command = command.replace('{PASSWORD}', str(password))
 
     conn.execute(command)
     conn.commit()

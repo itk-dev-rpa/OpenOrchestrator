@@ -1,0 +1,2 @@
+INSERT INTO Constants
+VALUES ('{NAME}', '{VALUE}')
