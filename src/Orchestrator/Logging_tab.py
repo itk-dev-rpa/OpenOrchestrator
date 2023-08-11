@@ -1,8 +1,6 @@
 import tkinter
 from tkinter import ttk, font, messagebox
 from datetime import datetime
-import os
-import pyodbc
 import DB_util, Table_util
 
 # TODO: Grid layout
