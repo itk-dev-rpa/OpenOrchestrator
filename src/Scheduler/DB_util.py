@@ -47,7 +47,6 @@ def _get_connection():
     except pyodbc.InterfaceError as e:
         messagebox.showerror("Error", f"Connection failed.\nGo to settings and enter a valid connection string.\n{e}")
 
-@catch_db_error
 def _load_sql_file(file_name):
     dir = os.path.dirname(__file__)
     path = os.path.join(dir, 'SQL', file_name)

@@ -3,10 +3,10 @@ from tkinter import ttk, font, messagebox
 from datetime import datetime
 import os
 import pyodbc
-from DB_util import catch_db_error
+import DB_util
 
 # TODO: Grid layout
-def create_tab(parent, app):
+def create_tab(parent):
     tab = ttk.Frame(parent)
     tab.pack(fill='both', expand=True)
       
@@ -33,7 +33,8 @@ def create_tab(parent, app):
 
     table.pack(expand=True, fill='both')
 
-    table.bind("<Control-c>", lambda e: copy_rows(table))
+    table.bind("<Control-c>", lambda e: copy_rows_to_clipboard(table))
+    # TODO: Double click log to open pop-up
     
     #Filters
     ttk.Label(tab, text="Date from:").pack(side='left')
@@ -51,22 +52,21 @@ def create_tab(parent, app):
     to_date_entry.pack(side='left')
 
     #Buttons
-    update_button = ttk.Button(tab, text="Update", command=lambda: update_table(app, table, from_date_entry, to_date_entry))
+    update_button = ttk.Button(tab, text="Update", command=lambda: update_table(table, from_date_entry, to_date_entry))
     update_button.pack(side='left')
 
     return tab
 
 def validate_date(entry: ttk.Entry):
     def inner(text: str):
-        try:
-            datetime.strptime(text, '%d-%m-%Y %H:%M:%S')
+        if parse_date(text) is not None:
             entry.configure(foreground='black')
-        except:
+        else:
             entry.configure(foreground='red')
         return True
     return inner
 
-def copy_rows(table):
+def copy_rows_to_clipboard(table):
     string = "("
     for item in table.selection():
         string += f"echo {str(table.item(item)['values'])} & " 
@@ -77,58 +77,46 @@ def copy_rows(table):
 def resize_table(table):
     max_length = 0
     f = font.nametofont("TkDefaultFont")
+
     for row in table.get_children():
         item = table.item(row)
         message = item['values'][-1]
         max_length = max(max_length, f.measure(message))
-    table.column("Message", width=max_length+20, stretch=False)
-    #TODO: Row height on multiline strings / repr()
 
-@catch_db_error
-def update_table(app, table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.Entry):
-    conn = app.get_db_connection()
-    
-    with open('SQL/Get_Logs.sql') as file:
-        command = file.read()
-    
+    table.column("Message", width=max_length+20, stretch=False)
+
+def update_table(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.Entry):    
     offset = 0
     fetch = 100
-    filter = create_select_filter(from_date_entry, to_date_entry)
+    
+    from_date = parse_date(from_date_entry.get()) or datetime(1900, 1, 1)
+    to_date = parse_date(to_date_entry.get()) or datetime(2100, 12, 31)
 
-    command = command.replace('{offset}', str(offset))
-    command = command.replace('{fetch}', str(fetch))
-    command = command.replace('{filter}', filter)
-
-    cursor = conn.execute(command)
+    logs = DB_util.get_logs(offset, fetch, from_date, to_date)
     
     #Clear table
     for c in table.get_children():
         table.delete(c)
 
     #Update table
-    for row in cursor:
+    for row in logs:
         row = [str(d) for d in row]
         table.insert('', 'end', values=row)
     
     resize_table(table)
 
 def parse_date(date_str: str):
-    try:
-        return datetime.strptime(date_str, '%d-%m-%Y %H:%M:%S')
-    except:
-        return None
-    
-def create_select_filter(from_date_entry: ttk.Entry, to_date_entry: ttk.Entry):
-    from_date = parse_date(from_date_entry.get())
-    to_date = parse_date(to_date_entry.get())
+    formats = (
+        '%d-%m-%Y %H:%M:%S',
+        '%d-%m-%Y %H:%M',
+        '%d-%m-%Y',
+        '%d-%m',
+    )
 
-    filters = []
-    if from_date:
-        filters.append(f"'{from_date.strftime('%d-%m-%Y %H:%M:%S')}' <= log_time")
-    if to_date:
-        filters.append(f"log_time <= '{to_date.strftime('%d-%m-%Y %H:%M:%S')}'")
-    
-    if filters:
-        return 'WHERE '+ ' AND '.join(filters)
-    else:
-        return ''
+    for f in formats:
+        try:
+            return datetime.strptime(date_str, f)
+        except:
+            ...
+
+    return None

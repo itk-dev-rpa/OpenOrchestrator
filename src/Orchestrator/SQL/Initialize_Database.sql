@@ -10,8 +10,8 @@ VALUES
     (2, 'Error');
 
 CREATE TABLE Logs (
-    id              UNIQUEIDENTIFIER    NOT NULL    PRIMARY KEY,
-    log_time        DATETIME            NOT NULL,
+    id              UNIQUEIDENTIFIER    NOT NULL    PRIMARY KEY     DEFAULT NEWID(),
+    log_time        DATETIME            NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     log_level       TINYINT             NOT NULL    FOREIGN KEY REFERENCES Log_Level(id),
     process_name    VARCHAR(100)        NOT NULL,
     log_message     VARCHAR(8000)
@@ -30,7 +30,7 @@ VALUES
     (3, 'Done');
 
 CREATE TABLE Scheduled_Triggers (
-    id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
+    id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY    DEFAULT NEWID(),
     process_name    VARCHAR(100)         NOT NULL,
     cron_expr       VARCHAR(200)         NOT NULL,
     last_run        DATETIME,
@@ -42,7 +42,7 @@ CREATE TABLE Scheduled_Triggers (
 );
 
 CREATE TABLE Single_Triggers (
-    id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
+    id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY    DEFAULT NEWID(),
     process_name    VARCHAR(100)         NOT NULL,
     last_run        DATETIME,
     next_run        DATETIME             NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE Single_Triggers (
 );
 
 CREATE TABLE Email_Triggers (
-    id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY,
+    id              UNIQUEIDENTIFIER     NOT NULL    PRIMARY KEY    DEFAULT NEWID(),
     process_name    VARCHAR(100)         NOT NULL,
     email_folder    VARCHAR(250)         NOT NULL,
     last_run        DATETIME,
