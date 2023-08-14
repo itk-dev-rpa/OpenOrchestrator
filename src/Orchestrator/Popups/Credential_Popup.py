@@ -2,7 +2,7 @@ import tkinter
 from tkinter import ttk, messagebox
 import tkcalendar
 from datetime import datetime
-import DB_util
+import DB_util, Crypto_util
 
 def show_popup(name=None, username=None):
     window = tkinter.Toplevel()
@@ -58,7 +58,10 @@ def create_credential(window, name_entry: ttk.Entry,
             return
         else:
             DB_util.delete_credential(name)
-            
+
+    # username = Crypto_util.encrypt_data(username)
+    password = Crypto_util.encrypt_data(password)
+
     DB_util.create_credential(name, username, password)
 
     window.destroy()
