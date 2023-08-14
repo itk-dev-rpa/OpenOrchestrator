@@ -202,5 +202,7 @@ def create_credential(name:str, username:str, password:str):
     command = command.replace('{USERNAME}', str(username))
     command = command.replace('{PASSWORD}', str(password))
 
+    print(command)
+
     conn.execute(command)
     conn.commit()
