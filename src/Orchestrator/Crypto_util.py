@@ -29,12 +29,3 @@ def validate_key(key:str):
         return True
     except:
         return False
-
-if __name__ == '__main__':
-    import DB_util
-    DB_util.connect('Driver={ODBC Driver 17 for SQL Server};Server=SRVSQLHOTEL03;Database=MKB-ITK-RPA;Trusted_Connection=yes;')
-    set_key('9q6bRUn4pRY9kcEEnSrLwZTFn4-uCQUANUFuRESYf6w=')
-    creds = DB_util.get_credentials()
-    for c in creds:
-        print(c)
-        print(decrypt_string(c[2]))
