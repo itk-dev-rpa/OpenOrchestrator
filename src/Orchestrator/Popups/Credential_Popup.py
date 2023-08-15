@@ -60,7 +60,7 @@ def create_credential(window, name_entry: ttk.Entry,
             DB_util.delete_credential(name)
 
     # username = Crypto_util.encrypt_data(username)
-    password = Crypto_util.encrypt_data(password)
+    password = Crypto_util.encrypt_string(password)
 
     DB_util.create_credential(name, username, password)
 
