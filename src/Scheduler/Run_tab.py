@@ -12,7 +12,6 @@ def create_tab(parent, app):
 
     ttk.Button(tab, text="Run", command=lambda: run(app, status_label)).pack()
     ttk.Button(tab, text="Pause", command=lambda: pause(app, status_label)).pack()
-    ttk.Button(tab, text="Finish", command=lambda: print('Not implemented')).pack()
 
     # Text area
     text_frame = tkinter.Frame(tab)
@@ -38,14 +37,16 @@ def run(app, status_label: ttk.Label):
         status_label.configure(text='State: Running')
         print('Running...\n')
         app.running = True
-        app.next_loop = app.after(0, loop, app)
+
+        # Only start loop if it's not already running
+        if app.tk.call('after', 'info') == '':
+            app.after(0, loop, app)
 
 def pause(app, status_label: ttk.Label):
     if app.running:
         status_label.configure(text="State: Paused")
-        print('Paused...\n')
+        print('Paused... Please wait for all processes to stop before closing the application\n')
         app.running = False
-        app.after_cancel(app.next_loop)
 
 def print_text(print_text: tkinter.Text, string: str):
     print_text.configure(state='normal')
@@ -53,30 +54,18 @@ def print_text(print_text: tkinter.Text, string: str):
     print_text.see('end')
     print_text.configure(state='disabled')
 
-def loop(app):
-    if not app.running:
-        return
-    
+def loop(app):  
     check_heartbeats(app)
 
-    #Check if process is blocking
-    blocking = False
-    for j in app.running_jobs:
-        if j.blocking:
-            print(f"Process '{j.process_name}' is blocking\n")
-            blocking = True
-
-    # Check triggers
-    if not blocking:
-        print('Checking triggers...')
-        job = Scheduler.poll_triggers(app)
-
-        if job is not None:
-            app.running_jobs.append(job)
+    if app.running:
+        check_triggers(app)
 
     # Schedule next loop
-    print('Waiting 6 seconds...\n')
-    app.next_loop = app.after(6_000, loop, app)
+    if app.running or len(app.running_jobs) > 0:
+        print('Waiting 6 seconds...\n')
+        app.after(6_000, loop, app)
+    else:
+        print("Scheduler is paused and no more processes are running.")
     
 def check_heartbeats(app):
     print('Checking heartbeats...')
@@ -93,3 +82,19 @@ def check_heartbeats(app):
 
         else:
             print(f"Process '{j.process_name}' is still running")
+
+def check_triggers(app):
+    #Check if process is blocking
+    blocking = False
+    for j in app.running_jobs:
+        if j.blocking:
+            print(f"Process '{j.process_name}' is blocking\n")
+            blocking = True
+
+    # Check triggers
+    if not blocking:
+        print('Checking triggers...')
+        job = Scheduler.poll_triggers(app)
+
+        if job is not None:
+            app.running_jobs.append(job)
