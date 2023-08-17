@@ -1,7 +1,7 @@
 import tkinter
 from tkinter import ttk
 import sys
-import Scheduler
+import Runner, DB_util, Crypto_util
 
 def create_tab(parent, app):
     tab = ttk.Frame(parent)
@@ -33,6 +33,13 @@ def create_tab(parent, app):
     return tab
 
 def run(app, status_label: ttk.Label):
+    if DB_util.get_conn_string() is None:
+        print("Can't start without a valid connection string. Go to the settings tab to configure the connection string")
+        return
+    if Crypto_util.get_key() is None:
+        print("Can't start without a valid encryption key. Go to the settings tab to configure the encryption key")
+        return
+
     if not app.running:
         status_label.configure(text='State: Running')
         print('Running...\n')
@@ -75,10 +82,10 @@ def check_heartbeats(app):
 
             if j.process.returncode == 0:
                 print(f"Process '{j.process_name}' is done")
-                Scheduler.end_job(j)
+                Runner.end_job(j)
             else:
                 print(f"Process '{j.process_name}' failed")
-                Scheduler.fail_job(j)
+                Runner.fail_job(j)
 
         else:
             print(f"Process '{j.process_name}' is still running")
@@ -94,7 +101,7 @@ def check_triggers(app):
     # Check triggers
     if not blocking:
         print('Checking triggers...')
-        job = Scheduler.poll_triggers(app)
+        job = Runner.poll_triggers(app)
 
         if job is not None:
             app.running_jobs.append(job)

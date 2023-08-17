@@ -54,6 +54,9 @@ def _load_sql_file(file_name):
         command = file.read()
     return command
 
+def get_conn_string():
+    return _connection_string
+
 @catch_db_error
 def begin_single_trigger(UUID: str):
     conn = _get_connection()
