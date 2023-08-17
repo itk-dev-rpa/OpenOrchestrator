@@ -1,4 +1,4 @@
-import DB_util
+import DB_util, Crypto_util
 from datetime import datetime
 import subprocess
 from croniter import croniter
@@ -65,7 +65,7 @@ def run_scheduled_trigger(app, name, id, process_path, is_git_repo, blocking, cr
         ...
         #TODO: Run main.*
     else:
-        process = subprocess.Popen(process_path, shell=True)
+        process = run_process(process_path, name, DB_util.get_conn_string(), Crypto_util.get_key())
     
     return Job(process, id, name, blocking, 'Scheduled')
 
@@ -88,3 +88,9 @@ def fail_job(job: Job):
         DB_util.set_scheduled_trigger_status(job.trigger_id, 2)
     elif job.type == 'Queue':
         ...
+
+def run_process(path:str, process_name, conn_string:str, crypto_key:str):
+    if path.endswith(".py"):
+        return subprocess.Popen(['python', path, process_name, conn_string, crypto_key])
+    
+    raise ValueError("The process path didn't point to a valid file: "+path)
