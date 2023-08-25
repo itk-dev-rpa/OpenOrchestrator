@@ -1,7 +1,7 @@
 import tkinter
 from tkinter import ttk, font, messagebox
 from datetime import datetime
-import DB_util, Table_util
+from OpenOrchestrator.Orchestrator import DB_util, Table_util
 
 # TODO: Grid layout
 def create_tab(parent):

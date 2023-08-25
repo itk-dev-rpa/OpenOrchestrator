@@ -1,6 +1,6 @@
 import tkinter
 from tkinter import ttk, messagebox
-import DB_util, Crypto_util
+from OpenOrchestrator.Orchestrator import DB_util, Crypto_util
 import os
 
 # TODO: Layout

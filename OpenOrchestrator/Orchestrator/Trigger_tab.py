@@ -1,6 +1,6 @@
 from tkinter import ttk, messagebox
-import DB_util, Table_util
-from Popups import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
+from OpenOrchestrator.Orchestrator import DB_util, Table_util
+from OpenOrchestrator.Orchestrator.Popups import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
 
 
 def create_tab(parent):

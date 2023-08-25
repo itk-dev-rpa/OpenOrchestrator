@@ -1,7 +1,7 @@
 import tkinter
 from tkinter import ttk, messagebox
-import DB_util, Table_util
-from Popups import Constant_Popup, Credential_Popup
+from OpenOrchestrator.Orchestrator import DB_util, Table_util
+from OpenOrchestrator.Orchestrator.Popups import Constant_Popup, Credential_Popup
 
 def create_tab(parent):
     tab = ttk.Frame(parent)
