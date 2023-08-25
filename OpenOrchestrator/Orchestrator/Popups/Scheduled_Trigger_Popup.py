@@ -2,7 +2,7 @@ import tkinter
 from tkinter import ttk, messagebox
 import croniter
 from datetime import datetime
-import DB_util
+from OpenOrchestrator.Orchestrator import DB_util
 import webbrowser
 
 def show_popup():

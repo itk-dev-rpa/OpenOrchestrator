@@ -2,7 +2,7 @@ import tkinter
 from tkinter import ttk, messagebox
 import tkcalendar
 from datetime import datetime
-import DB_util
+from OpenOrchestrator.Orchestrator import DB_util
 
 def show_popup(name=None, value=None):
     window = tkinter.Toplevel()

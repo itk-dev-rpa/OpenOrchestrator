@@ -1,7 +1,6 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-import Logging_tab, Settings_tab, Trigger_tab, Constants_tab
-import pyodbc
+from tkinter import ttk
+from OpenOrchestrator.Orchestrator import Logging_tab, Settings_tab, Trigger_tab, Constants_tab
 
 class Application(tk.Tk):
     def __init__(self):
