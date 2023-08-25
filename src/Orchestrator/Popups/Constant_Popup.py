@@ -41,7 +41,7 @@ def create_constant(window, name_entry: ttk.Entry, value_entry: ttk.Entry):
         return
     
     constants = DB_util.get_constants()
-    exists = any(c[0] == name for c in constants)
+    exists = any(c[0].lower() == name.lower() for c in constants)
     
     if exists:
         if not messagebox.askyesno('Error', 'A constant with that name already exists. Do you want to overwrite it?'):
