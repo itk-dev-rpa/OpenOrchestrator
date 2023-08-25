@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OpenOrchestrator"
+version = "0.0.1"
+authors = [
+  { name="ITK Development", email="itk-rpa@mkb.aarhus.dk" },
+]
+description = "A package containing OpenOrchestrator and OpenOrchestrator Scheduler"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+]
+dependencies = [
+    "pyodbc >= 4.0.39"
+    "tkcalendar >= 1.6.1"
+    "cryptography >= 41.0.3"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/itk-dev-rpa/OpenOrchestrator"
+"Bug Tracker" = "https://github.com/itk-dev-rpa/OpenOrchestrator/issues"
