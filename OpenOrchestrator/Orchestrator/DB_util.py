@@ -1,7 +1,9 @@
-import pyodbc
 from tkinter import messagebox
 import os
+import uuid
 from datetime import datetime
+import pyodbc
+from pypika import MSSQLQuery, Table, Order
 
 _connection_string = None
 _connection = None
@@ -47,18 +49,6 @@ def _get_connection():
     except pyodbc.InterfaceError as e:
         messagebox.showerror("Error", f"Connection failed.\nGo to settings and enter a valid connection string.\n{e}")
 
-def _load_sql_file(file_name):
-    dir = os.path.dirname(__file__)
-    path = os.path.join(dir, 'SQL', file_name)
-    with open(path) as file:
-        command = file.read()
-    return command
-
-def _fetch_all(file_name):
-    conn = _get_connection()
-    command = _load_sql_file(file_name)
-    rows = conn.execute(command).fetchall()
-    return rows
 
 @catch_db_error
 def initialize_database():
@@ -74,100 +64,220 @@ def initialize_database():
 
 @catch_db_error
 def get_scheduled_triggers():
-    return _fetch_all('Get_Scheduled_Triggers.sql')
+    conn = _get_connection()
+
+    triggers = Table("Scheduled_Triggers")
+    status = Table("Trigger_Status")
+    command = (
+        MSSQLQuery.from_(triggers)
+        .join(status)
+        .on(triggers.process_status == status.id)
+        .select(triggers.process_name, triggers.cron_expr, triggers.last_run, triggers.next_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .get_sql()
+    )
+
+    return conn.execute(command).fetchall()
+
 
 @catch_db_error
 def get_single_triggers():
-    return _fetch_all('Get_Single_Triggers.sql')
+    conn = _get_connection()
+
+    triggers = Table("Single_Triggers")
+    status = Table("Trigger_Status")
+    command = (
+        MSSQLQuery.from_(triggers)
+        .join(status)
+        .on(triggers.process_status == status.id)
+        .select(triggers.process_name, triggers.last_run, triggers.next_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .get_sql()
+    )
+
+    return conn.execute(command).fetchall()
 
 @catch_db_error
 def get_email_triggers():
-    return _fetch_all('Get_Email_Triggers.sql')
+    conn = _get_connection()
+
+    triggers = Table("Email_Triggers")
+    status = Table("Trigger_Status")
+    command = (
+        MSSQLQuery.from_(triggers)
+        .join(status)
+        .on(triggers.process_status == status.id)
+        .select(triggers.process_name, triggers.email_folder, triggers.last_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .get_sql()
+    )
+
+    return conn.execute(command).fetchall()
 
 @catch_db_error
 def delete_trigger(UUID):
     conn = _get_connection()
 
-    commands = _load_sql_file('Delete_Trigger.sql')
-    commands = commands.replace('{UUID}', UUID)
-    commands = commands.split(';')
+    Scheduled_Triggers = Table("Scheduled_Triggers")
+    command = (
+        MSSQLQuery.delete_from(Scheduled_Triggers)
+        .where(Scheduled_Triggers.id == UUID)
+        .get_sql()
+    )
+    conn.execute(command)
 
-    for command in commands:
-        if command:
-            conn.execute(command)
-    
+    Single_Triggers = Table("Single_Triggers")
+    command = (
+        MSSQLQuery.delete_from(Single_Triggers)
+        .where(Single_Triggers.id == UUID)
+        .get_sql()
+    )
+    conn.execute(command)
+
+    Email_Triggers = Table("Email_Triggers")
+    command = (
+        MSSQLQuery.delete_from(Email_Triggers)
+        .where(Email_Triggers.id == UUID)
+        .get_sql()
+    )
+    conn.execute(command)
+   
     conn.commit()
 
-@catch_db_error
-def get_logs(offset: int, fetch: int, from_date: datetime, to_date: datetime):
-    conn = _get_connection()
-    command = _load_sql_file('Get_Logs.sql')
 
-    command = command.replace('{OFFSET}', str(offset))
-    command = command.replace('{FETCH}', str(fetch))
-    command = command.replace('{FROM_DATE}', from_date.strftime('%d-%m-%Y %H:%M:%S'))
-    command = command.replace('{TO_DATE}', to_date.strftime('%d-%m-%Y %H:%M:%S'))
+@catch_db_error
+def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime):
+    conn = _get_connection()
     
-    logs = conn.execute(command).fetchall()
-    return logs
+    logs = Table("Logs")
+    command = (
+        MSSQLQuery
+        .select(logs.log_time, logs.log_level, logs.process_name, logs.log_message)
+        .from_(logs)
+        .where(from_date <= logs.log_time and logs.log_time <= to_date)
+        .orderby(logs.log_time, order=Order.desc)
+        .offset(offset)
+        .limit(fetch)
+        .get_sql()
+    )
+    
+    return conn.execute(command).fetchall()
+    
 
 @catch_db_error
 def create_single_trigger(name:str, date:datetime, path:str, is_git:bool, is_blocking:bool):
     conn = _get_connection()
-    command = _load_sql_file('Create_Single_Trigger.sql')
-
-    command = command.replace('{NAME}', str(name))
-    command = command.replace('{DATE}', date.strftime('%d-%m-%Y %H:%M:%S'))
-    command = command.replace('{PATH}', str(path))
-    command = command.replace('{GIT}', str(is_git))
-    command = command.replace('{BLOCKING}', str(is_blocking))
+    
+    triggers = Table("Single_Triggers")
+    command = (
+        MSSQLQuery
+        .into(triggers)
+        .insert(
+            uuid.uuid4(), 
+            name,
+            None,
+            date,
+            path,
+            0,
+            is_git,
+            is_blocking
+        )
+        .get_sql()
+    )
 
     conn.execute(command)
     conn.commit()
+
 
 @catch_db_error
 def create_scheduled_trigger(name:str, cron:str, date:datetime, path:str, is_git:bool, is_blocking:bool):
     conn = _get_connection()
-    command = _load_sql_file('Create_Scheduled_Trigger.sql')
-
-    command = command.replace('{NAME}', str(name))
-    command = command.replace('{CRON}', str(cron))
-    command = command.replace('{DATE}', date.strftime('%d-%m-%Y %H:%M:%S'))
-    command = command.replace('{PATH}', str(path))
-    command = command.replace('{GIT}', str(is_git))
-    command = command.replace('{BLOCKING}', str(is_blocking))
+    
+    triggers = Table("Scheduled_Triggers")
+    command = (
+        MSSQLQuery
+        .into(triggers)
+        .insert(
+            uuid.uuid4(), 
+            name,
+            cron,
+            None,
+            date,
+            path,
+            0,
+            is_git,
+            is_blocking
+        )
+        .get_sql()
+    )
 
     conn.execute(command)
     conn.commit()
+
 
 @catch_db_error
 def create_email_trigger(name:str, folder:str, path:str, is_git:bool, is_blocking:bool):
     conn = _get_connection()
-    command = _load_sql_file('Create_Email_Trigger.sql')
-
-    command = command.replace('{NAME}', str(name))
-    command = command.replace('{FOLDER}', str(folder))
-    command = command.replace('{PATH}', str(path))
-    command = command.replace('{GIT}', str(is_git))
-    command = command.replace('{BLOCKING}', str(is_blocking))
+    
+    triggers = Table("Email_Triggers")
+    command = (
+        MSSQLQuery
+        .into(triggers)
+        .insert(
+            uuid.uuid4(), 
+            name,
+            folder,
+            None,
+            path,
+            0,
+            is_git,
+            is_blocking
+        )
+        .get_sql()
+    )
 
     conn.execute(command)
     conn.commit()
 
+
 @catch_db_error
 def get_constants():
-    return _fetch_all('Get_Constants.sql')
+    conn = _get_connection()
+
+    constants = Table("Constants")
+    command = (
+        MSSQLQuery
+        .select(constants.constant_name, constants.constant_value)
+        .from_(constants)
+        .orderby(constants.constant_name)
+        .get_sql()
+    )
+
+    return conn.execute(command).fetchall()
 
 @catch_db_error
 def get_credentials():
-    return _fetch_all('Get_Credentials.sql')
+    conn = _get_connection()
+
+    credentials = Table("Credentials")
+    command = (
+        MSSQLQuery
+        .select(credentials.cred_name, credentials.cred_value)
+        .from_(credentials)
+        .orderby(credentials.cred_name)
+        .get_sql()
+    )
+
+    return conn.execute(command).fetchall()
 
 @catch_db_error
 def delete_constant(name: str):
     conn = _get_connection()
-    command = _load_sql_file('Delete_Constant.sql')
-
-    command = command.replace('{NAME}', str(name))
+    
+    constants = Table("Constants")
+    command = (
+        MSSQLQuery
+        .delete_from(constants)
+        .where(constants.constant_name == name)
+        .get_sql()
+    )
 
     conn.execute(command)
     conn.commit()
@@ -175,9 +285,14 @@ def delete_constant(name: str):
 @catch_db_error
 def delete_credential(name: str):
     conn = _get_connection()
-    command = _load_sql_file('Delete_Credential.sql')
-
-    command = command.replace('{NAME}', str(name))
+    
+    credentials = Table("Credentials")
+    command = (
+        MSSQLQuery
+        .delete_from(credentials)
+        .where(credentials.cred_name == name)
+        .get_sql()
+    )
 
     conn.execute(command)
     conn.commit()
@@ -185,10 +300,17 @@ def delete_credential(name: str):
 @catch_db_error
 def create_constant(name:str, value:str):
     conn = _get_connection()
-    command = _load_sql_file('Create_Constant.sql')
-
-    command = command.replace('{NAME}', str(name))
-    command = command.replace('{VALUE}', str(value))
+    
+    constants = Table("Constants")
+    command = (
+        MSSQLQuery
+        .into(constants)
+        .insert(
+            name, 
+            value
+        )
+        .get_sql()
+    )
 
     conn.execute(command)
     conn.commit()
@@ -196,11 +318,18 @@ def create_constant(name:str, value:str):
 @catch_db_error
 def create_credential(name:str, username:str, password:str):
     conn = _get_connection()
-    command = _load_sql_file('Create_Credential.sql')
-
-    command = command.replace('{NAME}', str(name))
-    command = command.replace('{USERNAME}', str(username))
-    command = command.replace('{PASSWORD}', str(password))
+    
+    credentials = Table("Credentials")
+    command = (
+        MSSQLQuery
+        .into(credentials)
+        .insert(
+            name, 
+            username,
+            password
+        )
+        .get_sql()
+    )
 
     conn.execute(command)
     conn.commit()
