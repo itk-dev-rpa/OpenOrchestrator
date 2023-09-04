@@ -69,10 +69,11 @@ def get_scheduled_triggers():
     triggers = Table("Scheduled_Triggers")
     status = Table("Trigger_Status")
     command = (
-        MSSQLQuery.from_(triggers)
+        MSSQLQuery
+        .select(triggers.process_name, triggers.cron_expr, triggers.last_run, triggers.next_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .from_(triggers)
         .join(status)
         .on(triggers.process_status == status.id)
-        .select(triggers.process_name, triggers.cron_expr, triggers.last_run, triggers.next_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
         .get_sql()
     )
 
@@ -86,10 +87,11 @@ def get_single_triggers():
     triggers = Table("Single_Triggers")
     status = Table("Trigger_Status")
     command = (
-        MSSQLQuery.from_(triggers)
+        MSSQLQuery
+        .select(triggers.process_name, triggers.last_run, triggers.next_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .from_(triggers)
         .join(status)
         .on(triggers.process_status == status.id)
-        .select(triggers.process_name, triggers.last_run, triggers.next_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
         .get_sql()
     )
 
@@ -102,10 +104,12 @@ def get_email_triggers():
     triggers = Table("Email_Triggers")
     status = Table("Trigger_Status")
     command = (
-        MSSQLQuery.from_(triggers)
+        MSSQLQuery
+        .select(triggers.process_name, triggers.email_folder, triggers.last_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .from_(triggers)
         .join(status)
         .on(triggers.process_status == status.id)
-        .select(triggers.process_name, triggers.email_folder, triggers.last_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        
         .get_sql()
     )
 
@@ -117,7 +121,9 @@ def delete_trigger(UUID):
 
     Scheduled_Triggers = Table("Scheduled_Triggers")
     command = (
-        MSSQLQuery.delete_from(Scheduled_Triggers)
+        MSSQLQuery
+        .from_(Scheduled_Triggers)
+        .delete()
         .where(Scheduled_Triggers.id == UUID)
         .get_sql()
     )
@@ -125,7 +131,9 @@ def delete_trigger(UUID):
 
     Single_Triggers = Table("Single_Triggers")
     command = (
-        MSSQLQuery.delete_from(Single_Triggers)
+        MSSQLQuery
+        .from_(Single_Triggers)
+        .delete()
         .where(Single_Triggers.id == UUID)
         .get_sql()
     )
@@ -133,7 +141,9 @@ def delete_trigger(UUID):
 
     Email_Triggers = Table("Email_Triggers")
     command = (
-        MSSQLQuery.delete_from(Email_Triggers)
+        MSSQLQuery
+        .from_(Email_Triggers)
+        .delete()
         .where(Email_Triggers.id == UUID)
         .get_sql()
     )
@@ -147,10 +157,13 @@ def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime):
     conn = _get_connection()
     
     logs = Table("Logs")
+    levels = Table("Log_Level")
     command = (
         MSSQLQuery
-        .select(logs.log_time, logs.log_level, logs.process_name, logs.log_message)
+        .select(logs.log_time, levels.level_text, logs.process_name, logs.log_message)
         .from_(logs)
+        .join(levels)
+        .on(logs.log_level == levels.id)
         .where(from_date <= logs.log_time and logs.log_time <= to_date)
         .orderby(logs.log_time, order=Order.desc)
         .offset(offset)
@@ -221,7 +234,7 @@ def create_email_trigger(name:str, folder:str, path:str, is_git:bool, is_blockin
         MSSQLQuery
         .into(triggers)
         .insert(
-            uuid.uuid4(), 
+            uuid.uuid4(),
             name,
             folder,
             None,
@@ -259,7 +272,7 @@ def get_credentials():
     credentials = Table("Credentials")
     command = (
         MSSQLQuery
-        .select(credentials.cred_name, credentials.cred_value)
+        .select(credentials.cred_name, credentials.cred_username, credentials.cred_password)
         .from_(credentials)
         .orderby(credentials.cred_name)
         .get_sql()
@@ -274,7 +287,8 @@ def delete_constant(name: str):
     constants = Table("Constants")
     command = (
         MSSQLQuery
-        .delete_from(constants)
+        .from_(constants)
+        .delete()
         .where(constants.constant_name == name)
         .get_sql()
     )
@@ -289,7 +303,8 @@ def delete_credential(name: str):
     credentials = Table("Credentials")
     command = (
         MSSQLQuery
-        .delete_from(credentials)
+        .from_(credentials)
+        .delete()
         .where(credentials.cred_name == name)
         .get_sql()
     )
