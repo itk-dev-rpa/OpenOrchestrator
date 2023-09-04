@@ -1,10 +1,13 @@
-import pyodbc
 import os
 from tkinter import messagebox
 from datetime import datetime
+from pypika import MSSQLQuery, Table
+import pyodbc
 
 _connection_string = None
 _connection = None
+
+_DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 def connect(conn_string: str) -> bool:
     global _connection, _connection_string
@@ -47,12 +50,6 @@ def _get_connection():
     except pyodbc.InterfaceError as e:
         messagebox.showerror("Error", f"Connection failed.\nGo to settings and enter a valid connection string.\n{e}")
 
-def _load_sql_file(file_name):
-    dir = os.path.dirname(__file__)
-    path = os.path.join(dir, 'SQL', file_name)
-    with open(path) as file:
-        command = file.read()
-    return command
 
 def get_conn_string():
     return _connection_string
@@ -60,48 +57,102 @@ def get_conn_string():
 @catch_db_error
 def begin_single_trigger(UUID: str):
     conn = _get_connection()
-    command = _load_sql_file('Begin_Single_Trigger.sql')
-    command = command.replace('{UUID}', UUID)
+    
+    triggers = Table("Single_Triggers")
+    command = (
+        MSSQLQuery
+        .update(triggers)
+        .set(triggers.process_status, 1)
+        .set(triggers.last_run, datetime.now().strftime(_DATETIME_FORMAT))
+        .where(triggers.id == UUID)
+        .get_sql()
+    )
+
     conn.execute(command)
     conn.commit()
 
 @catch_db_error
 def set_single_trigger_status(UUID: str, status: int):
     conn = _get_connection()
-    command = _load_sql_file('Set_Single_Trigger_Status.sql')
-    command = command.replace('{STATUS}', str(status))
-    command = command.replace('{UUID}', UUID)
+    
+    triggers = Table("Single_Triggers")
+    command = (
+        MSSQLQuery
+        .update(triggers)
+        .set(triggers.process_status, status)
+        .where(triggers.id == UUID)
+        .get_sql()
+    )
+
     conn.execute(command)
     conn.commit()
 
 @catch_db_error
 def get_next_single_trigger():
     conn = _get_connection()
-    command = _load_sql_file('Get_Next_Single_Trigger.sql')
+    
+    triggers = Table("Single_Triggers")
+    command = (
+        MSSQLQuery
+        .select(triggers.process_name, triggers.next_run, triggers.id, triggers.process_path, triggers.is_git_repo, triggers.blocking)
+        .from_(triggers)
+        .where(triggers.process_status == 0)
+        .orderby(triggers.next_run)
+        .limit(1)
+        .get_sql()
+    )
+
     cursor = conn.execute(command)
     return cursor.fetchone()
 
 @catch_db_error
 def get_next_scheduled_trigger():
     conn = _get_connection()
-    command = _load_sql_file('Get_Next_Scheduled_Trigger.sql')
+    
+    triggers = Table("Scheduled_Triggers")
+    command = (
+        MSSQLQuery
+        .select(triggers.process_name, triggers.next_run, triggers.id, triggers.process_path, triggers.is_git_repo, triggers.blocking, triggers.cron_expr)
+        .from_(triggers)
+        .where(triggers.process_status == 0)
+        .orderby(triggers.next_run)
+        .limit(1)
+        .get_sql()
+    )
+
     cursor = conn.execute(command)
     return cursor.fetchone()
 
 @catch_db_error
 def begin_scheduled_trigger(UUID: str, next_run: datetime):
     conn = _get_connection()
-    command = _load_sql_file('Begin_Scheduled_Trigger.sql')
-    command = command.replace('{UUID}', UUID)
-    command = command.replace('{NEXT_RUN}', next_run.strftime('%d-%m-%Y %H:%M:%S'))
+    
+    triggers = Table("Scheduled_Triggers")
+    command = (
+        MSSQLQuery
+        .update(triggers)
+        .set(triggers.process_status, 1)
+        .set(triggers.last_run, datetime.now().strftime(_DATETIME_FORMAT))
+        .set(triggers.next_run, next_run.strftime(_DATETIME_FORMAT))
+        .where(triggers.id == UUID)
+        .get_sql()
+    )
+
     conn.execute(command)
     conn.commit()
 
 @catch_db_error
 def set_scheduled_trigger_status(UUID: str, status: int):
     conn = _get_connection()
-    command = _load_sql_file('Set_Scheduled_Trigger_Status.sql')
-    command = command.replace('{STATUS}', str(status))
-    command = command.replace('{UUID}', UUID)
+
+    triggers = Table("Scheduled_Triggers")
+    command = (
+        MSSQLQuery
+        .update(triggers)
+        .set(triggers.process_status, status)
+        .where(triggers.id == UUID)
+        .get_sql()
+    )
+
     conn.execute(command)
     conn.commit()
