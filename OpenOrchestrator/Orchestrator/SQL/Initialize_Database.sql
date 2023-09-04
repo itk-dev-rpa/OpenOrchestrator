@@ -36,6 +36,7 @@ CREATE TABLE Scheduled_Triggers (
     last_run        DATETIME,
     next_run        DATETIME             NOT NULL,
     process_path    VARCHAR(250)         NOT NULL,
+    process_args    VARCHAR(1000),
     process_status  TINYINT              NOT NULL    FOREIGN KEY REFERENCES Trigger_Status(id),
     is_git_repo     BIT                  NOT NULL,
     blocking        BIT                  NOT NULL
@@ -47,6 +48,7 @@ CREATE TABLE Single_Triggers (
     last_run        DATETIME,
     next_run        DATETIME             NOT NULL,
     process_path    VARCHAR(250)         NOT NULL,
+    process_args    VARCHAR(1000),
     process_status  TINYINT              NOT NULL    FOREIGN KEY REFERENCES Trigger_Status(id),
     is_git_repo     BIT                  NOT NULL,
     blocking        BIT                  NOT NULL
@@ -58,6 +60,7 @@ CREATE TABLE Email_Triggers (
     email_folder    VARCHAR(250)         NOT NULL,
     last_run        DATETIME,
     process_path    VARCHAR(250)         NOT NULL,
+    process_args    VARCHAR(1000),
     process_status  TINYINT              NOT NULL    FOREIGN KEY REFERENCES Trigger_Status(id),
     is_git_repo     BIT                  NOT NULL,
     blocking        BIT                  NOT NULL

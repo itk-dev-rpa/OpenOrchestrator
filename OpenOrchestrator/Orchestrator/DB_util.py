@@ -70,7 +70,7 @@ def get_scheduled_triggers():
     status = Table("Trigger_Status")
     command = (
         MSSQLQuery
-        .select(triggers.process_name, triggers.cron_expr, triggers.last_run, triggers.next_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .select(triggers.process_name, triggers.cron_expr, triggers.last_run, triggers.next_run, triggers.process_path, triggers.process_args, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
         .from_(triggers)
         .join(status)
         .on(triggers.process_status == status.id)
@@ -88,7 +88,7 @@ def get_single_triggers():
     status = Table("Trigger_Status")
     command = (
         MSSQLQuery
-        .select(triggers.process_name, triggers.last_run, triggers.next_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .select(triggers.process_name, triggers.last_run, triggers.next_run, triggers.process_path, triggers.process_args, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
         .from_(triggers)
         .join(status)
         .on(triggers.process_status == status.id)
@@ -105,7 +105,7 @@ def get_email_triggers():
     status = Table("Trigger_Status")
     command = (
         MSSQLQuery
-        .select(triggers.process_name, triggers.email_folder, triggers.last_run, triggers.process_path, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
+        .select(triggers.process_name, triggers.email_folder, triggers.last_run, triggers.process_path, triggers.process_args, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
         .from_(triggers)
         .join(status)
         .on(triggers.process_status == status.id)
@@ -175,7 +175,7 @@ def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime):
     
 
 @catch_db_error
-def create_single_trigger(name:str, date:datetime, path:str, is_git:bool, is_blocking:bool):
+def create_single_trigger(name:str, date:datetime, path:str, args:str, is_git:bool, is_blocking:bool):
     conn = _get_connection()
     
     triggers = Table("Single_Triggers")
@@ -188,6 +188,7 @@ def create_single_trigger(name:str, date:datetime, path:str, is_git:bool, is_blo
             None,
             date,
             path,
+            args,
             0,
             is_git,
             is_blocking
@@ -200,7 +201,7 @@ def create_single_trigger(name:str, date:datetime, path:str, is_git:bool, is_blo
 
 
 @catch_db_error
-def create_scheduled_trigger(name:str, cron:str, date:datetime, path:str, is_git:bool, is_blocking:bool):
+def create_scheduled_trigger(name:str, cron:str, date:datetime, path:str, args:str, is_git:bool, is_blocking:bool):
     conn = _get_connection()
     
     triggers = Table("Scheduled_Triggers")
@@ -214,6 +215,7 @@ def create_scheduled_trigger(name:str, cron:str, date:datetime, path:str, is_git
             None,
             date,
             path,
+            args,
             0,
             is_git,
             is_blocking
@@ -226,7 +228,7 @@ def create_scheduled_trigger(name:str, cron:str, date:datetime, path:str, is_git
 
 
 @catch_db_error
-def create_email_trigger(name:str, folder:str, path:str, is_git:bool, is_blocking:bool):
+def create_email_trigger(name:str, folder:str, path:str, args:str, is_git:bool, is_blocking:bool):
     conn = _get_connection()
     
     triggers = Table("Email_Triggers")
@@ -239,6 +241,7 @@ def create_email_trigger(name:str, folder:str, path:str, is_git:bool, is_blockin
             folder,
             None,
             path,
+            args,
             0,
             is_git,
             is_blocking
