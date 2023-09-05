@@ -103,4 +103,4 @@ def run_process(path:str, process_name, conn_string:str, crypto_key:str):
     elif path.endswith(".bat"):
         return subprocess.Popen([path, process_name, conn_string, crypto_key])
     
-    raise ValueError("The process path didn't point to a valid file. Supported files are .py and .bat. Path: "+path)
+    raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{path}'")
