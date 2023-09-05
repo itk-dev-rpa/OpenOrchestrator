@@ -27,24 +27,30 @@ def show_popup():
     path_entry = ttk.Entry(window)
     path_entry.pack()
 
+    ttk.Label(window, text="Arguments:").pack()
+    args_entry = ttk.Entry(window)
+    args_entry.pack()
+
     git_check = tkinter.IntVar()
     ttk.Checkbutton(window, text="Is Git Repo?", variable=git_check).pack()
 
     blocking_check = tkinter.IntVar()
     ttk.Checkbutton(window, text="Is Blocking?", variable=blocking_check).pack()
 
-    ttk.Button(window, text='Create', command=lambda: create_trigger(window, name_entry, cron_entry, path_entry, git_check, blocking_check)).pack()
+    ttk.Button(window, text='Create', command=lambda: create_trigger(window, name_entry, cron_entry, path_entry, args_entry, git_check, blocking_check)).pack()
     ttk.Button(window, text='Cancel', command=lambda: window.destroy()).pack()
 
     return window
 
 def create_trigger(window,
                    name_entry: ttk.Entry, cron_entry: ttk.Entry, 
-                   path_entry: ttk.Entry, git_check: tkinter.IntVar, blocking_check: tkinter.IntVar):
+                   path_entry: ttk.Entry, args_entry: ttk.Entry,
+                   git_check: tkinter.IntVar, blocking_check: tkinter.IntVar):
     
     name = name_entry.get()
     cron = cron_entry.get()
     path = path_entry.get()
+    args = args_entry.get()
     is_git = git_check.get()
     is_blocking = blocking_check.get()
 
@@ -64,7 +70,7 @@ def create_trigger(window,
         return
     
     # Create trigger in database
-    DB_util.create_scheduled_trigger(name, cron, date, path, is_git, is_blocking)
+    DB_util.create_scheduled_trigger(name, cron, date, path, args, is_git, is_blocking)
 
     window.destroy()
 
