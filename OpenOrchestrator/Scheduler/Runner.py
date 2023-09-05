@@ -1,7 +1,7 @@
-import DB_util, Crypto_util
 from datetime import datetime
 import subprocess
 from croniter import croniter
+from OpenOrchestrator.Scheduler import DB_util, Crypto_util
 
 class Job():
     def __init__(self, process, trigger_id, process_name, blocking, type):
