@@ -48,7 +48,7 @@ def create_trigger(window,
         return
 
     if not folder:
-        messagebox.showerror('Error', 'Please enter a process name')
+        messagebox.showerror('Error', 'Please enter a folder name')
         return
 
     if not path:
