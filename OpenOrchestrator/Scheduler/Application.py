@@ -1,6 +1,6 @@
 import tkinter
 from tkinter import ttk, messagebox
-import Settings_tab, Run_tab
+from OpenOrchestrator.Scheduler import Settings_tab, Run_tab
 
 class Application(tkinter.Tk):
     def __init__(self):

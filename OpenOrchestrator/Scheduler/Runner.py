@@ -1,7 +1,7 @@
-import DB_util, Crypto_util
 from datetime import datetime
 import subprocess
 from croniter import croniter
+from OpenOrchestrator.Scheduler import DB_util, Crypto_util
 
 class Job():
     def __init__(self, process, trigger_id, process_name, blocking, type):
@@ -11,7 +11,17 @@ class Job():
         self.blocking = blocking
         self.type = type
 
-def poll_triggers(app):
+def poll_triggers(app) -> Job:
+    """Checks if any triggers are waiting to run. If any the first will be run and a
+    corresponding job object will be returned.
+
+    Args:
+        app: The Application object of the Scheduler app.
+
+    Returns:
+        Job: A job object describing the job that has been launched, if any else None.
+    """
+
     other_processes_running = len(app.running_jobs) != 0
 
     # Single triggers
@@ -21,7 +31,6 @@ def poll_triggers(app):
         name, next_run, id, process_path, is_git_repo, blocking = next_single_trigger
 
         if  next_run < datetime.now() and not (blocking and other_processes_running):
-            # TODO: Check if blocking
             return run_single_trigger(app, name, id, process_path, is_git_repo, blocking)
 
     # Email/Queue triggers
@@ -33,7 +42,6 @@ def poll_triggers(app):
         name, next_run, id, process_path, is_git_repo, blocking, cron_expr = next_scheduled_trigger
 
         if next_run < datetime.now() and not (blocking and other_processes_running):
-            # TODO: Check if blocking
             return run_scheduled_trigger(app, name, id, process_path, is_git_repo, blocking, cron_expr, next_run)
 
 
@@ -50,7 +58,7 @@ def run_single_trigger(app, name, id, process_path, is_git_repo, blocking):
         ...
         #TODO: Run main.*
     else:
-        process = subprocess.Popen(process_path, shell=True)
+        process = run_process(process_path, name, DB_util.get_conn_string(), Crypto_util.get_key())
 
     return Job(process, id, name, blocking, 'Single')
 
@@ -92,5 +100,7 @@ def fail_job(job: Job):
 def run_process(path:str, process_name, conn_string:str, crypto_key:str):
     if path.endswith(".py"):
         return subprocess.Popen(['python', path, process_name, conn_string, crypto_key])
+    elif path.endswith(".bat"):
+        return subprocess.Popen([path, process_name, conn_string, crypto_key])
     
-    raise ValueError("The process path didn't point to a valid file: "+path)
+    raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{path}'")
