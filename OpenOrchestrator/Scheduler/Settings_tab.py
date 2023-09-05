@@ -1,6 +1,6 @@
 from tkinter import ttk
-import DB_util, Crypto_util
 import os
+from OpenOrchestrator.Scheduler import DB_util, Crypto_util
 
 def create_tab(parent, app):
     tab = ttk.Frame(parent)
