@@ -1,0 +1,13 @@
+[pylint.messages_control]
+disable = 
+  C0303, # Trailing whitespace
+  C0103, # Variable names
+  C0305, # Trailing newlines
+  C0304, # Missing final line
+  C0301, # Line too long
+  I1101, E1101, # C-modules members
+  W0621, # Redefine outer name
+  R0913 # Too many arguments
+
+[MASTER]
+ignore-paths = ^tests/ # Ignore the tests folder
