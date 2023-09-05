@@ -185,11 +185,11 @@ def create_single_trigger(name:str, date:datetime, path:str, args:str, is_git:bo
         .insert(
             uuid.uuid4(), 
             name,
-            None,
+            None, # Last run
             date,
             path,
             args,
-            0,
+            0, # Status = Idle
             is_git,
             is_blocking
         )
@@ -212,11 +212,11 @@ def create_scheduled_trigger(name:str, cron:str, date:datetime, path:str, args:s
             uuid.uuid4(), 
             name,
             cron,
-            None,
+            None, # Last run
             date,
             path,
             args,
-            0,
+            0, # Status = Idle
             is_git,
             is_blocking
         )
@@ -239,10 +239,10 @@ def create_email_trigger(name:str, folder:str, path:str, args:str, is_git:bool, 
             uuid.uuid4(),
             name,
             folder,
-            None,
+            None, # Last run
             path,
             args,
-            0,
+            0, # Status = Idle
             is_git,
             is_blocking
         )
