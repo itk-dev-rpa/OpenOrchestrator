@@ -153,7 +153,7 @@ def delete_trigger(UUID):
 
 
 @catch_db_error
-def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime):
+def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime, process_name: str):
     conn = _get_connection()
     
     logs = Table("Logs")
@@ -164,14 +164,37 @@ def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime):
         .from_(logs)
         .join(levels)
         .on(logs.log_level == levels.id)
-        .where(from_date <= logs.log_time and logs.log_time <= to_date)
+        .where(from_date <= logs.log_time)
+        .where(logs.log_time <= to_date)
         .orderby(logs.log_time, order=Order.desc)
         .offset(offset)
         .limit(fetch)
-        .get_sql()
     )
+
+    if process_name:
+        command = command.where(logs.process_name == process_name)
+    
+    command = command.get_sql()
     
     return conn.execute(command).fetchall()
+
+@catch_db_error
+def get_unique_log_process_names():
+    conn = _get_connection()
+
+    logs = Table("Logs")
+    command = (
+        MSSQLQuery
+        .select(logs.process_name)
+        .distinct()
+        .from_(logs)
+        .orderby(logs.process_name)
+        .get_sql()
+    )
+
+    rows = conn.execute(command).fetchall()
+    return [r[0] for r in rows]
+
     
 
 @catch_db_error
