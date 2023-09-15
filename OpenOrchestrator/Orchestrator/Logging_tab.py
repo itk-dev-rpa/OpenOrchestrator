@@ -41,17 +41,25 @@ def create_tab(parent):
     to_date_entry.grid(row=0, column=3)
 
     # Process filter
+    ttk.Label(filter_frame, text="Process name:").grid(row=1, column=0)
     ttk.Style().configure("TMenubutton", background='white')
     process_options_var = tkinter.StringVar()
     process_options = ttk.OptionMenu(filter_frame, process_options_var, "", *("", "hej1", "med2", "dig3","hej4", "med5", "dig6"))
     process_options['menu'].delete(0, 'end')
-    process_options.grid(row=1, columnspan=3, sticky='ew')
+    process_options.grid(row=1, column=1, columnspan=3, sticky='ew', pady=2)
+
+    # Level filter
+    ttk.Label(filter_frame, text="Log level:").grid(row=2, column=0)
+    log_level = tkinter.StringVar()
+    ttk.OptionMenu(filter_frame, log_level, "", *("", "Trace", "Info", "Error")).grid(row=2, column=1, sticky='ew', pady=2)
     
     #Buttons
-    update_button = ttk.Button(filter_frame, text="Update", command=lambda: update_table(table, from_date_entry, to_date_entry, process_options, process_options_var))
-    update_button.grid(row=2, column=0)
+    update_command = lambda: update(table, from_date_entry, to_date_entry, process_options, process_options_var, log_level)
+    update_button = ttk.Button(filter_frame, text="Update", command=update_command)
+    update_button.grid(row=4, column=0)
 
     return tab
+
 
 def validate_date(entry: ttk.Entry):
     def inner(text: str):
@@ -61,6 +69,7 @@ def validate_date(entry: ttk.Entry):
             entry.configure(foreground='red')
         return True
     return inner
+
 
 def resize_table(table):
     max_length = 0
@@ -73,15 +82,20 @@ def resize_table(table):
 
     table.column("Message", width=max_length+20, stretch=False)
 
-def update_table(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.Entry, 
-                 process_options:ttk.OptionMenu, process_options_var:tkinter.StringVar):    
+
+def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.Entry, 
+                 process_options:ttk.OptionMenu, process_options_var:tkinter.StringVar,
+                 log_level: tkinter.StringVar):    
     offset = 0
     fetch = 100
     
     from_date = parse_date(from_date_entry.get()) or datetime(1900, 1, 1)
     to_date = parse_date(to_date_entry.get()) or datetime(2100, 12, 31)
 
-    logs = DB_util.get_logs(offset, fetch, from_date, to_date, process_options_var.get())
+    process_name = process_options_var.get()
+    log_level = log_level.get()
+
+    logs = DB_util.get_logs(offset, fetch, from_date, to_date, process_name, log_level)
     
     #Clear table
     for c in table.get_children():
@@ -90,6 +104,10 @@ def update_table(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry:
     #Update table
     for row in logs:
         row = [str(d) for d in row]
+
+        # Convert the message to single line text
+        row[-1] = repr(row[-1])
+
         table.insert('', 'end', values=row)
     
     resize_table(table)
@@ -98,6 +116,7 @@ def update_table(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry:
     process_names = DB_util.get_unique_log_process_names()
     process_names.insert(0, "")
     replace_options(process_options, process_options_var, process_names)
+
 
 def parse_date(date_str: str):
     formats = (
@@ -114,13 +133,19 @@ def parse_date(date_str: str):
 
     return None
 
+
 def double_click_log(table: ttk.Treeview):
     item = table.selection()
 
     if item:
-        values = table.item(item[0], 'values')
+        values = list(table.item(item[0], 'values'))
+
+        # Convert message back to multiline text
+        values[-1] = eval(values[-1])
+
         text = "\n".join(values)
         messagebox.showinfo("Info", text)
+
 
 def replace_options(option_menu: ttk.OptionMenu, option_menu_var: tkinter.StringVar, new_options: tuple[str]):
     # Reset var and delete all old options
