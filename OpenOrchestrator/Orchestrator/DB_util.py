@@ -1,25 +1,25 @@
 from tkinter import messagebox
-import os
 import uuid
 from datetime import datetime
 import pyodbc
+from pyodbc.
 from pypika import MSSQLQuery, Table, Order
 
 _connection_string = None
 _connection = None
 
 def connect(conn_string: str) -> bool:
-    global _connection, _connection_string
+    global _connection, _connection_string #pylint: disable=global-statement
 
     try:
         conn = pyodbc.connect(conn_string)
         _connection = conn
         _connection_string = conn_string
         return True
-    except Exception as e:
+    except pyodbc.InterfaceError as exc:
         _connection = None
         _connection_string = None
-        messagebox.showerror("Connection failed", str(e))
+        messagebox.showerror("Connection failed", str(exc))
     
     return False
 
@@ -33,7 +33,7 @@ def catch_db_error(func):
     return inner
 
 def _get_connection():
-    global _connection, _connection_string   
+    global _connection 
     
     if _connection:
         try:

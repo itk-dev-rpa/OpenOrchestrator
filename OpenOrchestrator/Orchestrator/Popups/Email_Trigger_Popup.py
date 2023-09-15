@@ -1,7 +1,6 @@
 import tkinter
 from tkinter import ttk, messagebox
-import tkcalendar
-from datetime import datetime
+
 from OpenOrchestrator.Orchestrator import DB_util
 
 def show_popup():
@@ -32,8 +31,9 @@ def show_popup():
     blocking_check = tkinter.IntVar()
     ttk.Checkbutton(window, text="Is Blocking?", variable=blocking_check).pack()
 
-    ttk.Button(window, text='Create', command=lambda: create_trigger(window, name_entry, folder_entry, path_entry, args_entry, git_check, blocking_check)).pack()
-    ttk.Button(window, text='Cancel', command=lambda: window.destroy()).pack()
+    def create_command(): create_trigger(window, name_entry, folder_entry, path_entry, args_entry, git_check, blocking_check)
+    ttk.Button(window, text='Create', command=create_command).pack()
+    ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
     return window
 

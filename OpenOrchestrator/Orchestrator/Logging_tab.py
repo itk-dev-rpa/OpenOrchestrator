@@ -1,6 +1,8 @@
 import tkinter
 from tkinter import ttk, font, messagebox
 from datetime import datetime
+from ast import literal_eval
+
 from OpenOrchestrator.Orchestrator import DB_util, Table_util
 
 def create_tab(parent):
@@ -54,7 +56,7 @@ def create_tab(parent):
     ttk.OptionMenu(filter_frame, log_level, "", *("", "Trace", "Info", "Error")).grid(row=2, column=1, sticky='ew', pady=2)
     
     #Buttons
-    update_command = lambda: update(table, from_date_entry, to_date_entry, process_options, process_options_var, log_level)
+    def update_command(): update(table, from_date_entry, to_date_entry, process_options, process_options_var, log_level)
     update_button = ttk.Button(filter_frame, text="Update", command=update_command)
     update_button.grid(row=4, column=0)
 
@@ -144,7 +146,7 @@ def double_click_log(table: ttk.Treeview):
         values = list(table.item(item[0], 'values'))
 
         # Convert message back to multiline text
-        values[-1] = eval(values[-1])
+        values[-1] = literal_eval(values[-1])
 
         text = "\n".join(values)
         messagebox.showinfo("Info", text)
@@ -160,4 +162,4 @@ def replace_options(option_menu: ttk.OptionMenu, option_menu_var: tkinter.String
 
     # Insert list of new options (tk._setit hooks them up to var)
     for choice in new_options:
-        option_menu['menu'].add_command(label=choice, command=tkinter._setit(option_menu_var, choice))
+        option_menu['menu'].add_command(label=choice, command=tkinter._setit(option_menu_var, choice)) #pylint: disable=protected-access

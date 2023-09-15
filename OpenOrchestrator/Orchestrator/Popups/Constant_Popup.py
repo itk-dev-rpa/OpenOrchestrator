@@ -1,7 +1,6 @@
 import tkinter
 from tkinter import ttk, messagebox
-import tkcalendar
-from datetime import datetime
+
 from OpenOrchestrator.Orchestrator import DB_util
 
 def show_popup(name=None, value=None):
@@ -18,8 +17,9 @@ def show_popup(name=None, value=None):
     value_entry = ttk.Entry(window)
     value_entry.pack()
 
-    ttk.Button(window, text='Create', command=lambda: create_constant(window, name_entry,value_entry)).pack()
-    ttk.Button(window, text='Cancel', command=lambda: window.destroy()).pack()
+    def create_command(): create_constant(window, name_entry,value_entry)
+    ttk.Button(window, text='Create', command=create_command ).pack()
+    ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
     if name:
         name_entry.insert('end', name)
@@ -43,11 +43,10 @@ def create_constant(window, name_entry: ttk.Entry, value_entry: ttk.Entry):
     constants = DB_util.get_constants()
     exists = any(c[0].lower() == name.lower() for c in constants)
     
-    if exists:
-        if not messagebox.askyesno('Error', 'A constant with that name already exists. Do you want to overwrite it?'):
-            return
-        else:
-            DB_util.delete_constant(name)
+    if exists and not messagebox.askyesno('Error', 'A constant with that name already exists. Do you want to overwrite it?'):
+        return
+        
+    DB_util.delete_constant(name)
             
     DB_util.create_constant(name, value)
 
