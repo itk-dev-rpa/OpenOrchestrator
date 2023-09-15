@@ -20,7 +20,8 @@ dependencies = [
     "pyodbc >= 4.0.39",
     "tkcalendar >= 1.6.1",
     "cryptography >= 41.0.3",
-    "pypika >= 0.48.9"
+    "pypika >= 0.48.9",
+    "croniter >= 1.4.1"
 ]
 
 [project.urls]

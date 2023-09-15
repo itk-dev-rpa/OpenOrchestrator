@@ -1,4 +1,3 @@
-import tkinter
 from tkinter import ttk, messagebox
 from OpenOrchestrator.Orchestrator import DB_util, Table_util
 from OpenOrchestrator.Orchestrator.Popups import Constant_Popup, Credential_Popup
@@ -27,7 +26,7 @@ def create_tab(parent):
     # Controls 1
     controls_frame = ttk.Frame(tab)
     controls_frame.grid(row=4, column=0)
-    ut = lambda: update_tables(const_table, cred_table)
+    def ut(): update_tables(const_table, cred_table)
 
     update_button = ttk.Button(controls_frame, text='Update', command=ut)
     update_button.pack(side='left')
@@ -89,7 +88,7 @@ def double_click_constant_table(event, const_table:ttk.Treeview, on_close:callab
 def double_click_credential_table(event, cred_table:ttk.Treeview, on_close:callable):
     row = cred_table.identify_row(event.y)
     if row:
-        name, value, password = cred_table.item(row, 'values')
+        name, value, _ = cred_table.item(row, 'values')
         show_credential_popup(on_close, name, value)
 
 def show_credential_popup(on_close:callable, name=None, username=None):

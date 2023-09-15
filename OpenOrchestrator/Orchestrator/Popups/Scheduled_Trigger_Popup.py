@@ -1,9 +1,11 @@
 import tkinter
 from tkinter import ttk, messagebox
-import croniter
 from datetime import datetime
-from OpenOrchestrator.Orchestrator import DB_util
 import webbrowser
+
+from OpenOrchestrator.Orchestrator import DB_util
+import croniter
+
 
 def show_popup():
     window = tkinter.Toplevel()
@@ -37,8 +39,9 @@ def show_popup():
     blocking_check = tkinter.IntVar()
     ttk.Checkbutton(window, text="Is Blocking?", variable=blocking_check).pack()
 
-    ttk.Button(window, text='Create', command=lambda: create_trigger(window, name_entry, cron_entry, path_entry, args_entry, git_check, blocking_check)).pack()
-    ttk.Button(window, text='Cancel', command=lambda: window.destroy()).pack()
+    def create_command(): create_trigger(window, name_entry, cron_entry, path_entry, args_entry, git_check, blocking_check)
+    ttk.Button(window, text='Create', command=create_command).pack()
+    ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
     return window
 
@@ -61,7 +64,7 @@ def create_trigger(window,
     try:
         c = croniter.croniter(cron, datetime.now())
         date = c.get_next(datetime)
-    except Exception as e:
+    except croniter.CroniterBadCronError as e:
         messagebox.showerror('Error', 'Please enter a valid cron expression\n'+str(e))
         return
 

@@ -1,7 +1,6 @@
 import tkinter
 from tkinter import ttk, messagebox
-import tkcalendar
-from datetime import datetime
+
 from OpenOrchestrator.Orchestrator import DB_util, Crypto_util
 
 def show_popup(name=None, username=None):
@@ -22,8 +21,9 @@ def show_popup(name=None, username=None):
     password_entry = ttk.Entry(window)
     password_entry.pack()
 
-    ttk.Button(window, text='Create', command=lambda: create_credential(window, name_entry,username_entry, password_entry)).pack()
-    ttk.Button(window, text='Cancel', command=lambda: window.destroy()).pack()
+    def create_command(): create_credential(window, name_entry,username_entry, password_entry)
+    ttk.Button(window, text='Create', command=create_command).pack()
+    ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
     if name:
         name_entry.insert('end', name)
@@ -53,11 +53,10 @@ def create_credential(window, name_entry: ttk.Entry,
     credentials = DB_util.get_credentials()
     exists = any(c[0] == name for c in credentials)
     
-    if exists:
-        if not messagebox.askyesno('Error', 'A credential with that name already exists. Do you want to overwrite it?'):
-            return
-        else:
-            DB_util.delete_credential(name)
+    if exists and not messagebox.askyesno('Error', 'A credential with that name already exists. Do you want to overwrite it?'):
+        return
+    
+    DB_util.delete_credential(name)
 
     # username = Crypto_util.encrypt_data(username)
     password = Crypto_util.encrypt_string(password)
