@@ -103,7 +103,10 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
 
     #Update table
     for row in logs:
-        row = [str(d) for d in row]
+        row = list(row)
+
+        # Pretty date format
+        row[0] = row[0].strftime('%d-%m-%Y %H:%M:%S')
 
         # Convert the message to single line text
         row[-1] = repr(row[-1])
