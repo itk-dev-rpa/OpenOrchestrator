@@ -153,7 +153,7 @@ def delete_trigger(UUID):
 
 
 @catch_db_error
-def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime, process_name: str):
+def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime, process_name: str, log_level: str):
     conn = _get_connection()
     
     logs = Table("Logs")
@@ -173,6 +173,10 @@ def get_logs(offset:int, fetch:int, from_date:datetime, to_date:datetime, proces
 
     if process_name:
         command = command.where(logs.process_name == process_name)
+
+    if log_level:
+        log_level = {"Trace": 0, "Info": 1, "Error": 2}[log_level]
+        command = command.where(logs.log_level == log_level)
     
     command = command.get_sql()
     
