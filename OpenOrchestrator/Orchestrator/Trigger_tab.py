@@ -1,5 +1,7 @@
 from tkinter import ttk, messagebox
-from OpenOrchestrator.Orchestrator import DB_util, Table_util
+
+from OpenOrchestrator.Common import db_util
+from OpenOrchestrator.Orchestrator import Table_util
 from OpenOrchestrator.Orchestrator.Popups import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
 
 
@@ -68,9 +70,9 @@ def show_email_trigger_popup(on_close: callable):
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 def update_tables(sc_table, e_table, si_table):
-    Table_util.update_table(sc_table, DB_util.get_scheduled_triggers())
-    Table_util.update_table(e_table, DB_util.get_email_triggers())
-    Table_util.update_table(si_table, DB_util.get_single_triggers())
+    Table_util.update_table(sc_table, db_util.get_scheduled_triggers())
+    Table_util.update_table(e_table, db_util.get_email_triggers())
+    Table_util.update_table(si_table, db_util.get_single_triggers())
 
 def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview):
     if sc_table.selection():
@@ -87,7 +89,7 @@ def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.
     if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{UUID}'?"):
         return
     
-    DB_util.delete_trigger(UUID)
+    db_util.delete_trigger(UUID)
 
     update_tables(sc_table, e_table, si_table)
 

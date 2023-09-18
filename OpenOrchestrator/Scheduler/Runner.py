@@ -1,7 +1,9 @@
 from datetime import datetime
 import subprocess
+
 from croniter import croniter
-from OpenOrchestrator.Scheduler import DB_util, Crypto_util
+
+from OpenOrchestrator.Common import db_util, crypto_util
 
 class Job():
     def __init__(self, process, trigger_id, process_name, blocking, type):
@@ -25,7 +27,7 @@ def poll_triggers(app) -> Job:
     other_processes_running = len(app.running_jobs) != 0
 
     # Single triggers
-    next_single_trigger = DB_util.get_next_single_trigger()
+    next_single_trigger = db_util.get_next_single_trigger()
 
     if next_single_trigger is not None:
         name, next_run, id, process_path, is_git_repo, blocking = next_single_trigger
@@ -36,7 +38,7 @@ def poll_triggers(app) -> Job:
     # Email/Queue triggers
 
     # Scheduled triggers
-    next_scheduled_trigger = DB_util.get_next_scheduled_trigger()
+    next_scheduled_trigger = db_util.get_next_scheduled_trigger()
 
     if next_scheduled_trigger is not None:
         name, next_run, id, process_path, is_git_repo, blocking, cron_expr = next_scheduled_trigger
@@ -51,14 +53,14 @@ def run_single_trigger(app, name, id, process_path, is_git_repo, blocking):
     print('Running process: ', name, id, process_path)
 
     # Mark trigger as running
-    DB_util.begin_single_trigger(id)
+    db_util.begin_single_trigger(id)
 
     if is_git_repo:
         grab_git_repo(process_path)
         ...
         #TODO: Run main.*
     else:
-        process = run_process(process_path, name, DB_util.get_conn_string(), Crypto_util.get_key())
+        process = run_process(process_path, name, db_util.get_conn_string(), crypto_util.get_key())
 
     return Job(process, id, name, blocking, 'Single')
 
@@ -66,14 +68,14 @@ def run_scheduled_trigger(app, name, id, process_path, is_git_repo, blocking, cr
     print('Running process: ', name, id, process_path)
 
     next_run = croniter(cron_expr, next_run).get_next(datetime)
-    DB_util.begin_scheduled_trigger(id, next_run)
+    db_util.begin_scheduled_trigger(id, next_run)
 
     if is_git_repo:
         grab_git_repo(process_path)
         ...
         #TODO: Run main.*
     else:
-        process = run_process(process_path, name, DB_util.get_conn_string(), Crypto_util.get_key())
+        process = run_process(process_path, name, db_util.get_conn_string(), crypto_util.get_key())
     
     return Job(process, id, name, blocking, 'Scheduled')
 
@@ -83,17 +85,17 @@ def grab_git_repo(path):
 
 def end_job(job: Job):
     if job.type == 'Single':
-        DB_util.set_single_trigger_status(job.trigger_id, 3)
+        db_util.set_single_trigger_status(job.trigger_id, 3)
     elif job.type == 'Scheduled':
-        DB_util.set_scheduled_trigger_status(job.trigger_id, 0)
+        db_util.set_scheduled_trigger_status(job.trigger_id, 0)
     elif job.type == 'Queue':
         ...
 
 def fail_job(job: Job):
     if job.type == 'Single':
-        DB_util.set_single_trigger_status(job.trigger_id, 2)
+        db_util.set_single_trigger_status(job.trigger_id, 2)
     elif job.type == 'Scheduled':
-        DB_util.set_scheduled_trigger_status(job.trigger_id, 2)
+        db_util.set_scheduled_trigger_status(job.trigger_id, 2)
     elif job.type == 'Queue':
         ...
 

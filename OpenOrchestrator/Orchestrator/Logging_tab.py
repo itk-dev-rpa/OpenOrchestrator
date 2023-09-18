@@ -3,7 +3,8 @@ from tkinter import ttk, font, messagebox
 from datetime import datetime
 from ast import literal_eval
 
-from OpenOrchestrator.Orchestrator import DB_util, Table_util
+from OpenOrchestrator.Common import db_util
+from OpenOrchestrator.Orchestrator import Table_util
 
 def create_tab(parent):
     tab = ttk.Frame(parent)
@@ -97,7 +98,7 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
     process_name = process_options_var.get()
     log_level = log_level.get()
 
-    logs = DB_util.get_logs(offset, fetch, from_date, to_date, process_name, log_level)
+    logs = db_util.get_logs(offset, fetch, from_date, to_date, process_name, log_level)
     
     #Clear table
     for c in table.get_children():
@@ -118,7 +119,7 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
     resize_table(table)
 
     # Update process_name OptionMenu
-    process_names = DB_util.get_unique_log_process_names()
+    process_names = db_util.get_unique_log_process_names()
     process_names.insert(0, "")
     replace_options(process_options, process_options_var, process_names)
 

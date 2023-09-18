@@ -1,8 +1,15 @@
-import tkinter as tk
+"""This module is the entry point for the Orchestrator app. It contains a single class
+that when created starts the application."""
+
+import tkinter
 from tkinter import ttk
+
 from OpenOrchestrator.Orchestrator import Logging_tab, Settings_tab, Trigger_tab, Constants_tab
 
-class Application(tk.Tk):
+class Application(tkinter.Tk):
+    """The main application object of the Orchestrator app.
+    Extends the tkinter.Tk object.
+    """
     def __init__(self):
         super().__init__()
         self.title("OpenOrchestrator")
