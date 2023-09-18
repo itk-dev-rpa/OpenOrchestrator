@@ -1,9 +1,16 @@
+"""This module is responsible for the layout and functionality of the 'New constant' popup."""
+
 import tkinter
 from tkinter import ttk, messagebox
 
-from OpenOrchestrator.Orchestrator import DB_util
+from OpenOrchestrator.Common import db_util
 
 def show_popup(name=None, value=None):
+    """Creates and shows a popup to create a new constant.
+
+    Returns:
+        tkinter.TopLevel: The created Toplevel object (Popup Window).
+    """
     window = tkinter.Toplevel()
     window.grab_set()
     window.title("New Constant")
@@ -17,7 +24,8 @@ def show_popup(name=None, value=None):
     value_entry = ttk.Entry(window)
     value_entry.pack()
 
-    def create_command(): create_constant(window, name_entry,value_entry)
+    def create_command():
+        create_constant(window, name_entry,value_entry)
     ttk.Button(window, text='Create', command=create_command ).pack()
     ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
@@ -29,6 +37,14 @@ def show_popup(name=None, value=None):
     return window
 
 def create_constant(window, name_entry: ttk.Entry, value_entry: ttk.Entry):
+    """Creates a new constant in the database using the data from the
+    UI.
+
+    Args:
+        window: The popup window.
+        name_entry: The name entry.
+        value_entry: The value entry.
+    """
     name = name_entry.get()
     value = value_entry.get()
 
@@ -39,15 +55,15 @@ def create_constant(window, name_entry: ttk.Entry, value_entry: ttk.Entry):
     if not value:
         messagebox.showerror('Error', 'Please enter a value')
         return
-    
-    constants = DB_util.get_constants()
+
+    constants = db_util.get_constants()
     exists = any(c[0].lower() == name.lower() for c in constants)
-    
+
     if exists and not messagebox.askyesno('Error', 'A constant with that name already exists. Do you want to overwrite it?'):
         return
-        
-    DB_util.delete_constant(name)
-            
-    DB_util.create_constant(name, value)
+
+    db_util.delete_constant(name)
+
+    db_util.create_constant(name, value)
 
     window.destroy()

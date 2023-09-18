@@ -1,7 +1,9 @@
+import os
 import tkinter
 from tkinter import ttk, messagebox
-from OpenOrchestrator.Orchestrator import DB_util, Crypto_util
-import os
+
+from OpenOrchestrator.Common import db_util, crypto_util
+
 
 # TODO: Layout
 def create_tab(parent):
@@ -25,7 +27,7 @@ def create_tab(parent):
     key_button = ttk.Button(tab, text="New key", command=lambda: new_key(key_entry))
     key_button.pack()
 
-    init_button = ttk.Button(tab, text='Initialize Database', command=DB_util.initialize_database)
+    init_button = ttk.Button(tab, text='Initialize Database', command=db_util.initialize_database)
     init_button.pack()
 
     # TEMPORARY
@@ -38,22 +40,22 @@ def create_tab(parent):
 def connect(conn_entry: ttk.Entry, conn_button: ttk.Button):
     conn_string = conn_entry.get()
 
-    if DB_util.connect(conn_string):
+    if db_util.connect(conn_string):
         conn_button.configure(text="Connected!")
     else:
         conn_button.configure(text="Connect")
 
 def validate_key(entry:ttk.Entry):
     def inner(text:str):
-        if Crypto_util.validate_key(text):
+        if crypto_util.validate_key(text):
             entry.configure(foreground='black')
-            Crypto_util.set_key(text)
+            crypto_util.set_key(text)
         else:
             entry.configure(foreground='red')
         return True
     return inner
 
 def new_key(key_entry:ttk.Entry):
-    key = Crypto_util.generate_key()
+    key = crypto_util.generate_key()
     key_entry.delete(0, 'end')
     key_entry.insert(0, key)

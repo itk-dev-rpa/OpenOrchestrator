@@ -1,13 +1,26 @@
+"""This module contains convenience functions related to ttk.Treeview objects."""
+
 from tkinter import ttk
 import os
 
-def create_table(parent, columns):
+def create_table(parent: ttk.Frame, columns: list[str]):
+    """Create a ttk.Treeview with horizontal and vertical scroll bars
+    and with the given column names.
+    Bind ctrl+c to copy selection to the clipboard.
+
+    Args:
+        parent: The parent frame of the table and scroll bars.
+        columns: A list of column names.
+
+    Returns:
+        ttk.Treeview: The created table (treeview).
+    """
     table = ttk.Treeview(parent, show='headings', selectmode='browse')
     table['columns'] = columns
     for c in table['columns']:
         table.heading(c, text=c, anchor='w')
         table.column(c, stretch=False)
-    
+
     yscroll = ttk.Scrollbar(parent, orient='vertical', command=table.yview)
     yscroll.pack(side='right', fill='y')
     table.configure(yscrollcommand=yscroll.set)
@@ -22,7 +35,13 @@ def create_table(parent, columns):
 
     return table
 
-def copy_selected_rows_to_clipboard(table:ttk.Treeview):
+
+def copy_selected_rows_to_clipboard(table: ttk.Treeview) -> None:
+    """Copies the values of the selected rows in the table to the clipboard.
+
+    Args:
+        table: The table to copy from.
+    """
     if len(table.selection()) == 0:
         return
 
@@ -33,7 +52,14 @@ def copy_selected_rows_to_clipboard(table:ttk.Treeview):
     string += ")"
     os.system(f"{string} | clip")
 
-def update_table(table: ttk.Treeview, rows):
+
+def update_table(table: ttk.Treeview, rows: list[list[any]]) -> None:
+    """Deletes all rows in the table and inserts the given values.
+
+    Args:
+        table: The table whose values to replace.
+        rows: The new row values to insert.
+    """
     #Clear table
     for c in table.get_children():
         table.delete(c)
@@ -43,6 +69,8 @@ def update_table(table: ttk.Treeview, rows):
         row = [str(d) for d in row]
         table.insert('', 'end', values=row)
 
-def deselect_tables(*tables):
+
+def deselect_tables(*tables) -> None:
+    """Deselects all selected rows in the given tables."""    
     for table in tables:
         table.selection_remove(table.selection())
