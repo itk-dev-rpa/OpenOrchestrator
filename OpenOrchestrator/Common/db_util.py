@@ -42,9 +42,10 @@ def catch_db_error(func: callable) -> callable:
     """A decorator that catches errors in SQL calls."""
     def inner(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
+            result = func(*args, **kwargs)
         except pyodbc.ProgrammingError as e:
             messagebox.showerror("Error", f"Query failed:\n{e}")
+        return result
     return inner
 
 
@@ -56,6 +57,7 @@ def _get_connection() -> pyodbc.Connection:
 
     if _connection:
         try:
+            # Test if connection is still open
             _connection.cursor()
             return _connection
         except pyodbc.ProgrammingError as e:
@@ -64,9 +66,10 @@ def _get_connection() -> pyodbc.Connection:
 
     try:
         _connection = pyodbc.connect(_connection_string)
-        return _connection
     except pyodbc.InterfaceError as e:
         messagebox.showerror("Error", f"Connection failed.\nGo to settings and enter a valid connection string.\n{e}")
+
+    return _connection
 
 
 def get_conn_string() -> str:
