@@ -3,6 +3,8 @@
 from cryptography.fernet import Fernet
 from cryptography.exceptions import InvalidSignature
 
+# The encryption key is a module wide variable used in
+# static functions. Linting is disabled on this.
 _encryption_key = None
 
 def generate_key() -> bytes:
@@ -18,7 +20,7 @@ def set_key(key: str) -> None:
     """Set the crypto key for the module.
     The key will be used in all subsequent calls to this module.
     """
-    global _encryption_key #pylint: disable=global-statement
+    global _encryption_key # pylint: disable=global-statement
     _encryption_key = key
 
 
@@ -29,6 +31,7 @@ def get_key() -> str:
     Returns:
         str: The encryption key, if any.
     """
+    return _encryption_key
 
 
 def encrypt_string(data: str) -> str:
