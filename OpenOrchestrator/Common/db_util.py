@@ -1,4 +1,5 @@
-import os
+"""This module handles the connection to the database in OpenOrchestrator."""
+
 from datetime import datetime
 from tkinter import messagebox
 import uuid
@@ -106,7 +107,7 @@ def get_scheduled_triggers() -> list[list[str]]:
     )
 
     rows = conn.execute(command).fetchall()
-    return [list[r] for r in rows]
+    return [list(r) for r in rows]
 
 
 @catch_db_error
@@ -132,7 +133,7 @@ def get_single_triggers() -> list[list[str]]:
     )
 
     rows = conn.execute(command).fetchall()
-    return [list[r] for r in rows]
+    return [list(r) for r in rows]
 
 
 @catch_db_error
@@ -158,7 +159,7 @@ def get_email_triggers() -> list[list[str]]:
     )
 
     rows = conn.execute(command).fetchall()
-    return [list[r] for r in rows]
+    return [list(r) for r in rows]
 
 
 @catch_db_error
@@ -250,7 +251,7 @@ def get_logs(offset: int, fetch: int,
     command = command.get_sql()
 
     rows = conn.execute(command).fetchall()
-    return [list[r] for r in rows]
+    return [list(r) for r in rows]
 
 
 @catch_db_error
@@ -259,7 +260,7 @@ def get_unique_log_process_names() -> list[str]:
 
     Returns:
         list[str]: A list of unique process names.
-    """    
+    """
     conn = _get_connection()
 
     logs = Table("Logs")
@@ -296,7 +297,7 @@ def create_single_trigger(name: str, date: datetime, path: str,
         MSSQLQuery
         .into(triggers)
         .insert(
-            uuid.uuid4(), 
+            uuid.uuid4(),
             name,
             None, # Last run
             date,
@@ -335,7 +336,7 @@ def create_scheduled_trigger(name: str, cron: str, date: datetime,
         MSSQLQuery
         .into(triggers)
         .insert(
-            uuid.uuid4(), 
+            uuid.uuid4(),
             name,
             cron,
             None, # Last run
@@ -411,7 +412,7 @@ def get_constants() -> list[list[str]]:
     )
 
     rows = conn.execute(command).fetchall()
-    return [list[r] for r in rows]
+    return [list(r) for r in rows]
 
 
 @catch_db_error
@@ -435,7 +436,7 @@ def get_credentials() -> list[list[str]]:
     )
 
     rows = conn.execute(command).fetchall()
-    return [list[r] for r in rows]
+    return [list(r) for r in rows]
 
 
 @catch_db_error
@@ -526,7 +527,7 @@ def create_credential(name: str, username: str, password: str) -> None:
         MSSQLQuery
         .into(credentials)
         .insert(
-            name, 
+            name,
             username,
             password
         )
@@ -608,7 +609,7 @@ def get_next_single_trigger() -> list[str]:
         list[str]: The next single trigger to run, if any.
     """
     conn = _get_connection()
-    
+
     triggers = Table("Single_Triggers")
     command = (
         MSSQLQuery
@@ -665,7 +666,7 @@ def begin_scheduled_trigger(UUID: str, next_run: datetime) -> None:
         bool: True if the trigger was 'idle' and now 'running'.
     """
     conn = _get_connection()
-    
+
     triggers = Table("Scheduled_Triggers")
     command = (
         MSSQLQuery

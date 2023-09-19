@@ -62,9 +62,10 @@ def decrypt_string(data: str) -> str:
     try:
         data = data.encode()
         data = Fernet(_encryption_key).decrypt(data)
-        return data.decode()
     except InvalidSignature as exc:
         raise ValueError("Couldn't verify signature. The decryption key is not the same as the encryption key.") from exc
+
+    return data.decode()
 
 
 def validate_key(key: str) -> bool:
@@ -78,6 +79,7 @@ def validate_key(key: str) -> bool:
     """
     try:
         Fernet(key)
-        return True
     except ValueError:
         return False
+
+    return True

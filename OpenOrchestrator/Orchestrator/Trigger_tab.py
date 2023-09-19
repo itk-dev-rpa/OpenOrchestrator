@@ -1,3 +1,6 @@
+"""This module is responsible for the layout and functionality of the Trigger tab
+in Orchestrator."""
+
 from tkinter import ttk, messagebox
 
 from OpenOrchestrator.Common import db_util
@@ -5,7 +8,15 @@ from OpenOrchestrator.Orchestrator import Table_util
 from OpenOrchestrator.Orchestrator.Popups import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
 
 
-def create_tab(parent):
+def create_tab(parent) -> ttk.Frame:
+    """Create a new Trigger tab object.
+
+    Args:
+        parent: The ttk.Notebook object that this tab is a child of.
+
+    Returns:
+        ttk.Frame: The created tab object as a ttk.Frame.
+    """
     tab = ttk.Frame(parent)
     tab.pack(fill='both', expand=True)
     tab.columnconfigure(0, weight=1)
@@ -34,9 +45,10 @@ def create_tab(parent):
     # Controls 1
     controls_frame = ttk.Frame(tab)
     controls_frame.grid(row=6, column=0)
-    ut = lambda: update_tables(sc_table, e_table, si_table)
+    def update_command():
+        update_tables(sc_table, e_table, si_table)
 
-    update_button = ttk.Button(controls_frame, text='Update', command=ut)
+    update_button = ttk.Button(controls_frame, text='Update', command=update_command)
     update_button.pack(side='left')
 
     delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(sc_table, e_table, si_table))
@@ -46,9 +58,9 @@ def create_tab(parent):
     controls_frame2 = ttk.Frame(tab)
     controls_frame2.grid(row=7, column=0)
 
-    ttk.Button(controls_frame2, text='New scheduled trigger', command=lambda: show_scheduled_trigger_popup(ut)).pack(side='left')
-    ttk.Button(controls_frame2, text='New email trigger', command=lambda: show_email_trigger_popup(ut)).pack(side='left')
-    ttk.Button(controls_frame2, text='New single trigger', command=lambda: show_single_trigger_popup(ut)).pack(side='left')
+    ttk.Button(controls_frame2, text='New scheduled trigger', command=lambda: show_scheduled_trigger_popup(update_command)).pack(side='left')
+    ttk.Button(controls_frame2, text='New email trigger', command=lambda: show_email_trigger_popup(update_command)).pack(side='left')
+    ttk.Button(controls_frame2, text='New single trigger', command=lambda: show_single_trigger_popup(update_command)).pack(side='left')
 
     # Bindings
     sc_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(e_table, si_table))
@@ -57,24 +69,64 @@ def create_tab(parent):
 
     return tab
 
-def show_scheduled_trigger_popup(on_close: callable):
+
+def show_scheduled_trigger_popup(on_close: callable) -> None:
+    """Shows the new scheduled trigger popup.
+    Binds a callable to the popup's on_close event.
+
+    Args:
+        on_close: on_close: A function to be called when the popup closes.
+    """
     popup = Scheduled_Trigger_Popup.show_popup()
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
-def show_single_trigger_popup(on_close: callable):
+
+def show_single_trigger_popup(on_close: callable) -> None:
+    """Shows the new single trigger popup.
+    Binds a callable to the popup's on_close event.
+
+    Args:
+        on_close: on_close: A function to be called when the popup closes.
+    """
     popup = Single_Trigger_Popup.show_popup()
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
-def show_email_trigger_popup(on_close: callable):
+
+def show_email_trigger_popup(on_close: callable) -> None:
+    """Shows the new email trigger popup.
+    Binds a callable to the popup's on_close event.
+
+    Args:
+        on_close: on_close: A function to be called when the popup closes.
+    """
     popup = Email_Trigger_Popup.show_popup()
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
-def update_tables(sc_table, e_table, si_table):
+
+def update_tables(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview):
+    """Updates all three trigger tables
+    with values from the database.
+
+    Args:
+        sc_table: The scheduled table.
+        e_table: The email table.
+        si_table: The single table.
+    """
     Table_util.update_table(sc_table, db_util.get_scheduled_triggers())
     Table_util.update_table(e_table, db_util.get_email_triggers())
     Table_util.update_table(si_table, db_util.get_single_triggers())
 
-def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview):
+
+def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
+    """Deletes the currently selected trigger from either
+    of the three trigger tables.
+    Shows a confirmation dialog before deleting.
+
+    Args:
+        sc_table: The scheduled table.
+        e_table: The email table.
+        si_table: The single table.
+    """
     if sc_table.selection():
         table = sc_table
     elif e_table.selection():
@@ -88,11 +140,7 @@ def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.
 
     if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{UUID}'?"):
         return
-    
+
     db_util.delete_trigger(UUID)
 
     update_tables(sc_table, e_table, si_table)
-
-
-
-    
