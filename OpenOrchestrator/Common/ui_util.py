@@ -3,7 +3,7 @@ once across the project."""
 
 import os
 import tkinter
-from tkinter import ttk, messagebox
+from tkinter import ttk
 
 from OpenOrchestrator.Common import db_util, crypto_util
 

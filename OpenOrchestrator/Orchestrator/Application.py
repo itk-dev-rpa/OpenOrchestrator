@@ -11,6 +11,9 @@ class Application(tkinter.Tk):
     Extends the tkinter.Tk object.
     """
     def __init__(self):
+        # Disable pylint duplicate code error since it
+        # mostly reacts to the layout code being similar.
+        # pylint: disable=R0801
         super().__init__()
         self.title("OpenOrchestrator")
         self.geometry("850x600")
