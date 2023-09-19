@@ -2,19 +2,20 @@
 
 from datetime import datetime
 import subprocess
+from dataclasses import dataclass
 
 from croniter import croniter
 
 from OpenOrchestrator.Common import db_util, crypto_util
 
+@dataclass
 class Job():
-    """An object that holds information about a running job."""    
-    def __init__(self, process, trigger_id, process_name, blocking, job_type):
-        self.process = process
-        self.trigger_id = trigger_id
-        self.process_name = process_name
-        self.blocking = blocking
-        self.type = job_type
+    """An object that holds information about a running job."""
+    process: subprocess.Popen
+    trigger_id: str
+    process_name: str
+    blocking: bool
+    type: str
 
 
 def poll_triggers(app) -> Job:
@@ -184,7 +185,8 @@ def run_process(path: str, process_name: str, conn_string: str, crypto_key: str)
     """
     if path.endswith(".py"):
         return subprocess.Popen(['python', path, process_name, conn_string, crypto_key])
-    elif path.endswith(".bat"):
+
+    if path.endswith(".bat"):
         return subprocess.Popen([path, process_name, conn_string, crypto_key])
 
     raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{path}'")
