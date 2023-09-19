@@ -16,6 +16,9 @@ def show_popup() -> tkinter.Toplevel:
     Returns:
         tkinter.TopLevel: The created Toplevel object (Popup Window).
     """
+    # Disable pylint duplicate code error since it
+    # mostly reacts to the layout code being similar.
+    # pylint: disable=R0801
     window = tkinter.Toplevel()
     window.grab_set()
     window.title("New Single Trigger")
@@ -53,6 +56,7 @@ def show_popup() -> tkinter.Toplevel:
     ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
     return window
+
 
 def create_trigger(window: tkinter.Toplevel,
                    name_entry: ttk.Entry, cron_entry: ttk.Entry,
