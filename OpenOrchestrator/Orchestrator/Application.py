@@ -30,6 +30,8 @@ class Application(tkinter.Tk):
         notebook.add(const_tab, text="Constants")
         notebook.add(set_tab, text="Settings")
 
+        notebook.select(3)
+
         self.mainloop()
 
 if __name__=='__main__':

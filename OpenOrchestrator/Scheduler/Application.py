@@ -28,6 +28,8 @@ class Application(tkinter.Tk):
         notebook.add(run_tab, text='Run')
         notebook.add(settings_tab, text="Settings")
 
+        notebook.select(1)
+
         self.protocol('WM_DELETE_WINDOW', self.on_close)
 
         self.mainloop()
