@@ -1,15 +1,25 @@
+"""This module is responsible for the layout and functionality of the Settings tab
+in Orchestrator."""
+
 import os
-import tkinter
-from tkinter import ttk, messagebox
+from tkinter import ttk
 
 from OpenOrchestrator.Common import db_util, crypto_util
 
 
 # TODO: Layout
 def create_tab(parent):
+    """Create a new Setting tab object.
+
+    Args:
+        parent: The ttk.Notebook object that this tab is a child of.
+
+    Returns:
+        ttk.Frame: The created tab object as a ttk.Frame.
+    """
     tab = ttk.Frame(parent)
     tab.pack(fill='both', expand=True)
-      
+
     ttk.Label(tab, text="Connection string:").pack()
 
     conn_entry = ttk.Entry(tab)
@@ -37,7 +47,14 @@ def create_tab(parent):
 
     return tab
 
-def connect(conn_entry: ttk.Entry, conn_button: ttk.Button):
+def connect(conn_entry: ttk.Entry, conn_button: ttk.Button) -> None:
+    """Connect using the connection string given in the UI.
+    Change the label of the connect button if successful.
+
+    Args:
+        conn_entry: The connection string entry.
+        conn_button: The connect button.
+    """
     conn_string = conn_entry.get()
 
     if db_util.connect(conn_string):
@@ -45,7 +62,19 @@ def connect(conn_entry: ttk.Entry, conn_button: ttk.Button):
     else:
         conn_button.configure(text="Connect")
 
+
 def validate_key(entry:ttk.Entry):
+    """Creates a validator function to validate if
+    an AES key entered in the given entry is valid.
+    Changes the color of the Entry widget according
+    to the validity of the key.
+
+    Args:
+        entry: The entry widget to validate on.
+
+    Returns:
+        callable: The validator function.
+    """
     def inner(text:str):
         if crypto_util.validate_key(text):
             entry.configure(foreground='black')
@@ -55,7 +84,13 @@ def validate_key(entry:ttk.Entry):
         return True
     return inner
 
-def new_key(key_entry:ttk.Entry):
+def new_key(key_entry:ttk.Entry) -> None:
+    """Creates a new valid AES crypto key
+    and inserts in into the entry widget.
+
+    Args:
+        key_entry: The entry widget to insert the new key into.
+    """
     key = crypto_util.generate_key()
     key_entry.delete(0, 'end')
     key_entry.insert(0, key)

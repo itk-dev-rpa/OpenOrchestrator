@@ -1,3 +1,6 @@
+"""This module is responsible for the layout and functionality of the Logging tab
+in Orchestrator."""
+
 import tkinter
 from tkinter import ttk, font, messagebox
 from datetime import datetime
@@ -7,6 +10,14 @@ from OpenOrchestrator.Common import db_util
 from OpenOrchestrator.Orchestrator import Table_util
 
 def create_tab(parent):
+    """Create a new Logging tab object.
+
+    Args:
+        parent: The ttk.Notebook object that this tab is a child of.
+
+    Returns:
+        ttk.Frame: The created tab object as a ttk.Frame.
+    """
     tab = ttk.Frame(parent)
     tab.pack(fill='both', expand=True)
 
@@ -23,7 +34,7 @@ def create_tab(parent):
     table.column("Level", width=50, stretch=False)
     table.column("Process", width=150, stretch=False)
     table.bind("<Double-1>", lambda e: double_click_log(table))
-    
+
     # Filters
     filter_frame = ttk.Frame(tab)
     filter_frame.grid(row=1, column=0, sticky='nsew')
@@ -55,16 +66,28 @@ def create_tab(parent):
     ttk.Label(filter_frame, text="Log level:").grid(row=2, column=0)
     log_level = tkinter.StringVar()
     ttk.OptionMenu(filter_frame, log_level, "", *("", "Trace", "Info", "Error")).grid(row=2, column=1, sticky='ew', pady=2)
-    
+
     #Buttons
-    def update_command(): update(table, from_date_entry, to_date_entry, process_options, process_options_var, log_level)
+    def update_command():
+        update(table, from_date_entry, to_date_entry, process_options, process_options_var, log_level)
     update_button = ttk.Button(filter_frame, text="Update", command=update_command)
     update_button.grid(row=4, column=0)
 
     return tab
 
 
-def validate_date(entry: ttk.Entry):
+def validate_date(entry: ttk.Entry) -> callable:
+    """Creates a validator function to validate if
+    an datetime entered in the given entry is valid.
+    Changes the color of the Entry widget according
+    to the validity of the datetime.
+
+    Args:
+        entry: The entry widget to validate on.
+
+    Returns:
+        callable: The validator function.
+    """
     def inner(text: str):
         if parse_date(text) is not None:
             entry.configure(foreground='black')
@@ -74,7 +97,13 @@ def validate_date(entry: ttk.Entry):
     return inner
 
 
-def resize_table(table):
+def resize_table(table: ttk.Treeview) -> None:
+    """Resizes the 'Message' column of the table to match the longest string
+    in the column.
+
+    Args:
+        table (ttk.Treeview): The table object.
+    """
     max_length = 0
     f = font.nametofont("TkDefaultFont")
 
@@ -86,12 +115,24 @@ def resize_table(table):
     table.column("Message", width=max_length+20, stretch=False)
 
 
-def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.Entry, 
+def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.Entry,
                  process_options:ttk.OptionMenu, process_options_var:tkinter.StringVar,
-                 log_level: tkinter.StringVar):    
+                 log_level: tkinter.StringVar) -> None:
+    """Updates the logs table with new values from the database
+    using the filter options given in the UI.
+    Updates the filter option menus with values from the database.
+
+    Args:
+        table: The logs table to update.
+        from_date_entry: The entry with the from date.
+        to_date_entry: The entry with the to date.
+        process_options: The options menu with process names.
+        process_options_var: The StringVar connected to process_options.
+        log_level: The log level to filter on.
+    """
     offset = 0
     fetch = 100
-    
+
     from_date = parse_date(from_date_entry.get()) or datetime(1900, 1, 1)
     to_date = parse_date(to_date_entry.get()) or datetime(2100, 12, 31)
 
@@ -99,15 +140,13 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
     log_level = log_level.get()
 
     logs = db_util.get_logs(offset, fetch, from_date, to_date, process_name, log_level)
-    
+
     #Clear table
     for c in table.get_children():
         table.delete(c)
 
     #Update table
     for row in logs:
-        row = list(row)
-
         # Pretty date format
         row[0] = row[0].strftime('%d-%m-%Y %H:%M:%S')
 
@@ -115,7 +154,7 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
         row[-1] = repr(row[-1])
 
         table.insert('', 'end', values=row)
-    
+
     resize_table(table)
 
     # Update process_name OptionMenu
@@ -124,7 +163,16 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
     replace_options(process_options, process_options_var, process_names)
 
 
-def parse_date(date_str: str):
+def parse_date(date_str: str) -> datetime:
+    """Tries to parse a string to a datetime object with
+    a selection of different formats.
+
+    Args:
+        date_str: The string to parse.
+
+    Returns:
+        datetime: The parsed datetime if possible else None.
+    """
     formats = (
         '%d-%m-%Y %H:%M:%S',
         '%d-%m-%Y %H:%M',
@@ -140,7 +188,13 @@ def parse_date(date_str: str):
     return None
 
 
-def double_click_log(table: ttk.Treeview):
+def double_click_log(table: ttk.Treeview) -> None:
+    """Handles double clicks on the logs table.
+    Opens a popup with the selected log's text.
+
+    Args:
+        table (ttk.Treeview): _description_
+    """
     item = table.selection()
 
     if item:
@@ -153,14 +207,17 @@ def double_click_log(table: ttk.Treeview):
         messagebox.showinfo("Info", text)
 
 
-def replace_options(option_menu: ttk.OptionMenu, option_menu_var: tkinter.StringVar, new_options: tuple[str]):
-    # Reset var and delete all old options
+def replace_options(option_menu: ttk.OptionMenu, option_menu_var: tkinter.StringVar, new_options: tuple[str]) -> None:
+    """Replaces the options in a ttk.OptionsMenu.
+
+    Args:
+        option_menu: The OptionsMenu whose options to replace.
+        option_menu_var: The StringVar connected to the OptionsMenu.
+        new_options (tuple[str]): _description_
+    """
     selected = option_menu_var.get()
-    if selected not in new_options:
-        option_menu_var.set('')
 
-    option_menu['menu'].delete(0, 'end')
+    option_menu.set_menu(None, *new_options)
 
-    # Insert list of new options (tk._setit hooks them up to var)
-    for choice in new_options:
-        option_menu['menu'].add_command(label=choice, command=tkinter._setit(option_menu_var, choice)) #pylint: disable=protected-access
+    if selected in new_options:
+        option_menu_var.set(selected)
