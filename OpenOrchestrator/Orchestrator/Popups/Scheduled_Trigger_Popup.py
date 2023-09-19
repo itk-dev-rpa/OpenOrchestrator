@@ -1,5 +1,9 @@
 """This module is responsible for the layout and functionality of the 'New Scheduled Trigger' popup."""
 
+# Disable pylint duplicate code error since it
+# mostly reacts to the layout code being similar.
+# pylint: disable=R0801
+
 import tkinter
 from tkinter import ttk, messagebox
 from datetime import datetime
@@ -16,9 +20,6 @@ def show_popup() -> tkinter.Toplevel:
     Returns:
         tkinter.TopLevel: The created Toplevel object (Popup Window).
     """
-    # Disable pylint duplicate code error since it
-    # mostly reacts to the layout code being similar.
-    # pylint: disable=R0801
     window = tkinter.Toplevel()
     window.grab_set()
     window.title("New Single Trigger")
