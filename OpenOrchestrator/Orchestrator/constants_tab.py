@@ -5,8 +5,8 @@ import tkinter
 from tkinter import ttk, messagebox
 
 from OpenOrchestrator.common import db_util
-from OpenOrchestrator.Orchestrator import Table_util
-from OpenOrchestrator.Orchestrator.Popups import Constant_Popup, Credential_Popup
+from OpenOrchestrator.orchestrator import table_util
+from OpenOrchestrator.orchestrator.popups import constant_popup, credential_popup
 
 def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     """Create a new Constants tab object.
@@ -29,13 +29,13 @@ def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     ttk.Label(tab, text="Constants").grid(row=0, column=0)
     const_table_frame = ttk.Frame(tab)
     const_table_frame.grid(row=1, column=0, sticky='nsew')
-    const_table = Table_util.create_table(const_table_frame, ('Name', 'Value'))
+    const_table = table_util.create_table(const_table_frame, ('Name', 'Value'))
 
     #Credentials table
     ttk.Label(tab, text="Credentials").grid(row=2, column=0)
     cred_table_frame = ttk.Frame(tab)
     cred_table_frame.grid(row=3, column=0, sticky='nsew')
-    cred_table = Table_util.create_table(cred_table_frame, ('Name', 'Username', 'Password'))
+    cred_table = table_util.create_table(cred_table_frame, ('Name', 'Username', 'Password'))
 
     # Controls 1
     controls_frame = ttk.Frame(tab)
@@ -57,10 +57,10 @@ def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     ttk.Button(controls_frame2, text='New credential', command=lambda: show_credential_popup(update_command)).pack(side='left')
 
     # Bindings
-    const_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(cred_table))
+    const_table.bind('<FocusIn>', lambda e: table_util.deselect_tables(cred_table))
     const_table.bind('<Double-1>', lambda e: double_click_constant_table(e, const_table, update_command))
 
-    cred_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(const_table))
+    cred_table.bind('<FocusIn>', lambda e: table_util.deselect_tables(const_table))
     cred_table.bind('<Double-1>', lambda e: double_click_credential_table(e, cred_table, update_command))
 
     tab.bind_all('<Delete>', lambda e: delete_selected(const_table, cred_table))
@@ -76,8 +76,8 @@ def update_tables(const_table: ttk.Treeview, cred_table: ttk.Treeview) -> None:
         const_table: The constants table object.
         cred_table: The credentials table object.
     """
-    Table_util.update_table(const_table, db_util.get_constants())
-    Table_util.update_table(cred_table, db_util.get_credentials())
+    table_util.update_table(const_table, db_util.get_constants())
+    table_util.update_table(cred_table, db_util.get_credentials())
 
 
 def delete_selected(const_table: ttk.Treeview, cred_table: ttk.Treeview) -> None:
@@ -116,7 +116,7 @@ def show_constant_popup(on_close: callable, name: str=None, value: str=None) -> 
         name (optional): A value to pre-populate the name entry widget with. Defaults to None.
         value (optional): A value to pre-populate the value entry widget with. Defaults to None.
     """
-    popup = Constant_Popup.show_popup(name, value)
+    popup = constant_popup.show_popup(name, value)
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 
@@ -160,5 +160,5 @@ def show_credential_popup(on_close: callable, name: str=None, username: str=None
         name (optional): A value to pre-populate the name entry widget with. Defaults to None.
         username (optional): A value to pre-populate the username entry widget with. Defaults to None.
     """
-    popup = Credential_Popup.show_popup(name, username)
+    popup = credential_popup.show_popup(name, username)
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)

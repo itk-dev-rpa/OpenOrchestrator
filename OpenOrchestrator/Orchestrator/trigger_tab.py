@@ -4,8 +4,8 @@ in Orchestrator."""
 from tkinter import ttk, messagebox
 
 from OpenOrchestrator.common import db_util
-from OpenOrchestrator.Orchestrator import Table_util
-from OpenOrchestrator.Orchestrator.Popups import Single_Trigger_Popup, Email_Trigger_Popup, Scheduled_Trigger_Popup
+from OpenOrchestrator.orchestrator import table_util
+from OpenOrchestrator.orchestrator.popups import single_trigger_popup, email_trigger_popup, scheduled_trigger_popup
 
 
 def create_tab(parent) -> ttk.Frame:
@@ -28,19 +28,19 @@ def create_tab(parent) -> ttk.Frame:
     ttk.Label(tab, text="Scheduled Triggers").grid(row=0, column=0)
     sc_table_frame = ttk.Frame(tab)
     sc_table_frame.grid(row=1, column=0, sticky='nsew')
-    sc_table = Table_util.create_table(sc_table_frame, ('Process Name', 'Cron', 'Last run', 'Next run', 'Path', 'Arguments', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
+    sc_table = table_util.create_table(sc_table_frame, ('Process Name', 'Cron', 'Last run', 'Next run', 'Path', 'Arguments', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
 
     #Email table
     ttk.Label(tab, text="Email Triggers").grid(row=2, column=0)
     e_table_frame = ttk.Frame(tab)
     e_table_frame.grid(row=3, column=0, sticky='nsew')
-    e_table = Table_util.create_table(e_table_frame, ('Process Name', 'Folder', 'Last run', 'Path', 'Arguments', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
+    e_table = table_util.create_table(e_table_frame, ('Process Name', 'Folder', 'Last run', 'Path', 'Arguments', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
 
     #Single table
     ttk.Label(tab, text="Single Triggers").grid(row=4, column=0)
     si_table_frame = ttk.Frame(tab)
     si_table_frame.grid(row=5, column=0, sticky='nsew')
-    si_table = Table_util.create_table(si_table_frame, ('Process Name', 'Last run', 'Next run', 'Path', 'Arguments', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
+    si_table = table_util.create_table(si_table_frame, ('Process Name', 'Last run', 'Next run', 'Path', 'Arguments', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
 
     # Controls 1
     controls_frame = ttk.Frame(tab)
@@ -63,9 +63,9 @@ def create_tab(parent) -> ttk.Frame:
     ttk.Button(controls_frame2, text='New single trigger', command=lambda: show_single_trigger_popup(update_command)).pack(side='left')
 
     # Bindings
-    sc_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(e_table, si_table))
-    e_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(sc_table, si_table))
-    si_table.bind('<FocusIn>', lambda e: Table_util.deselect_tables(sc_table, e_table))
+    sc_table.bind('<FocusIn>', lambda e: table_util.deselect_tables(e_table, si_table))
+    e_table.bind('<FocusIn>', lambda e: table_util.deselect_tables(sc_table, si_table))
+    si_table.bind('<FocusIn>', lambda e: table_util.deselect_tables(sc_table, e_table))
 
     return tab
 
@@ -77,7 +77,7 @@ def show_scheduled_trigger_popup(on_close: callable) -> None:
     Args:
         on_close: on_close: A function to be called when the popup closes.
     """
-    popup = Scheduled_Trigger_Popup.show_popup()
+    popup = scheduled_trigger_popup.show_popup()
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 
@@ -88,7 +88,7 @@ def show_single_trigger_popup(on_close: callable) -> None:
     Args:
         on_close: on_close: A function to be called when the popup closes.
     """
-    popup = Single_Trigger_Popup.show_popup()
+    popup = single_trigger_popup.show_popup()
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 
@@ -99,7 +99,7 @@ def show_email_trigger_popup(on_close: callable) -> None:
     Args:
         on_close: on_close: A function to be called when the popup closes.
     """
-    popup = Email_Trigger_Popup.show_popup()
+    popup = email_trigger_popup.show_popup()
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 
@@ -112,9 +112,9 @@ def update_tables(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.T
         e_table: The email table.
         si_table: The single table.
     """
-    Table_util.update_table(sc_table, db_util.get_scheduled_triggers())
-    Table_util.update_table(e_table, db_util.get_email_triggers())
-    Table_util.update_table(si_table, db_util.get_single_triggers())
+    table_util.update_table(sc_table, db_util.get_scheduled_triggers())
+    table_util.update_table(e_table, db_util.get_email_triggers())
+    table_util.update_table(si_table, db_util.get_single_triggers())
 
 
 def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
@@ -136,11 +136,11 @@ def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.
     else:
         return
 
-    UUID = table.item(table.selection()[0])['values'][-1]
+    trigger_id = table.item(table.selection()[0])['values'][-1]
 
-    if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{UUID}'?"):
+    if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{trigger_id}'?"):
         return
 
-    db_util.delete_trigger(UUID)
+    db_util.delete_trigger(trigger_id)
 
     update_tables(sc_table, e_table, si_table)

@@ -3,7 +3,7 @@ that when created starts the application."""
 
 import tkinter
 from tkinter import ttk, messagebox
-from OpenOrchestrator.Scheduler import Settings_tab, Run_tab
+from OpenOrchestrator.scheduler import settings_tab, run_tab
 
 class Application(tkinter.Tk):
     """The main application object of the Scheduler app.
@@ -25,11 +25,11 @@ class Application(tkinter.Tk):
         notebook = ttk.Notebook(self)
         notebook.pack(expand=True, fill='both')
 
-        run_tab = Run_tab.create_tab(notebook, self)
-        settings_tab = Settings_tab.create_tab(notebook)
+        run_tab_ = run_tab.create_tab(notebook, self)
+        settings_tab_ = settings_tab.create_tab(notebook)
 
-        notebook.add(run_tab, text='Run')
-        notebook.add(settings_tab, text="Settings")
+        notebook.add(run_tab_, text='Run')
+        notebook.add(settings_tab_, text="Settings")
 
         notebook.select(1)
 

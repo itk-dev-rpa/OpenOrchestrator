@@ -89,8 +89,8 @@ def create_trigger(window: tkinter.Toplevel,
         hour, minute = time.split(":")
         hour, minute = int(hour), int(minute)
         date = datetime(date.year, date.month, date.day, hour, minute)
-    except ValueError as e:
-        messagebox.showerror('Error', "Please enter a valid time in the format 'tt:mm'\n"+str(e))
+    except ValueError as exc:
+        messagebox.showerror('Error', "Please enter a valid time in the format 'tt:mm'\n"+str(exc))
 
     if date < datetime.now():
         if not messagebox.askyesno('Warning', "The selected datetime is in the past. Do you want to create the trigger anyway?"):

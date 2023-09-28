@@ -6,7 +6,7 @@ from tkinter import ttk
 import sys
 
 from OpenOrchestrator.common import db_util, crypto_util
-from OpenOrchestrator.Scheduler import Runner
+from OpenOrchestrator.scheduler import runner
 
 def create_tab(parent: ttk.Notebook, app) -> ttk.Frame:
     """Create a new Run tab object.
@@ -84,7 +84,7 @@ def pause(app, status_label: ttk.Label):
         app.running = False
 
 
-def print_text(print_text: tkinter.Text, string: str) -> None:
+def print_text(text_widget: tkinter.Text, string: str) -> None:
     """Appends text to the text area.
     Is used to replace the functionality of sys.stdout.write (print).
 
@@ -92,10 +92,10 @@ def print_text(print_text: tkinter.Text, string: str) -> None:
         print_text: The text area object.
         string: The string to append.
     """
-    print_text.configure(state='normal')
-    print_text.insert('end', string)
-    print_text.see('end')
-    print_text.configure(state='disabled')
+    text_widget.configure(state='normal')
+    text_widget.insert('end', string)
+    text_widget.see('end')
+    text_widget.configure(state='disabled')
 
 
 def loop(app) -> None:
@@ -131,10 +131,10 @@ def check_heartbeats(app) -> None:
 
             if j.process.returncode == 0:
                 print(f"Process '{j.process_name}' is done")
-                Runner.end_job(j)
+                runner.end_job(j)
             else:
                 print(f"Process '{j.process_name}' failed")
-                Runner.fail_job(j)
+                runner.fail_job(j)
 
         else:
             print(f"Process '{j.process_name}' is still running")
@@ -157,7 +157,7 @@ def check_triggers(app) -> None:
     # Check triggers
     if not blocking:
         print('Checking triggers...')
-        job = Runner.poll_triggers(app)
+        job = runner.poll_triggers(app)
 
         if job is not None:
             app.running_jobs.append(job)

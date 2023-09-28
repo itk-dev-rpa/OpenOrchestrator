@@ -7,7 +7,7 @@ from datetime import datetime
 from ast import literal_eval
 
 from OpenOrchestrator.common import db_util
-from OpenOrchestrator.Orchestrator import Table_util
+from OpenOrchestrator.orchestrator import table_util
 
 def create_tab(parent):
     """Create a new Logging tab object.
@@ -29,7 +29,7 @@ def create_tab(parent):
     table_frame = ttk.Frame(tab)
     table_frame.grid(row=0, column=0, sticky="nsew")
 
-    table = Table_util.create_table(table_frame, ("Time", "Level", "Process", "Message"))
+    table = table_util.create_table(table_frame, ("Time", "Level", "Process", "Message"))
     table.column("Time", width=120, stretch=False)
     table.column("Level", width=50, stretch=False)
     table.column("Process", width=150, stretch=False)
@@ -105,12 +105,12 @@ def resize_table(table: ttk.Treeview) -> None:
         table (ttk.Treeview): The table object.
     """
     max_length = 0
-    f = font.nametofont("TkDefaultFont")
+    default_font = font.nametofont("TkDefaultFont")
 
     for row in table.get_children():
         item = table.item(row)
         message = item['values'][-1]
-        max_length = max(max_length, f.measure(message))
+        max_length = max(max_length, default_font.measure(message))
 
     table.column("Message", width=max_length+20, stretch=False)
 
@@ -142,8 +142,8 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
     logs = db_util.get_logs(offset, fetch, from_date, to_date, process_name, log_level)
 
     #Clear table
-    for c in table.get_children():
-        table.delete(c)
+    for row in table.get_children():
+        table.delete(row)
 
     #Update table
     for row in logs:
@@ -179,9 +179,9 @@ def parse_date(date_str: str) -> datetime:
         '%d-%m-%Y'
     )
 
-    for f in formats:
+    for format_ in formats:
         try:
-            return datetime.strptime(date_str, f)
+            return datetime.strptime(date_str, format_)
         except ValueError:
             ...
 

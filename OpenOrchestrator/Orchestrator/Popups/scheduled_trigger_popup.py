@@ -77,7 +77,7 @@ def create_trigger(window: tkinter.Toplevel,
     """
 
     name = name_entry.get()
-    cron = cron_entry.get()
+    cron_string = cron_entry.get()
     path = path_entry.get()
     args = args_entry.get()
     is_git = git_check.get()
@@ -88,10 +88,10 @@ def create_trigger(window: tkinter.Toplevel,
         return
 
     try:
-        c = croniter.croniter(cron, datetime.now())
-        date = c.get_next(datetime)
-    except croniter.CroniterBadCronError as e:
-        messagebox.showerror('Error', 'Please enter a valid cron expression\n'+str(e))
+        cron_iter = croniter.croniter(cron_string, datetime.now())
+        date = cron_iter.get_next(datetime)
+    except croniter.CroniterBadCronError as exc:
+        messagebox.showerror('Error', 'Please enter a valid cron expression\n'+str(exc))
         return
 
     if not path:
@@ -99,6 +99,6 @@ def create_trigger(window: tkinter.Toplevel,
         return
 
     # Create trigger in database
-    db_util.create_scheduled_trigger(name, cron, date, path, args, is_git, is_blocking)
+    db_util.create_scheduled_trigger(name, cron_iter, date, path, args, is_git, is_blocking)
 
     window.destroy()

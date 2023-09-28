@@ -2,8 +2,8 @@
 Usage: python -m OpenOrchestrator [-o|-s]"""
 
 import sys
-from OpenOrchestrator.Scheduler.Application import Application as s_app
-from OpenOrchestrator.Orchestrator.Application import Application as o_app
+from OpenOrchestrator.scheduler.application import Application as s_app
+from OpenOrchestrator.orchestrator.application import Application as o_app
 
 def _print_usage():
     print("Usage: -o to start Orchestrator. -s to start Scheduler")

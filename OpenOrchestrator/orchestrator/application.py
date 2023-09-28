@@ -4,7 +4,7 @@ that when created starts the application."""
 import tkinter
 from tkinter import ttk
 
-from OpenOrchestrator.Orchestrator import Logging_tab, Settings_tab, Trigger_tab, Constants_tab
+from OpenOrchestrator.orchestrator import logging_tab, settings_tab, trigger_tab, constants_tab
 
 class Application(tkinter.Tk):
     """The main application object of the Orchestrator app.
@@ -23,10 +23,10 @@ class Application(tkinter.Tk):
         notebook = ttk.Notebook(self)
         notebook.pack(expand=True, fill='both')
 
-        trig_tab = Trigger_tab.create_tab(notebook)
-        log_tab = Logging_tab.create_tab(notebook)
-        const_tab = Constants_tab.create_tab(notebook)
-        set_tab = Settings_tab.create_tab(notebook)
+        trig_tab = trigger_tab.create_tab(notebook)
+        log_tab = logging_tab.create_tab(notebook)
+        const_tab = constants_tab.create_tab(notebook)
+        set_tab = settings_tab.create_tab(notebook)
 
         notebook.add(trig_tab, text="Triggers")
         notebook.add(log_tab, text="Logs")

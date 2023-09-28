@@ -17,9 +17,9 @@ def create_table(parent: ttk.Frame, columns: list[str]):
     """
     table = ttk.Treeview(parent, show='headings', selectmode='browse')
     table['columns'] = columns
-    for c in table['columns']:
-        table.heading(c, text=c, anchor='w')
-        table.column(c, stretch=False)
+    for column in table['columns']:
+        table.heading(column, text=column, anchor='w')
+        table.column(column, stretch=False)
 
     yscroll = ttk.Scrollbar(parent, orient='vertical', command=table.yview)
     yscroll.pack(side='right', fill='y')
@@ -61,8 +61,8 @@ def update_table(table: ttk.Treeview, rows: list[list[any]]) -> None:
         rows: The new row values to insert.
     """
     #Clear table
-    for c in table.get_children():
-        table.delete(c)
+    for row in table.get_children():
+        table.delete(row)
 
     #Update table
     for row in rows:
