@@ -125,19 +125,19 @@ def check_heartbeats(app) -> None:
         app: The Scheduler Application object.
     """
     print('Checking heartbeats...')
-    for j in app.running_jobs:
-        if j.process.poll() is not None:
-            app.running_jobs.remove(j)
+    for job in app.running_jobs:
+        if job.process.poll() is not None:
+            app.running_jobs.remove(job)
 
-            if j.process.returncode == 0:
-                print(f"Process '{j.process_name}' is done")
-                runner.end_job(j)
+            if job.process.returncode == 0:
+                print(f"Process '{job.process_name}' is done")
+                runner.end_job(job)
             else:
-                print(f"Process '{j.process_name}' failed")
-                runner.fail_job(j)
+                print(f"Process '{job.process_name}' failed")
+                runner.fail_job(job)
 
         else:
-            print(f"Process '{j.process_name}' is still running")
+            print(f"Process '{job.process_name}' is still running")
 
 
 def check_triggers(app) -> None:
@@ -149,9 +149,9 @@ def check_triggers(app) -> None:
     """
     #Check if process is blocking
     blocking = False
-    for j in app.running_jobs:
-        if j.blocking:
-            print(f"Process '{j.process_name}' is blocking\n")
+    for job in app.running_jobs:
+        if job.blocking:
+            print(f"Process '{job.process_name}' is blocking\n")
             blocking = True
 
     # Check triggers
