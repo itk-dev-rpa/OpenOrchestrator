@@ -27,3 +27,8 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/itk-dev-rpa/OpenOrchestrator"
 "Bug Tracker" = "https://github.com/itk-dev-rpa/OpenOrchestrator/issues"
+
+[project.optional-dependencies]
+dev = [
+  "pylint"
+]
