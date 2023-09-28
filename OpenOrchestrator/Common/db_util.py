@@ -7,7 +7,7 @@ import uuid
 import pyodbc
 from pypika import MSSQLQuery, Table, Order
 
-from OpenOrchestrator.Common import crypto_util
+from OpenOrchestrator.common import crypto_util
 
 _connection_string = None
 _connection = None

@@ -5,7 +5,7 @@ import tkinter
 from tkinter import ttk
 import sys
 
-from OpenOrchestrator.Common import db_util, crypto_util
+from OpenOrchestrator.common import db_util, crypto_util
 from OpenOrchestrator.Scheduler import Runner
 
 def create_tab(parent: ttk.Notebook, app) -> ttk.Frame:

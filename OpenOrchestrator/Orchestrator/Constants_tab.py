@@ -4,7 +4,7 @@ in Orchestrator."""
 import tkinter
 from tkinter import ttk, messagebox
 
-from OpenOrchestrator.Common import db_util
+from OpenOrchestrator.common import db_util
 from OpenOrchestrator.Orchestrator import Table_util
 from OpenOrchestrator.Orchestrator.Popups import Constant_Popup, Credential_Popup
 

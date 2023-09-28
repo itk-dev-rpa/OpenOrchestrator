@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from croniter import croniter
 
-from OpenOrchestrator.Common import db_util, crypto_util
+from OpenOrchestrator.common import db_util, crypto_util
 
 @dataclass
 class Job():

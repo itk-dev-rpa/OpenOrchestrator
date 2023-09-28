@@ -3,7 +3,7 @@ in Scheduler."""
 
 from tkinter import ttk
 
-from OpenOrchestrator.Common import ui_util
+from OpenOrchestrator.common import ui_util
 
 def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     """Creates a new Settings tab object.

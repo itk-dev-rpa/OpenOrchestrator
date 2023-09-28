@@ -5,7 +5,7 @@ import os
 import tkinter
 from tkinter import ttk
 
-from OpenOrchestrator.Common import db_util, crypto_util
+from OpenOrchestrator.common import db_util, crypto_util
 
 def create_connection_frame(parent: tkinter.Widget) -> ttk.Frame:
     """Creates a frame containing a label, entry and button

@@ -9,7 +9,7 @@ import tkinter
 from tkinter import ttk, messagebox
 import tkcalendar
 
-from OpenOrchestrator.Common import db_util
+from OpenOrchestrator.common import db_util
 
 def show_popup():
     """Creates and shows a popup to create a new single trigger.

@@ -3,7 +3,7 @@ in Orchestrator."""
 
 from tkinter import ttk
 
-from OpenOrchestrator.Common import db_util, crypto_util, ui_util
+from OpenOrchestrator.common import db_util, crypto_util, ui_util
 
 
 def create_tab(parent):
