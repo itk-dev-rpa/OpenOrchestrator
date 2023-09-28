@@ -46,8 +46,9 @@ def copy_selected_rows_to_clipboard(table: ttk.Treeview) -> None:
         return
 
     items = []
-    for item in table.selection():
-        items.append(f'echo "{str(table.item(item, "values"))}"')
+    for row_id in table.selection():
+        values = table.item(row_id, "values")
+        items.append(f'echo "{values}"')
     string = '('+' & '.join(items)+')'
     os.system(f"{string} | clip")
 
