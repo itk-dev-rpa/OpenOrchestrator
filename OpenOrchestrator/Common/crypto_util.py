@@ -5,7 +5,7 @@ from cryptography.exceptions import InvalidSignature
 
 # The encryption key is a module wide variable used in
 # static functions. Linting is disabled on this.
-_encryption_key = None
+_encryption_key: str
 
 def generate_key() -> bytes:
     """Generates a new valid AES crypto key.
