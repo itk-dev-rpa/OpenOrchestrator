@@ -1,11 +1,6 @@
 [pylint.messages_control]
 disable = 
-  C0103, # Variable names
   C0301, # Line too long
   I1101, E1101, # C-modules members
-  W0621, # Redefine outer name
   R0913, # Too many arguments
   R0914 # Too many local variables
-
-[MASTER]
-ignore-paths = ^tests/ # Ignore the tests folder
