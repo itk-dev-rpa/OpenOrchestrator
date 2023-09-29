@@ -1,12 +1,19 @@
 """This module is responsible for checking triggers and running processes."""
 
+import os
 from datetime import datetime
 import subprocess
 from dataclasses import dataclass
+import uuid
 
 from croniter import croniter
 
 from OpenOrchestrator.common import db_util, crypto_util
+
+SCHEDULED = 'Scheduled'
+SINGLE = 'Single'
+QUEUE = 'Queue'
+
 
 @dataclass
 class Job():
@@ -14,6 +21,7 @@ class Job():
     process: subprocess.Popen
     trigger_id: str
     process_name: str
+    is_git: bool
     blocking: bool
     type: str
 
@@ -35,10 +43,10 @@ def poll_triggers(app) -> Job:
     next_single_trigger = db_util.get_next_single_trigger()
 
     if next_single_trigger is not None:
-        name, next_run, uuid, process_path, is_git_repo, blocking = next_single_trigger
+        name, next_run, trigger_id, process_path, is_git_repo, blocking = next_single_trigger
 
         if  next_run < datetime.now() and not (blocking and other_processes_running):
-            return run_single_trigger(name, uuid, process_path, is_git_repo, blocking)
+            return run_single_trigger(name, trigger_id, process_path, is_git_repo, blocking)
 
     # Email/Queue triggers
 
@@ -46,16 +54,16 @@ def poll_triggers(app) -> Job:
     next_scheduled_trigger = db_util.get_next_scheduled_trigger()
 
     if next_scheduled_trigger is not None:
-        name, next_run, uuid, process_path, is_git_repo, blocking, cron_expr = next_scheduled_trigger
+        name, next_run, trigger_id, process_path, is_git_repo, blocking, cron_expr = next_scheduled_trigger
 
         if next_run < datetime.now() and not (blocking and other_processes_running):
-            return run_scheduled_trigger(name, uuid, process_path, is_git_repo, blocking, cron_expr, next_run)
+            return run_scheduled_trigger(name, trigger_id, process_path, is_git_repo, blocking, cron_expr, next_run)
 
 
     return None
 
 
-def run_single_trigger(name: str, uuid: str, process_path: str,
+def run_single_trigger(name: str, trigger_id: str, process_path: str,
                        is_git_repo: bool, blocking: bool) -> Job:
     """Mark a single trigger as running in the database,
     grab the process from git (if needed)
@@ -72,21 +80,21 @@ def run_single_trigger(name: str, uuid: str, process_path: str,
     Returns:
         Job: A Job object describing the process.
     """
-    print('Running process: ', name, uuid, process_path)
+    print('Running process: ', name, trigger_id, process_path)
 
     # Mark trigger as running
-    db_util.begin_single_trigger(uuid)
+    db_util.begin_single_trigger(trigger_id)
 
     if is_git_repo:
-        clone_git_repo(process_path)
-        #TODO: Run main.*
-    else:
-        process = run_process(process_path, name, db_util.get_conn_string(), crypto_util.get_key())
+        git_folder_path = clone_git_repo(process_path)
+        process_path = find_main_file(git_folder_path)
 
-    return Job(process, uuid, name, blocking, 'Single')
+    process = run_process(process_path, name, db_util.get_conn_string(), crypto_util.get_key())
+
+    return Job(process, trigger_id, name, is_git_repo, blocking, SINGLE)
 
 
-def run_scheduled_trigger(name: str, uuid: str, process_path: str,
+def run_scheduled_trigger(name: str, trigger_id: str, process_path: str,
                           is_git_repo: bool, blocking: bool,
                           cron_expr: str, next_run: datetime) -> Job:
     """Mark a scheduled trigger as running in the database,
@@ -106,30 +114,59 @@ def run_scheduled_trigger(name: str, uuid: str, process_path: str,
     Returns:
         Job: A Job object describing the process.
     """
-    print('Running process: ', name, uuid, process_path)
+    print('Running process: ', name, trigger_id, process_path)
 
     next_run = croniter(cron_expr, next_run).get_next(datetime)
-    db_util.begin_scheduled_trigger(uuid, next_run)
+    db_util.begin_scheduled_trigger(trigger_id, next_run)
 
     if is_git_repo:
-        clone_git_repo(process_path)
-        #TODO: Run main.*
-    else:
-        process = run_process(process_path, name, db_util.get_conn_string(), crypto_util.get_key())
+        git_folder_path = clone_git_repo(process_path)
+        process_path = find_main_file(git_folder_path)
 
-    return Job(process, uuid, name, blocking, 'Scheduled')
+    process = run_process(process_path, name, db_util.get_conn_string(), crypto_util.get_key())
+
+    return Job(process, trigger_id, name, is_git_repo, blocking, SCHEDULED)
 
 
-def clone_git_repo(path: str) -> str:
-    """Clone the git repo at the path to the desktop.
+def clone_git_repo(repo_url: str) -> str:
+    """Clone the git repo at the path to %USER%\\desktop\\Scheduler_Repos\\%UUID%.
 
     Args:
-        path: Path/URL to the git repo to clone.
+        repo_url: URL to the git repo to clone.
 
     Returns:
-        str: The path to the repo on the desktop.
+        str: The path to the cloned repo on the desktop.
     """
-    raise NotImplementedError("Clone git repo not implemented")
+    desktop_path = os.path.expanduser("~\\Desktop")
+    unique_id = str(uuid.uuid4())
+    repo_path = os.path.join(desktop_path, "Scheduler_Repos", unique_id)
+
+    os.makedirs(repo_path)
+    try:
+        subprocess.run(['git', 'clone', repo_url, repo_path], check=True)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError(f"Failed to clone git repo at {repo_url}.") from exc
+
+    return repo_path
+
+
+def find_main_file(folder_path: str) -> str:
+    """Finds the file in the given folder with the name 'main.*'.
+    The search check subfolders recursively.
+    Only the first found file is returned.
+
+    Args:
+        folder_path: The path to the folder.
+
+    Returns:
+        str: The path to the main.* file.
+    """
+    for dir_path, _, file_names in os.walk(folder_path):
+        for file_name in file_names:
+            if file_name.startswith("main."):
+                return os.path.join(dir_path, file_name)
+
+    return None
 
 
 def end_job(job: Job) -> None:
@@ -141,11 +178,11 @@ def end_job(job: Job) -> None:
     Args:
         job: The job whose trigger to mark as ended.
     """
-    if job.type == 'Single':
+    if job.type == SINGLE:
         db_util.set_single_trigger_status(job.trigger_id, 3)
-    elif job.type == 'Scheduled':
+    elif job.type == SCHEDULED:
         db_util.set_scheduled_trigger_status(job.trigger_id, 0)
-    elif job.type == 'Queue':
+    elif job.type == QUEUE:
         ...
 
 
@@ -155,11 +192,11 @@ def fail_job(job: Job) -> None:
     Args:
         job: The job whose trigger to mark as failed.
     """
-    if job.type == 'Single':
+    if job.type == SINGLE:
         db_util.set_single_trigger_status(job.trigger_id, 2)
-    elif job.type == 'Scheduled':
+    elif job.type == SCHEDULED:
         db_util.set_scheduled_trigger_status(job.trigger_id, 2)
-    elif job.type == 'Queue':
+    elif job.type == QUEUE:
         ...
 
 
