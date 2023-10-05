@@ -1,3 +1,6 @@
+[tool.pylint.basic]
+good-names = ["OpenOrchestrator"]
+
 [pylint.messages_control]
 disable = 
   C0301, # Line too long
