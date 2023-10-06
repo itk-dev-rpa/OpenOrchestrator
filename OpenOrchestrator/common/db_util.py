@@ -602,14 +602,14 @@ def set_single_trigger_status(trigger_id: str, status: int) -> None:
 
 
 @catch_db_error
-def get_next_single_trigger() -> list[str]:
+def get_next_single_trigger() -> list[str] | None:
     """Get the single trigger that should trigger next.
     A trigger returned by this is not necessarily ready to trigger.
     The format of the trigger is:
     [process_name, next_run, id, process_path, is_git_repo, blocking]
 
     Returns:
-        list[str]: The next single trigger to run, if any.
+        list[str]: The next single trigger to run, if any else None.
     """
     conn = _get_connection()
 
@@ -625,18 +625,21 @@ def get_next_single_trigger() -> list[str]:
     )
 
     trigger = conn.execute(command).fetchone()
-    return list[trigger]
+    if trigger is not None:
+        return list(trigger)
+
+    return None
 
 
 @catch_db_error
-def get_next_scheduled_trigger() -> list[str]:
+def get_next_scheduled_trigger() -> list[str] | None:
     """Get the scheduled trigger that should trigger next.
     A trigger returned by this is not necessarily ready to trigger.
     The format of the trigger is:
     [process_name, next_run, id, process_path, is_git_repo, blocking, cron_expr]
 
     Returns:
-        list[str]: The next scheduled trigger to run, if any.
+        list[str]: The next scheduled trigger to run, if any else None.
     """
     conn = _get_connection()
 
@@ -652,7 +655,10 @@ def get_next_scheduled_trigger() -> list[str]:
     )
 
     trigger = conn.execute(command).fetchone()
-    return list[trigger]
+    if trigger is not None:
+        return list(trigger)
+
+    return None
 
 
 @catch_db_error
