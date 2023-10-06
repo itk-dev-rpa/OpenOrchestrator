@@ -99,6 +99,6 @@ def create_trigger(window: tkinter.Toplevel,
         return
 
     # Create trigger in database
-    db_util.create_scheduled_trigger(name, cron_iter, date, path, args, is_git, is_blocking)
+    db_util.create_scheduled_trigger(name, cron_string, date, path, args, is_git, is_blocking)
 
     window.destroy()

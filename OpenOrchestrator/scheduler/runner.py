@@ -26,7 +26,7 @@ class Job():
     type: str
 
 
-def poll_triggers(app) -> Job:
+def poll_triggers(app) -> Job | None:
     """Checks if any triggers are waiting to run. If any the first will be run and a
     corresponding job object will be returned.
 
@@ -59,7 +59,6 @@ def poll_triggers(app) -> Job:
         if next_run < datetime.now() and not (blocking and other_processes_running):
             return run_scheduled_trigger(name, trigger_id, process_path, is_git_repo, blocking, cron_expr, next_run)
 
-
     return None
 
 
@@ -68,7 +67,6 @@ def run_single_trigger(name: str, trigger_id: str, process_path: str,
     """Mark a single trigger as running in the database,
     grab the process from git (if needed)
     and start the process.
-
 
     Args:
         name: The name of the process.
@@ -80,6 +78,7 @@ def run_single_trigger(name: str, trigger_id: str, process_path: str,
     Returns:
         Job: A Job object describing the process.
     """
+
     print('Running process: ', name, trigger_id, process_path)
 
     # Mark trigger as running
