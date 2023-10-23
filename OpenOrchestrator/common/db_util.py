@@ -13,6 +13,7 @@ _connection_string: str
 _connection: pyodbc.Connection
 
 _DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
+_TRIGGER_TABLES = ("Scheduled_Triggers", "Single_Triggers", "Email_Triggers")
 
 def connect(conn_string: str) -> bool:
     """Connects to the database using the given connection string.
@@ -175,36 +176,17 @@ def delete_trigger(trigger_id: str) -> None:
     """
     conn = _get_connection()
 
-    scheduled_triggers = Table("Scheduled_Triggers")
-    command = (
-        MSSQLQuery
-        .from_(scheduled_triggers)
-        .delete()
-        .where(scheduled_triggers.id == trigger_id)
-        .get_sql()
-    )
-    conn.execute(command)
+    for table in _TRIGGER_TABLES:
+        trigger_table = Table(table)
+        command = (
+            MSSQLQuery
+            .from_(trigger_table)
+            .delete()
+            .where(trigger_table.id == trigger_id)
+            .get_sql()
+        )
+        conn.execute(command)
 
-    single_triggers = Table("Single_Triggers")
-    command = (
-        MSSQLQuery
-        .from_(single_triggers)
-        .delete()
-        .where(single_triggers.id == trigger_id)
-        .get_sql()
-    )
-    conn.execute(command)
-
-    email_triggers = Table("Email_Triggers")
-    command = (
-        MSSQLQuery
-        .from_(email_triggers)
-        .delete()
-        .where(email_triggers.id == trigger_id)
-        .get_sql()
-    )
-
-    conn.execute(command)
     conn.commit()
 
 
