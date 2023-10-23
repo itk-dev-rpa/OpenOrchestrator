@@ -579,34 +579,6 @@ def begin_single_trigger(trigger_id: str) -> bool:
 
 
 @catch_db_error
-def set_single_trigger_status(trigger_id: str, status: int) -> None:
-    """Set the status of a single trigger.
-    Status codes are:
-    0: Idle
-    1: Running
-    2: Error
-    3: Done
-
-    Args:
-        UUID: The UUID of the trigger.
-        status: The new status of the trigger.
-    """
-    conn = _get_connection()
-
-    triggers = Table("Single_Triggers")
-    command = (
-        MSSQLQuery
-        .update(triggers)
-        .set(triggers.process_status, status)
-        .where(triggers.id == trigger_id)
-        .get_sql()
-    )
-
-    conn.execute(command)
-    conn.commit()
-
-
-@catch_db_error
 def get_next_single_trigger() -> list[str] | None:
     """Get the single trigger that should trigger next.
     A trigger returned by this is not necessarily ready to trigger.
@@ -700,10 +672,9 @@ def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> None:
     conn.commit()
     return True
 
-
 @catch_db_error
-def set_scheduled_trigger_status(trigger_id: str, status: int) -> None:
-    """Set the status of a scheduled trigger.
+def set_trigger_status(trigger_id: str, status: int) -> None:
+    """Set the status of a trigger.
     Status codes are:
     0: Idle
     1: Running
@@ -716,14 +687,15 @@ def set_scheduled_trigger_status(trigger_id: str, status: int) -> None:
     """
     conn = _get_connection()
 
-    triggers = Table("Scheduled_Triggers")
-    command = (
-        MSSQLQuery
-        .update(triggers)
-        .set(triggers.process_status, status)
-        .where(triggers.id == trigger_id)
-        .get_sql()
-    )
+    for table_name in _TRIGGER_TABLES:
+        triggers = Table(table_name)
+        command = (
+            MSSQLQuery
+            .update(triggers)
+            .set(triggers.process_status, status)
+            .where(triggers.id == trigger_id)
+            .get_sql()
+        )
+        conn.execute(command)
 
-    conn.execute(command)
     conn.commit()
