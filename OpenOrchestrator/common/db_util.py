@@ -258,6 +258,29 @@ def get_logs(offset: int, fetch: int,
 
 
 @catch_db_error
+def create_log(process_name:str, level:int, message:str) -> None:
+    """Create a log in the logs table in the database.
+
+    Args:
+        process_name: The name of the process generating the log.
+        level: The level of the log (0,1,2).
+        message: The message of the log.
+    """
+    conn = _get_connection()
+
+    logs = Table('Logs')
+    command = (
+        MSSQLQuery.into(logs)
+        .columns(logs.log_level, logs.process_name, logs.log_message)
+        .insert(level, process_name, message)
+        .get_sql()
+    )
+
+    conn.execute(command)
+    conn.commit()
+
+
+@catch_db_error
 def get_unique_log_process_names() -> list[str]:
     """Get a list of unique process names in the logs database.
 
