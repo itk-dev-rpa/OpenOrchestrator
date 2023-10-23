@@ -74,7 +74,7 @@ def create_encryption_key_frame(parent: tkinter.Widget) -> [ttk.Frame, ttk.Entry
     key_entry.configure(validatecommand=(reg, '%P'))
     key_entry.pack()
 
-    crypto_key = os.environ.get('OpenOrhcestratorKey', None)
+    crypto_key = os.environ.get('OpenOrchestratorKey', None)
     if crypto_key:
         key_entry.insert(0, crypto_key)
 
