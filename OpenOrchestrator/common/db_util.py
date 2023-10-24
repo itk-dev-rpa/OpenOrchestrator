@@ -4,6 +4,7 @@ from datetime import datetime
 from tkinter import messagebox
 import uuid
 
+
 import pyodbc
 from pypika import MSSQLQuery, Table, Order
 
@@ -13,6 +14,8 @@ _connection_string: str
 _connection: pyodbc.Connection
 
 _DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
+_TRIGGER_TABLES = ("Scheduled_Triggers", "Single_Triggers", "Email_Triggers")
+
 
 def connect(conn_string: str) -> bool:
     """Connects to the database using the given connection string.
@@ -175,36 +178,19 @@ def delete_trigger(trigger_id: str) -> None:
     """
     conn = _get_connection()
 
-    scheduled_triggers = Table("Scheduled_Triggers")
-    command = (
-        MSSQLQuery
-        .from_(scheduled_triggers)
-        .delete()
-        .where(scheduled_triggers.id == trigger_id)
-        .get_sql()
-    )
-    conn.execute(command)
+    # Find the trigger in one of the three tables.
+    # This is temporary until an ORM is implemented.
+    for table in _TRIGGER_TABLES:
+        trigger_table = Table(table)
+        command = (
+            MSSQLQuery
+            .from_(trigger_table)
+            .delete()
+            .where(trigger_table.id == trigger_id)
+            .get_sql()
+        )
+        conn.execute(command)
 
-    single_triggers = Table("Single_Triggers")
-    command = (
-        MSSQLQuery
-        .from_(single_triggers)
-        .delete()
-        .where(single_triggers.id == trigger_id)
-        .get_sql()
-    )
-    conn.execute(command)
-
-    email_triggers = Table("Email_Triggers")
-    command = (
-        MSSQLQuery
-        .from_(email_triggers)
-        .delete()
-        .where(email_triggers.id == trigger_id)
-        .get_sql()
-    )
-
-    conn.execute(command)
     conn.commit()
 
 
@@ -255,6 +241,29 @@ def get_logs(offset: int, fetch: int,
 
     rows = conn.execute(command).fetchall()
     return [list(r) for r in rows]
+
+
+@catch_db_error
+def create_log(process_name:str, level:int, message:str) -> None:
+    """Create a log in the logs table in the database.
+
+    Args:
+        process_name: The name of the process generating the log.
+        level: The level of the log (0,1,2).
+        message: The message of the log.
+    """
+    conn = _get_connection()
+
+    logs = Table('Logs')
+    command = (
+        MSSQLQuery.into(logs)
+        .columns(logs.log_level, logs.process_name, logs.log_message)
+        .insert(level, process_name, message)
+        .get_sql()
+    )
+
+    conn.execute(command)
+    conn.commit()
 
 
 @catch_db_error
@@ -574,34 +583,6 @@ def begin_single_trigger(trigger_id: str) -> bool:
 
 
 @catch_db_error
-def set_single_trigger_status(trigger_id: str, status: int) -> None:
-    """Set the status of a single trigger.
-    Status codes are:
-    0: Idle
-    1: Running
-    2: Error
-    3: Done
-
-    Args:
-        UUID: The UUID of the trigger.
-        status: The new status of the trigger.
-    """
-    conn = _get_connection()
-
-    triggers = Table("Single_Triggers")
-    command = (
-        MSSQLQuery
-        .update(triggers)
-        .set(triggers.process_status, status)
-        .where(triggers.id == trigger_id)
-        .get_sql()
-    )
-
-    conn.execute(command)
-    conn.commit()
-
-
-@catch_db_error
 def get_next_single_trigger() -> list[str] | None:
     """Get the single trigger that should trigger next.
     A trigger returned by this is not necessarily ready to trigger.
@@ -695,10 +676,9 @@ def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> None:
     conn.commit()
     return True
 
-
 @catch_db_error
-def set_scheduled_trigger_status(trigger_id: str, status: int) -> None:
-    """Set the status of a scheduled trigger.
+def set_trigger_status(trigger_id: str, status: int) -> None:
+    """Set the status of a trigger.
     Status codes are:
     0: Idle
     1: Running
@@ -711,14 +691,17 @@ def set_scheduled_trigger_status(trigger_id: str, status: int) -> None:
     """
     conn = _get_connection()
 
-    triggers = Table("Scheduled_Triggers")
-    command = (
-        MSSQLQuery
-        .update(triggers)
-        .set(triggers.process_status, status)
-        .where(triggers.id == trigger_id)
-        .get_sql()
-    )
+    # Find the trigger in one of the three tables.
+    # This is temporary until an ORM is implemented.
+    for table_name in _TRIGGER_TABLES:
+        triggers = Table(table_name)
+        command = (
+            MSSQLQuery
+            .update(triggers)
+            .set(triggers.process_status, status)
+            .where(triggers.id == trigger_id)
+            .get_sql()
+        )
+        conn.execute(command)
 
-    conn.execute(command)
     conn.commit()
