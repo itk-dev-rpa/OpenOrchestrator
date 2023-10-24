@@ -54,6 +54,9 @@ def create_tab(parent) -> ttk.Frame:
     delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(sc_table, e_table, si_table))
     delete_button.pack(side='left')
 
+    retry_button = ttk.Button(controls_frame, text="Reset", command=lambda: retry_trigger(sc_table, e_table, si_table))
+    retry_button.pack(side='left')
+
     # Controls 2
     controls_frame2 = ttk.Frame(tab)
     controls_frame2.grid(row=7, column=0)
@@ -127,16 +130,10 @@ def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.
         e_table: The email table.
         si_table: The single table.
     """
-    if sc_table.selection():
-        table = sc_table
-    elif e_table.selection():
-        table = e_table
-    elif si_table.selection():
-        table = si_table
-    else:
-        return
+    trigger_id = get_selected_trigger(sc_table, e_table, si_table)
 
-    trigger_id = table.item(table.selection()[0])['values'][-1]
+    if trigger_id is None:
+        return
 
     if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{trigger_id}'?"):
         return
@@ -144,3 +141,43 @@ def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.
     db_util.delete_trigger(trigger_id)
 
     update_tables(sc_table, e_table, si_table)
+
+
+def retry_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
+    """Set the status of the selected trigger to 'Idle'.
+
+    Args:
+        sc_table: The scheduled table.
+        e_table: The email table.
+        si_table: The single table.
+    """
+    trigger_id = get_selected_trigger(sc_table, e_table, si_table)
+
+    if trigger_id is None:
+        return
+
+    db_util.set_trigger_status(trigger_id, 0)
+    update_tables(sc_table, e_table, si_table)
+
+
+def get_selected_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview) -> str:
+    """Get the id of the current selected trigger across the three tables.
+
+    Args:
+        sc_table: The scheduled table.
+        e_table: The email table.
+        si_table: The single table.
+
+    Returns:
+        str: The UUID of the selected trigger if any.
+    """
+    if sc_table.selection():
+        table = sc_table
+    elif e_table.selection():
+        table = e_table
+    elif si_table.selection():
+        table = si_table
+    else:
+        return None
+
+    return table.item(table.selection()[0])['values'][-1]
