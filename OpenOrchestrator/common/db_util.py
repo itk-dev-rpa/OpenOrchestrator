@@ -4,6 +4,7 @@ from datetime import datetime
 from tkinter import messagebox
 import uuid
 
+
 import pyodbc
 from pypika import MSSQLQuery, Table, Order
 
@@ -14,6 +15,7 @@ _connection: pyodbc.Connection
 
 _DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 _TRIGGER_TABLES = ("Scheduled_Triggers", "Single_Triggers", "Email_Triggers")
+
 
 def connect(conn_string: str) -> bool:
     """Connects to the database using the given connection string.
@@ -176,6 +178,8 @@ def delete_trigger(trigger_id: str) -> None:
     """
     conn = _get_connection()
 
+    # Find the trigger in one of the three tables.
+    # This is temporary until an ORM is implemented.
     for table in _TRIGGER_TABLES:
         trigger_table = Table(table)
         command = (
@@ -687,6 +691,8 @@ def set_trigger_status(trigger_id: str, status: int) -> None:
     """
     conn = _get_connection()
 
+    # Find the trigger in one of the three tables.
+    # This is temporary until an ORM is implemented.
     for table_name in _TRIGGER_TABLES:
         triggers = Table(table_name)
         command = (
