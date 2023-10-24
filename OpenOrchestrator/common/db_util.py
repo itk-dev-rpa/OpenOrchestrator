@@ -30,12 +30,19 @@ def connect(conn_string: str) -> bool:
         _connection = conn
         _connection_string = conn_string
         return True
-    except pyodbc.InterfaceError as exc:
+    except (pyodbc.InterfaceError, pyodbc.OperationalError) as exc:
         _connection = None
         _connection_string = None
         messagebox.showerror("Connection failed", str(exc))
 
     return False
+
+
+def disconnect() -> None:
+    """Disconnect from the database."""
+    global _connection, _connection_string #pylint: disable=global-statement
+    _connection = None
+    _connection_string = None
 
 
 def catch_db_error(func: callable) -> callable:
