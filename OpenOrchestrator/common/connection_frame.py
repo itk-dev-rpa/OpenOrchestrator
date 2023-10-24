@@ -1,5 +1,4 @@
-"""This module contains functions to create similar UI elements used more than
-once across the project."""
+"""This module contains a single class: ConnectionFrame."""
 
 import os
 import tkinter
