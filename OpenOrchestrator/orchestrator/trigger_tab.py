@@ -54,8 +54,8 @@ def create_tab(parent) -> ttk.Frame:
     delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(sc_table, e_table, si_table))
     delete_button.pack(side='left')
 
-    retry_button = ttk.Button(controls_frame, text="Reset", command=lambda: retry_trigger(sc_table, e_table, si_table))
-    retry_button.pack(side='left')
+    reset_button = ttk.Button(controls_frame, text="Reset", command=lambda: reset_trigger(sc_table, e_table, si_table))
+    reset_button.pack(side='left')
 
     # Controls 2
     controls_frame2 = ttk.Frame(tab)
@@ -143,7 +143,7 @@ def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.
     update_tables(sc_table, e_table, si_table)
 
 
-def retry_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
+def reset_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
     """Set the status of the selected trigger to 'Idle'.
 
     Args:
