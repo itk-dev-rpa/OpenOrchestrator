@@ -2,19 +2,19 @@
 
 from datetime import datetime
 from tkinter import messagebox
-import uuid
 
-
-import pyodbc
-from pypika import MSSQLQuery, Table, Order
+from sqlalchemy import Engine, create_engine, select, text
+from sqlalchemy import exc as alc_exc
+from sqlalchemy.orm import Session
 
 from OpenOrchestrator.common import crypto_util
+from OpenOrchestrator.database import logs, triggers, constants
+from OpenOrchestrator.database.logs import Log, LogLevel
+from OpenOrchestrator.database.constants import Constant, Credential
+from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 
+_connection_engine: Engine
 _connection_string: str
-_connection: pyodbc.Connection
-
-_DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
-_TRIGGER_TABLES = ("Scheduled_Triggers", "Single_Triggers", "Email_Triggers")
 
 
 def connect(conn_string: str) -> bool:
@@ -26,16 +26,16 @@ def connect(conn_string: str) -> bool:
     Returns:
         bool: True if successful.
     """
-    global _connection, _connection_string #pylint: disable=global-statement
+    global _connection_engine, _connection_string # pylint: disable=global-statement
 
     try:
-        conn = pyodbc.connect(conn_string)
-        _connection = conn
+        engine = create_engine(conn_string)
+        engine.connect()
+        _connection_engine = engine
         _connection_string = conn_string
         return True
-    except (pyodbc.InterfaceError, pyodbc.OperationalError) as exc:
-        _connection = None
-        _connection_string = None
+    except alc_exc.InterfaceError as exc:
+        _connection_engine = None
         messagebox.showerror("Connection failed", str(exc))
 
     return False
@@ -43,9 +43,9 @@ def connect(conn_string: str) -> bool:
 
 def disconnect() -> None:
     """Disconnect from the database."""
-    global _connection, _connection_string #pylint: disable=global-statement
-    _connection = None
-    _connection_string = None
+    global _connection_engine #pylint: disable=global-statement
+    _connection_engine.dispose()
+    _connection_engine = None
 
 
 def catch_db_error(func: callable) -> callable:
@@ -53,33 +53,10 @@ def catch_db_error(func: callable) -> callable:
     def inner(*args, **kwargs):
         try:
             result = func(*args, **kwargs)
-        except pyodbc.ProgrammingError as exc:
+        except alc_exc.ProgrammingError as exc:
             messagebox.showerror("Error", f"Query failed:\n{exc}")
         return result
     return inner
-
-
-def _get_connection() -> pyodbc.Connection:
-    """Get the open connection.
-    If the connection is closed, try to reopen it.
-    """
-    global _connection #pylint: disable=global-statement
-
-    if _connection:
-        try:
-            # Test if connection is still open
-            _connection.cursor()
-            return _connection
-        except pyodbc.ProgrammingError as exc:
-            if str(exc) != 'Attempt to use a closed connection.':
-                messagebox.showerror("Connection Error", str(exc))
-
-    try:
-        _connection = pyodbc.connect(_connection_string)
-    except pyodbc.InterfaceError as exc:
-        messagebox.showerror("Error", f"Connection failed.\nGo to settings and enter a valid connection string.\n{exc}")
-
-    return _connection
 
 
 def get_conn_string() -> str:
@@ -93,165 +70,108 @@ def get_conn_string() -> str:
 
 @catch_db_error
 def initialize_database() -> None:
-    """Initializes the database with all the needed tables."""  
-    messagebox.showinfo("Database initialized", "Initialization not implemented.")
+    """Initializes the database with all the needed tables."""
+    logs.create_tables(_connection_engine)
+    triggers.create_tables(_connection_engine)
+    constants.create_tables(_connection_engine)
+    messagebox.showinfo("Database initialized", "Database has been initialized!")
 
 
 @catch_db_error
-def get_scheduled_triggers() -> list[list[str]]:
+def get_scheduled_triggers() -> tuple(ScheduledTrigger):
     """Get all scheduled triggers from the database.
-    The format of each trigger is as follows:
-    [process_name, cron_expr, last_run, next_run, process_path, process_args, status_text, is_git_repo, blocking, id]
 
     Returns:
-        list[list[str]]: A list of all scheduled triggers in the database as lists of strings.
+        tuple(ScheduledTrigger): A list of all scheduled triggers in the database.
     """
-    conn = _get_connection()
-
-    triggers = Table("Scheduled_Triggers")
-    status = Table("Trigger_Status")
-    command = (
-        MSSQLQuery
-        .select(triggers.process_name, triggers.cron_expr, triggers.last_run, triggers.next_run, triggers.process_path, triggers.process_args, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
-        .from_(triggers)
-        .join(status)
-        .on(triggers.process_status == status.id)
-        .get_sql()
-    )
-
-    rows = conn.execute(command).fetchall()
-    return [list(r) for r in rows]
+    with Session(_connection_engine) as session:
+        query = select(ScheduledTrigger)
+        result = session.scalars(query).all()
+        return tuple(result)
 
 
 @catch_db_error
-def get_single_triggers() -> list[list[str]]:
+def get_single_triggers() -> tuple(SingleTrigger):
     """Get all single triggers from the database.
-    The format of each trigger is as follows:
-    [process_name, last_run, next_run, process_path, process_args, status_text, is_git_repo, blocking, id]
 
     Returns:
-        list[list[str]]: A list of all single triggers in the database as lists of strings.
+        tuple(SingleTrigger): A list of all single triggers in the database.
     """
-    conn = _get_connection()
-
-    triggers = Table("Single_Triggers")
-    status = Table("Trigger_Status")
-    command = (
-        MSSQLQuery
-        .select(triggers.process_name, triggers.last_run, triggers.next_run, triggers.process_path, triggers.process_args, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
-        .from_(triggers)
-        .join(status)
-        .on(triggers.process_status == status.id)
-        .get_sql()
-    )
-
-    rows = conn.execute(command).fetchall()
-    return [list(r) for r in rows]
+    with Session(_connection_engine) as session:
+        query = select(SingleTrigger)
+        result = session.scalars(query).all()
+        return tuple(result)
 
 
 @catch_db_error
-def get_email_triggers() -> list[list[str]]:
-    """Get all email triggers from the database.
-    The format of each trigger is as follows:
-    [process_name, email_folder, last_run, process_path, process_args, status_text, is_git_repo, blocking, id]trigger_id
+def get_queue_triggers() -> tuple(QueueTrigger):
+    """Get all queue triggers from the database.
 
     Returns:
-        list[list[str]]: A list of all email triggers in the database as lists of strings.
+        tuple(QueueTrigger): A list of all queue triggers in the database.
     """
-    conn = _get_connection()
-
-    triggers = Table("Email_Triggers")
-    status = Table("Trigger_Status")
-    command = (
-        MSSQLQuery
-        .select(triggers.process_name, triggers.email_folder, triggers.last_run, triggers.process_path, triggers.process_args, status.status_text, triggers.is_git_repo, triggers.blocking, triggers.id)
-        .from_(triggers)
-        .join(status)
-        .on(triggers.process_status == status.id)
-        .get_sql()
-    )
-
-    rows = conn.execute(command).fetchall()
-    return [list(r) for r in rows]
+    with Session(_connection_engine) as session:
+        query = select(SingleTrigger)
+        result = session.scalars(query).all()
+        return tuple(result)
 
 
 @catch_db_error
-def delete_trigger(trigger_id: str) -> None:
-    """Delete a trigger with the given UUID.
-    The trigger can be of any type.
+def delete_trigger(trigger: Trigger) -> None:
+    """Delete the given trigger from the database.
 
     Args:
-        UUID: The unique identifier of the trigger.
+        Trigger: The trigger to delete.
     """
-    conn = _get_connection()
-
-    # Find the trigger in one of the three tables.
-    # This is temporary until an ORM is implemented.
-    for table in _TRIGGER_TABLES:
-        trigger_table = Table(table)
-        command = (
-            MSSQLQuery
-            .from_(trigger_table)
-            .delete()
-            .where(trigger_table.id == trigger_id)
-            .get_sql()
-        )
-        conn.execute(command)
-
-    conn.commit()
+    with Session(_connection_engine) as session:
+        trigger = session.get(Trigger, trigger.id)
+        session.delete(trigger)
+        session.commit()
 
 
 @catch_db_error
-def get_logs(offset: int, fetch: int,
+def get_logs(offset: int, limit: int,
              from_date: datetime, to_date: datetime,
-             process_name: str, log_level: str) -> list[list[str]]:
+             process_name: str|None, log_level: LogLevel|None) -> tuple(Log):
     """Get the logs from the database using filters and pagination.
-    The format of the logs is as follows:
-    [log_time, level_text, process_name, log_message]
 
     Args:
         offset: The index of the first log to get.
-        fetch: The number of logs to get.
+        limit: The number of logs to get.
         from_date: The datetime where the log time must be at or after.
         to_date: The datetime where the log time must be at or earlier.
         process_name: The process name to filter on. If none the filter is disabled.
         log_level: The log level to filter on. If none the filter is disabled.
 
     Returns:
-        list[list[str]]: A list of logs as lists of strings.
+        tuple(Log): A list of logs matching the given filters.
     """
-    conn = _get_connection()
+    query = (
+            select(Log)
+            .order_by(Log.log_time)
+            .offset(offset)
+            .limit(limit)
+        )
 
-    logs = Table("Logs")
-    levels = Table("Log_Level")
-    command = (
-        MSSQLQuery
-        .select(logs.log_time, levels.level_text, logs.process_name, logs.log_message)
-        .from_(logs)
-        .join(levels)
-        .on(logs.log_level == levels.id)
-        .where(from_date <= logs.log_time)
-        .where(logs.log_time <= to_date)
-        .orderby(logs.log_time, order=Order.desc)
-        .offset(offset)
-        .limit(fetch)
-    )
+    if from_date:
+        query = query.where(Log.log_time >= from_date)
+
+    if to_date:
+        query = query.where(Log.log_time <= to_date)
 
     if process_name:
-        command = command.where(logs.process_name == process_name)
+        query = query.where(Log.process_name == process_name)
 
     if log_level:
-        log_level = {"Trace": 0, "Info": 1, "Error": 2}[log_level]
-        command = command.where(logs.log_level == log_level)
+        query = query.where(Log.log_level == log_level)
 
-    command = command.get_sql()
-
-    rows = conn.execute(command).fetchall()
-    return [list(r) for r in rows]
+    with Session(_connection_engine) as session:
+        result = session.scalars(query).all()
+        return tuple(result)
 
 
 @catch_db_error
-def create_log(process_name:str, level:int, message:str) -> None:
+def create_log(process_name: str, level: LogLevel, message: str) -> None:
     """Create a log in the logs table in the database.
 
     Args:
@@ -259,83 +179,66 @@ def create_log(process_name:str, level:int, message:str) -> None:
         level: The level of the log (0,1,2).
         message: The message of the log.
     """
-    conn = _get_connection()
-
-    logs = Table('Logs')
-    command = (
-        MSSQLQuery.into(logs)
-        .columns(logs.log_level, logs.process_name, logs.log_message)
-        .insert(level, process_name, message)
-        .get_sql()
-    )
-
-    conn.execute(command)
-    conn.commit()
+    with Session(_connection_engine) as session:
+        log = Log(
+            log_level = level,
+            process_name = process_name,
+            log_message = message
+        )
+        session.add(log)
+        session.commit()
 
 
 @catch_db_error
-def get_unique_log_process_names() -> list[str]:
+def get_unique_log_process_names() -> tuple[str]:
     """Get a list of unique process names in the logs database.
 
     Returns:
-        list[str]: A list of unique process names.
+        tuple[str]: A list of unique process names.
     """
-    conn = _get_connection()
 
-    logs = Table("Logs")
-    command = (
-        MSSQLQuery
-        .select(logs.process_name)
+    query = (
+        select(Log.process_name)
         .distinct()
-        .from_(logs)
-        .orderby(logs.process_name)
-        .get_sql()
+        .order_by(Log.process_name)
     )
 
-    rows = conn.execute(command).fetchall()
-    return [r[0] for r in rows]
+    with Session(_connection_engine) as session:
+        result = session.scalars(query).all()
+        return tuple(result)
 
 
 @catch_db_error
-def create_single_trigger(name: str, date: datetime, path: str,
-                          args: str, is_git: bool, is_blocking: bool) -> None:
+def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
+                          process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool) -> None:
     """Create a new single trigger in the database.
 
     Args:
-        name: The process name.
-        date: The datetime when the trigger should run.
-        path: The path of the process.
-        args: The argument string of the process.
-        is_git: The is_git value.
-        is_blocking: The is_blocking value.
+        trigger_name: The name of the trigger.
+        process_name: The process name.
+        next_run: The datetime when the trigger should run.
+        process_path: The path of the process.
+        process_args: The argument string of the process.
+        is_git_repo: If the process_path points to a git repo.
+        is_blocking: If the process should be blocking.
     """
-    conn = _get_connection()
-
-    triggers = Table("Single_Triggers")
-    command = (
-        MSSQLQuery
-        .into(triggers)
-        .insert(
-            uuid.uuid4(),
-            name,
-            None, # Last run
-            date,
-            path,
-            args,
-            0, # Status = Idle
-            is_git,
-            is_blocking
+    with Session(_connection_engine) as session:
+        trigger = SingleTrigger(
+            trigger_name= trigger_name,
+            process_name = process_name,
+            process_path = process_path,
+            process_args = process_args,
+            is_git_repo = is_git_repo,
+            is_blocking = is_blocking,
+            next_run = next_run
         )
-        .get_sql()
-    )
-
-    conn.execute(command)
-    conn.commit()
+        session.add(trigger)
+        session.commit()
 
 
 @catch_db_error
-def create_scheduled_trigger(name: str, cron: str, date: datetime,
-                             path: str, args: str, is_git: bool,
+def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
+                             process_path: str, process_args: str, is_git_repo: bool,
                              is_blocking: bool) -> None:
     """Create a new scheduled trigger in the database.
 
@@ -348,35 +251,26 @@ def create_scheduled_trigger(name: str, cron: str, date: datetime,
         is_git: The is_git value of the process.
         is_blocking: The is_blocking value of the process.
     """
-    conn = _get_connection()
-
-    triggers = Table("Scheduled_Triggers")
-    command = (
-        MSSQLQuery
-        .into(triggers)
-        .insert(
-            uuid.uuid4(),
-            name,
-            cron,
-            None, # Last run
-            date,
-            path,
-            args,
-            0, # Status = Idle
-            is_git,
-            is_blocking
+    with Session(_connection_engine) as session:
+        trigger = ScheduledTrigger(
+            trigger_name= trigger_name,
+            process_name = process_name,
+            process_path = process_path,
+            process_args = process_args,
+            is_git_repo = is_git_repo,
+            is_blocking = is_blocking,
+            next_run = next_run,
+            cron_expr = cron_expr
         )
-        .get_sql()
-    )
-
-    conn.execute(command)
-    conn.commit()
+        session.add(trigger)
+        session.commit()
 
 
 @catch_db_error
-def create_email_trigger(name: str, folder: str, path: str,
-                         args: str, is_git: bool, is_blocking: bool) -> None:
-    """Create a new email trigger in the database.
+def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
+                         process_args: str, is_git_repo: bool, is_blocking: bool,
+                         min_batch_size: int=None, max_batch_size: int=None) -> None:
+    """Create a new queue trigger in the database.
 
     Args:
         name: The process name.
@@ -386,120 +280,53 @@ def create_email_trigger(name: str, folder: str, path: str,
         is_git: The is_git value of the process.
         is_blocking: The is_blocking value of the process.
     """
-    conn = _get_connection()
-
-    triggers = Table("Email_Triggers")
-    command = (
-        MSSQLQuery
-        .into(triggers)
-        .insert(
-            uuid.uuid4(),
-            name,
-            folder,
-            None, # Last run
-            path,
-            args,
-            0, # Status = Idle
-            is_git,
-            is_blocking
+    with Session(_connection_engine) as session:
+        trigger = QueueTrigger(
+            trigger_name= trigger_name,
+            process_name = process_name,
+            process_path = process_path,
+            process_args = process_args,
+            is_git_repo = is_git_repo,
+            is_blocking = is_blocking,
+            queue_name = queue_name,
+            min_batch_size = min_batch_size,
+            max_batch_size = max_batch_size
         )
-        .get_sql()
-    )
-
-    conn.execute(command)
-    conn.commit()
+        session.add(trigger)
+        session.commit()
 
 
 @catch_db_error
-def get_constants() -> list[list[str]]:
+def get_constant(name: str) -> Constant:
+    """Get a constant from the database.
+
+    Args:
+        name: The name of the constant.
+
+    Returns:
+        Constant: The constant with the given name.
+    
+    Raises:
+        ValueError: If no constant with the given name exists.
+    """
+    with Session(_connection_engine) as session:
+        constant = session.get(Constant, name)
+        if constant is None:
+            raise ValueError(f"No constant with name '{name}' was found.")
+        return constant
+
+
+@catch_db_error
+def get_constants() -> tuple[Constant]:
     """Get all constants in the database.
-    The format of the constants are as follows:
-    [constant_name, constant_value]
 
     Returns:
-        list[list[str]]: A list of constants as lists of strings.
+        tuple[Constants]: A list of constants.
     """
-    conn = _get_connection()
-
-    constants = Table("Constants")
-    command = (
-        MSSQLQuery
-        .select(constants.constant_name, constants.constant_value)
-        .from_(constants)
-        .orderby(constants.constant_name)
-        .get_sql()
-    )
-
-    rows = conn.execute(command).fetchall()
-    return [list(r) for r in rows]
-
-
-@catch_db_error
-def get_credentials() -> list[list[str]]:
-    """Get all credentials in the database.
-    The format of the credentials are as follows:
-    [cred_name, cred_username, cred_password]
-
-    Returns:
-        list[list[str]]: A list of credentials as lists of strings.
-    """
-    conn = _get_connection()
-
-    credentials = Table("Credentials")
-    command = (
-        MSSQLQuery
-        .select(credentials.cred_name, credentials.cred_username, credentials.cred_password)
-        .from_(credentials)
-        .orderby(credentials.cred_name)
-        .get_sql()
-    )
-
-    rows = conn.execute(command).fetchall()
-    return [list(r) for r in rows]
-
-
-@catch_db_error
-def delete_constant(name: str) -> None:
-    """Delete the constant with the given name from the database.
-
-    Args:
-        name: The name of the constant to delete.
-    """
-    conn = _get_connection()
-
-    constants = Table("Constants")
-    command = (
-        MSSQLQuery
-        .from_(constants)
-        .delete()
-        .where(constants.constant_name == name)
-        .get_sql()
-    )
-
-    conn.execute(command)
-    conn.commit()
-
-
-@catch_db_error
-def delete_credential(name: str) -> None:
-    """Delete the credential with the given name from the database.
-
-    Args:
-        name: The name of the credential to delete.
-    """
-    conn = _get_connection()
-
-    credentials = Table("Credentials")
-    command = (
-        MSSQLQuery
-        .from_(credentials)
-        .delete()
-        .where(credentials.cred_name == name)
-        .get_sql()
-    )
-
-    conn.execute(command)
-    conn.commit()
+    with Session(_connection_engine) as session:
+        query = select(Constant).order_by(Constant.constant_name)
+        result = session.scalars(query).all()
+        return tuple(result)
 
 
 @catch_db_error
@@ -510,21 +337,70 @@ def create_constant(name: str, value: str) -> None:
         name: The name of the constant.
         value: The value of the constant.
     """
-    conn = _get_connection()
+    with Session(_connection_engine) as session:
+        constant = Constant(constant_name = name, constant_value = value)
+        session.add(constant)
+        session.commit()
 
-    constants = Table("Constants")
-    command = (
-        MSSQLQuery
-        .into(constants)
-        .insert(
-            name,
-            value
-        )
-        .get_sql()
-    )
 
-    conn.execute(command)
-    conn.commit()
+@catch_db_error
+def update_constant(name: str, new_value: str) -> None:
+    """Updates an existing constant with a new value.
+
+    Args:
+        name: The name of the constant to update.
+        new_value: The new value of the constant.
+    """
+    with Session(_connection_engine) as session:
+        constant = session.get(Constant, name)
+        constant.constant_value = new_value
+        session.commit()
+
+
+@catch_db_error
+def delete_constant(name: str) -> None:
+    """Delete the constant with the given name from the database.
+
+    Args:
+        name: The name of the constant to delete.
+    """
+    with Session(_connection_engine) as session:
+        constant = session.get(Constant, name)
+        session.delete(constant)
+        session.commit()
+
+
+@catch_db_error
+def get_credential(name: str) -> Credential:
+    """Get a credential from the database.
+
+    Args:
+        name: The name of the credential.
+
+    Returns:
+        Credential: The credential with the given name.
+    
+    Raises:
+        ValueError: If no credential with the given name exists.
+    """
+    with Session(_connection_engine) as session:
+        credential = session.get(Constant, name)
+        if credential is None:
+            raise ValueError(f"No credential with name '{name}' was found.")
+        return credential
+
+
+@catch_db_error
+def get_credentials() -> tuple[Credential]:
+    """Get all credentials in the database.
+
+    Returns:
+        tuple[Credential]: A list of credentials.
+    """
+    with Session(_connection_engine) as session:
+        query = select(Credential).order_by(Credential.constant_name)
+        result = session.scalars(query).all()
+        return tuple(result)
 
 
 @catch_db_error
@@ -537,24 +413,48 @@ def create_credential(name: str, username: str, password: str) -> None:
         username: The username of the credential.
         password: The password of the credential.
     """
-    conn = _get_connection()
 
     password = crypto_util.encrypt_string(password)
 
-    credentials = Table("Credentials")
-    command = (
-        MSSQLQuery
-        .into(credentials)
-        .insert(
-            name,
-            username,
-            password
+    with Session(_connection_engine) as session:
+        credential = Credential(
+            credential_name = name,
+            credential_username= username,
+            credential_password = password
         )
-        .get_sql()
-    )
+        session.add(credential)
+        session.commit()
 
-    conn.execute(command)
-    conn.commit()
+
+@catch_db_error
+def update_credential(name: str, new_username: str, new_password: str) -> None:
+    """Updates an existing credential with a new value.
+
+    Args:
+        name: The name of the credential to update.
+        new_username: The new username of the credential.
+        new_password: The new password of the credential.
+    """
+    new_password = crypto_util.encrypt_string(new_password)
+
+    with Session(_connection_engine) as session:
+        credential = session.get(Credential, name)
+        credential.credential_username = new_username
+        credential.credential_password = new_password
+        session.commit()
+
+
+@catch_db_error
+def delete_credential(name: str) -> None:
+    """Delete the credential with the given name from the database.
+
+    Args:
+        name: The name of the credential to delete.
+    """
+    with Session(_connection_engine) as session:
+        constant = session.get(Constant, name)
+        session.delete(constant)
+        session.commit()
 
 
 @catch_db_error
@@ -568,85 +468,53 @@ def begin_single_trigger(trigger_id: str) -> bool:
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
-    conn = _get_connection()
+    with Session(_connection_engine) as session:
+        trigger = session.get(SingleTrigger, trigger_id)
 
-    triggers = Table("Single_Triggers")
-    command = (
-        MSSQLQuery
-        .update(triggers)
-        .set(triggers.process_status, 1)
-        .set(triggers.last_run, datetime.now().strftime(_DATETIME_FORMAT))
-        .where(triggers.id == trigger_id)
-        .where(triggers.process_status == 0)
-        .get_sql()
-    )
+        if trigger.process_status != TriggerStatus.IDLE:
+            return False
 
-    cursor = conn.execute(command)
-    if cursor.rowcount == 0:
-        return False
+        trigger.process_status = TriggerStatus.RUNNING
+        trigger.last_run = datetime.now()
 
-    conn.commit()
-    return True
+        session.commit()
+        return True
 
 
 @catch_db_error
-def get_next_single_trigger() -> list[str] | None:
+def get_next_single_trigger() -> SingleTrigger | None:
     """Get the single trigger that should trigger next.
-    A trigger returned by this is not necessarily ready to trigger.
-    The format of the trigger is:
-    [process_name, next_run, id, process_path, is_git_repo, blocking]
 
     Returns:
-        list[str]: The next single trigger to run, if any else None.
+        SingleTrigger | None: The next single trigger to run if any.
     """
-    conn = _get_connection()
-
-    triggers = Table("Single_Triggers")
-    command = (
-        MSSQLQuery
-        .select(triggers.process_name, triggers.next_run, triggers.id, triggers.process_path, triggers.is_git_repo, triggers.blocking)
-        .from_(triggers)
-        .where(triggers.process_status == 0)
-        .orderby(triggers.next_run)
-        .limit(1)
-        .get_sql()
-    )
-
-    trigger = conn.execute(command).fetchone()
-    if trigger is not None:
-        return list(trigger)
-
-    return None
+    with Session(_connection_engine) as session:
+        query = (
+            select(SingleTrigger)
+            .where(SingleTrigger.process_status == TriggerStatus.IDLE)
+            .where(SingleTrigger.next_run <= datetime.now())
+            .order_by(SingleTrigger.next_run)
+            .limit(1)
+        )
+        return session.scalar(query)
 
 
 @catch_db_error
-def get_next_scheduled_trigger() -> list[str] | None:
+def get_next_scheduled_trigger() -> ScheduledTrigger | None:
     """Get the scheduled trigger that should trigger next.
-    A trigger returned by this is not necessarily ready to trigger.
-    The format of the trigger is:
-    [process_name, next_run, id, process_path, is_git_repo, blocking, cron_expr]
 
     Returns:
-        list[str]: The next scheduled trigger to run, if any else None.
+        ScheduledTrigger | None: The next scheduled trigger to run if any.
     """
-    conn = _get_connection()
-
-    triggers = Table("Scheduled_Triggers")
-    command = (
-        MSSQLQuery
-        .select(triggers.process_name, triggers.next_run, triggers.id, triggers.process_path, triggers.is_git_repo, triggers.blocking, triggers.cron_expr)
-        .from_(triggers)
-        .where(triggers.process_status == 0)
-        .orderby(triggers.next_run)
-        .limit(1)
-        .get_sql()
-    )
-
-    trigger = conn.execute(command).fetchone()
-    if trigger is not None:
-        return list(trigger)
-
-    return None
+    with Session(_connection_engine) as session:
+        query = (
+            select(ScheduledTrigger)
+            .where(ScheduledTrigger.process_status == TriggerStatus.IDLE)
+            .where(ScheduledTrigger.next_run <= datetime.now())
+            .order_by(ScheduledTrigger.next_run)
+            .limit(1)
+        )
+        return session.scalar(query)
 
 
 @catch_db_error
@@ -662,53 +530,54 @@ def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> None:
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
-    conn = _get_connection()
+    with Session(_connection_engine) as session:
+        trigger = session.get(ScheduledTrigger, trigger_id)
 
-    triggers = Table("Scheduled_Triggers")
-    command = (
-        MSSQLQuery
-        .update(triggers)
-        .set(triggers.process_status, 1)
-        .set(triggers.last_run, datetime.now().strftime(_DATETIME_FORMAT))
-        .set(triggers.next_run, next_run.strftime(_DATETIME_FORMAT))
-        .where(triggers.id == trigger_id)
-        .where(triggers.process_status == 0)
-        .get_sql()
-    )
+        if trigger.process_status != TriggerStatus.IDLE:
+            return False
 
-    cursor = conn.execute(command)
-    if cursor.rowcount == 0:
-        return False
+        trigger.process_status = TriggerStatus.RUNNING
+        trigger.last_run = datetime.now()
+        trigger.next_run = next_run
 
-    conn.commit()
-    return True
+        session.commit()
+        return True
+
 
 @catch_db_error
-def set_trigger_status(trigger_id: str, status: int) -> None:
+def get_next_queue_trigger() -> QueueTrigger | None:
+    """Get the next queue trigger to run.
+    This functions loops through the queue triggers and checks
+    if the number of queue elements with status 'New' is above
+    the triggers min_batch_size.
+
+    Returns:
+        QueueTrigger | None: The next queue trigger to run if any.
+    """
+
+    with Session(_connection_engine) as session:
+        query = (
+            select(QueueTrigger)
+            .where(QueueTrigger.process_status == TriggerStatus.IDLE)
+        )
+        for trigger in session.scalars(query):
+            query = text("SELECT COUNT(*) FROM :table WHERE Status='New'")
+            count = session.scalar(query, {":table": trigger.queue_name})
+            if count >= trigger.min_batch_size:
+                return trigger
+
+    return None
+
+
+@catch_db_error
+def set_trigger_status(trigger_id: str, status: TriggerStatus) -> None:
     """Set the status of a trigger.
-    Status codes are:
-    0: Idle
-    1: Running
-    2: Error
-    3: Done
 
     Args:
         UUID: The UUID of the trigger.
         status: The new status of the trigger.
     """
-    conn = _get_connection()
-
-    # Find the trigger in one of the three tables.
-    # This is temporary until an ORM is implemented.
-    for table_name in _TRIGGER_TABLES:
-        triggers = Table(table_name)
-        command = (
-            MSSQLQuery
-            .update(triggers)
-            .set(triggers.process_status, status)
-            .where(triggers.id == trigger_id)
-            .get_sql()
-        )
-        conn.execute(command)
-
-    conn.commit()
+    with Session(_connection_engine) as session:
+        trigger = session.get(Trigger, trigger_id)
+        trigger.process_status = status
+        session.commit()
