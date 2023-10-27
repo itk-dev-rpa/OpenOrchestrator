@@ -11,7 +11,7 @@ import webbrowser
 
 import croniter
 
-from OpenOrchestrator.common import db_util
+from OpenOrchestrator.database import db_util
 
 
 def show_popup() -> tkinter.Toplevel:

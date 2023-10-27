@@ -4,7 +4,8 @@ import os
 import tkinter
 from tkinter import ttk, messagebox
 
-from OpenOrchestrator.common import db_util, crypto_util
+from OpenOrchestrator.common import crypto_util
+from OpenOrchestrator.database import db_util
 
 # pylint: disable-next=too-many-ancestors
 class ConnectionFrame(ttk.Frame):

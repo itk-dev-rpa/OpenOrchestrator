@@ -8,7 +8,8 @@ import uuid
 
 from croniter import croniter
 
-from OpenOrchestrator.common import db_util, crypto_util
+from OpenOrchestrator.common import crypto_util
+from OpenOrchestrator.database import db_util
 
 SCHEDULED = 'Scheduled'
 SINGLE = 'Single'

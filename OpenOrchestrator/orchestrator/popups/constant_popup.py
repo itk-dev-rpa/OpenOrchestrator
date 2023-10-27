@@ -7,7 +7,7 @@
 import tkinter
 from tkinter import ttk, messagebox
 
-from OpenOrchestrator.common import db_util
+from OpenOrchestrator.database import db_util
 
 def show_popup(name=None, value=None):
     """Creates and shows a popup to create a new constant.

@@ -6,7 +6,7 @@ from tkinter import ttk, font, messagebox
 from datetime import datetime
 from ast import literal_eval
 
-from OpenOrchestrator.common import db_util
+from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator import table_util
 
 def create_tab(parent):

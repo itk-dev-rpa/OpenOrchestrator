@@ -3,7 +3,7 @@ in Orchestrator."""
 
 from tkinter import ttk, messagebox
 
-from OpenOrchestrator.common import db_util
+from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator import table_util
 from OpenOrchestrator.orchestrator.popups import single_trigger_popup, email_trigger_popup, scheduled_trigger_popup
 
