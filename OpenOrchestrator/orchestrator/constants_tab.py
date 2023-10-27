@@ -29,13 +29,13 @@ def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     ttk.Label(tab, text="Constants").grid(row=0, column=0)
     const_table_frame = ttk.Frame(tab)
     const_table_frame.grid(row=1, column=0, sticky='nsew')
-    const_table = table_util.create_table(const_table_frame, ('Name', 'Value'))
+    const_table = table_util.create_table(const_table_frame, ('Name', 'Value', 'Change Date'))
 
     #Credentials table
     ttk.Label(tab, text="Credentials").grid(row=2, column=0)
     cred_table_frame = ttk.Frame(tab)
     cred_table_frame.grid(row=3, column=0, sticky='nsew')
-    cred_table = table_util.create_table(cred_table_frame, ('Name', 'Username', 'Password'))
+    cred_table = table_util.create_table(cred_table_frame, ('Name', 'Username', 'Password', 'Change Date'))
 
     # Controls 1
     controls_frame = ttk.Frame(tab)
@@ -76,8 +76,13 @@ def update_tables(const_table: ttk.Treeview, cred_table: ttk.Treeview) -> None:
         const_table: The constants table object.
         cred_table: The credentials table object.
     """
-    table_util.update_table(const_table, db_util.get_constants())
-    table_util.update_table(cred_table, db_util.get_credentials())
+
+    # Convert ORM objects to lists of values
+    const_list = [[c.constant_name, c.constant_value, c.change_date] for c in db_util.get_constants()]
+    cred_list = [[c.credential_name, c.credential_username, c.credential_password, c.change_date] for c in db_util.get_credentials()]
+
+    table_util.update_table(const_table, const_list)
+    table_util.update_table(cred_table, cred_list)
 
 
 def delete_selected(const_table: ttk.Treeview, cred_table: ttk.Treeview) -> None:
