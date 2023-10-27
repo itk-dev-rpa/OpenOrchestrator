@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 # pylint: disable=too-few-public-methods
 
 
-class Status(enum.Enum):
+class TriggerStatus(enum.Enum):
     """An enum representing the status of trigger processes."""
     IDLE = "Idle"
     RUNNING = "Running"
@@ -21,7 +21,7 @@ class Status(enum.Enum):
     PAUSED = "Paused"
 
 
-class Type(enum.Enum):
+class TriggerType(enum.Enum):
     """An enum representing the type of triggers."""
     SINGLE = "Single"
     SCHEDULED = "Scheduled"
@@ -42,10 +42,10 @@ class Trigger(Base):
     last_run: Mapped[Optional[datetime]]
     process_path: Mapped[str] = mapped_column(String(250))
     process_args: Mapped[Optional[str]] = mapped_column(String(1000))
-    process_status: Mapped[Status] = mapped_column(default=Status.IDLE)
+    process_status: Mapped[TriggerStatus] = mapped_column(default=TriggerStatus.IDLE)
     is_git_repo: Mapped[bool]
     blocking: Mapped[bool]
-    type: Mapped[Type]
+    type: Mapped[TriggerType]
 
     __mapper_args__ = {
         "polymorphic_on": "type",
@@ -63,7 +63,7 @@ class SingleTrigger(Trigger):
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("Triggers.id"), primary_key=True)
     next_run: Mapped[datetime]
 
-    __mapper_args__ = {"polymorphic_identity": Type.SINGLE}
+    __mapper_args__ = {"polymorphic_identity": TriggerType.SINGLE}
 
 
 class ScheduledTrigger(Trigger):
@@ -74,7 +74,7 @@ class ScheduledTrigger(Trigger):
     cron_expr: Mapped[str] = mapped_column(String(200))
     next_run: Mapped[datetime]
 
-    __mapper_args__ = {"polymorphic_identity": Type.SCHEDULED}
+    __mapper_args__ = {"polymorphic_identity": TriggerType.SCHEDULED}
 
 
 class QueueTrigger(Trigger):
@@ -86,7 +86,7 @@ class QueueTrigger(Trigger):
     min_batch_size: Mapped[Optional[int]]
     max_batch_size: Mapped[Optional[int]]
 
-    __mapper_args__ = {"polymorphic_identity": Type.QUEUE}
+    __mapper_args__ = {"polymorphic_identity": TriggerType.QUEUE}
 
 
 def create_tables(engine: Engine):

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
 
-class Level(enum.Enum):
+class LogLevel(enum.Enum):
     """An enum representing the level of logs."""
     TRACE = "Trace"
     INFO = "Info"
@@ -27,7 +27,7 @@ class Log(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     log_time: Mapped[datetime] = mapped_column(default=datetime.now)
-    log_level: Mapped[Level]
+    log_level: Mapped[LogLevel]
     process_name: Mapped[str] = mapped_column(String(100))
     log_message: Mapped[str] = mapped_column(String(8000))
 
