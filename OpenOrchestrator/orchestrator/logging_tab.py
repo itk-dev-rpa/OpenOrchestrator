@@ -131,7 +131,7 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
         log_level: The log level to filter on.
     """
     offset = 0
-    fetch = 100
+    limit = 100
 
     from_date = parse_date(from_date_entry.get()) or datetime(1900, 1, 1)
     to_date = parse_date(to_date_entry.get()) or datetime(2100, 12, 31)
@@ -139,31 +139,29 @@ def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.E
     process_name = process_options_var.get()
     log_level = log_level.get()
 
-    logs = db_util.get_logs(offset, fetch, from_date, to_date, process_name, log_level)
+    logs = db_util.get_logs(offset, limit, from_date, to_date, process_name, log_level)
 
-    #Clear table
-    for row in table.get_children():
-        table.delete(row)
+    # Convert log objects to lists of strings
+    logs_list = [
+        [
+            l.log_time.strftime('%d-%m-%Y %H:%M:%S'),
+            l.log_level.value,
+            l.process_name,
+            repr(l.log_message) # Convert message to single line text
+        ]
+        for l in logs
+    ]
 
-    #Update table
-    for row in logs:
-        # Pretty date format
-        row[0] = row[0].strftime('%d-%m-%Y %H:%M:%S')
-
-        # Convert the message to single line text
-        row[-1] = repr(row[-1])
-
-        table.insert('', 'end', values=row)
-
+    table_util.update_table(table, logs_list)
     resize_table(table)
 
     # Update process_name OptionMenu
-    process_names = db_util.get_unique_log_process_names()
+    process_names = list(db_util.get_unique_log_process_names())
     process_names.insert(0, "")
     replace_options(process_options, process_options_var, process_names)
 
 
-def parse_date(date_str: str) -> datetime:
+def parse_date(date_str: str) -> datetime | None:
     """Tries to parse a string to a datetime object with
     a selection of different formats.
 
