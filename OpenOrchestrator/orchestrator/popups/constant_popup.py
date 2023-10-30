@@ -66,10 +66,12 @@ def create_constant(window, name_entry: ttk.Entry, value_entry: ttk.Entry):
     except ValueError:
         exists = False
 
-    if exists and not messagebox.askyesno('Error', 'A constant with that name already exists. Do you want to overwrite it?'):
-        db_util.update_constant(name, value)
-        return
-
-    db_util.create_constant(name, value)
+    if exists:
+        if messagebox.askyesno('Error', 'A constant with that name already exists. Do you want to overwrite it?'):
+            db_util.update_constant(name, value)
+        else:
+            return
+    else:
+        db_util.create_constant(name, value)
 
     window.destroy()
