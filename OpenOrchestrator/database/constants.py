@@ -18,7 +18,7 @@ class Constant(Base):
 
     constant_name: Mapped[str] = mapped_column(String(100), primary_key=True)
     constant_value: Mapped[str] = mapped_column(String(1000))
-    change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now)
+    change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
 
 class Credential(Base):
@@ -28,7 +28,7 @@ class Credential(Base):
     credential_name: Mapped[str] = mapped_column(String(100), primary_key=True)
     credential_username: Mapped[str] = mapped_column(String(250))
     credential_password: Mapped[str] = mapped_column(String(1000))
-    change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now)
+    change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
 
 def create_tables(engine: Engine):
