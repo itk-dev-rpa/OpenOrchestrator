@@ -1,4 +1,4 @@
-"""This module is responsible for the layout and functionality of the 'New Email Trigger' popup."""
+"""This module is responsible for the layout and functionality of the 'New Queue Trigger' popup."""
 
 # Disable pylint duplicate code error since it
 # mostly reacts to the layout code being similar.
@@ -10,7 +10,7 @@ from tkinter import ttk, messagebox
 from OpenOrchestrator.database import db_util
 
 def show_popup():
-    """Creates and shows a popup to create a new email trigger.
+    """Creates and shows a popup to create a new queue trigger.
 
     Returns:
         tkinter.TopLevel: The created Toplevel object (Popup Window).
@@ -18,15 +18,19 @@ def show_popup():
     window = tkinter.Toplevel()
     window.grab_set()
     window.title("New Email Trigger")
-    window.geometry("300x300")
+    window.geometry("300x350")
+
+    ttk.Label(window, text="Trigger Name:").pack()
+    trigger_entry = ttk.Entry(window)
+    trigger_entry.pack()
 
     ttk.Label(window, text="Process Name:").pack()
     name_entry = ttk.Entry(window)
     name_entry.pack()
 
-    ttk.Label(window, text="Email Folder:").pack()
-    folder_entry = ttk.Entry(window)
-    folder_entry.pack()
+    ttk.Label(window, text="Queue Name:").pack()
+    queue_entry = ttk.Entry(window)
+    queue_entry.pack()
 
     ttk.Label(window, text="Process Path:").pack()
     path_entry = ttk.Entry(window)
@@ -43,17 +47,17 @@ def show_popup():
     ttk.Checkbutton(window, text="Is Blocking?", variable=blocking_check).pack()
 
     def create_command():
-        create_trigger(window, name_entry, folder_entry, path_entry, args_entry, git_check, blocking_check)
+        create_trigger(window, trigger_entry, name_entry, queue_entry, path_entry, args_entry, git_check, blocking_check)
     ttk.Button(window, text='Create', command=create_command).pack()
     ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
     return window
 
-def create_trigger(window: tkinter.Toplevel,
-                   name_entry: ttk.Entry, folder_entry: ttk.Entry,
+def create_trigger(window: tkinter.Toplevel, trigger_entry: ttk.Entry,
+                   name_entry: ttk.Entry, queue_entry: ttk.Entry,
                    path_entry: ttk.Entry, args_entry: ttk.Entry,
                    git_check: tkinter.IntVar, blocking_check: tkinter.IntVar):
-    """Creates a new email trigger in the database
+    """Creates a new queue trigger in the database
     using the data entered in the UI.
 
     Args:
@@ -65,19 +69,24 @@ def create_trigger(window: tkinter.Toplevel,
         git_check: The intvar holding the 'is_git' value.
         blocking_check: The intvar holding the 'blocking' value.
     """
+    trigger_name = trigger_entry.get()
     name = name_entry.get()
-    folder = folder_entry.get()
+    queue = queue_entry.get()
     path = path_entry.get()
     args = args_entry.get()
     is_git = git_check.get()
     is_blocking = blocking_check.get()
 
+    if not trigger_name:
+        messagebox.showerror('Error', 'Please enter a trigger name')
+        return
+
     if not name:
         messagebox.showerror('Error', 'Please enter a process name')
         return
 
-    if not folder:
-        messagebox.showerror('Error', 'Please enter a folder name')
+    if not queue:
+        messagebox.showerror('Error', 'Please enter a queue name')
         return
 
     if not path:
@@ -85,6 +94,6 @@ def create_trigger(window: tkinter.Toplevel,
         return
 
     # Create trigger in database
-    db_util.create_email_trigger(name, folder, path, args, is_git, is_blocking)
+    db_util.create_queue_trigger(trigger_name, name, queue, path, args, is_git, is_blocking)
 
     window.destroy()
