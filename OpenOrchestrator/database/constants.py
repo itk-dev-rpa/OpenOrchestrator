@@ -20,6 +20,14 @@ class Constant(Base):
     constant_value: Mapped[str] = mapped_column(String(1000))
     change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
+    def as_tuple(self) -> tuple:
+        """Convert the constant to a tuple of values.
+
+        Returns:
+            tuple: A tuple of all the triggers values.
+        """
+        return (self.constant_name, self.constant_value, self.change_date)
+
 
 class Credential(Base):
     """A class representing a credential object in the ORM."""
@@ -29,6 +37,19 @@ class Credential(Base):
     credential_username: Mapped[str] = mapped_column(String(250))
     credential_password: Mapped[str] = mapped_column(String(1000))
     change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
+
+    def as_tuple(self) -> tuple:
+        """Convert the credential to a tuple of values.
+
+        Returns:
+            tuple: A tuple of all the triggers values.
+        """
+        return (
+            self.credential_name,
+            self.credential_username,
+            self.credential_password,
+            self.change_date
+        )
 
 
 def create_tables(engine: Engine):
