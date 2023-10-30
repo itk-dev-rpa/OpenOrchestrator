@@ -10,7 +10,7 @@ from OpenOrchestrator.database import db_util
 # pylint: disable-next=too-many-ancestors
 class ConnectionFrame(ttk.Frame):
     """A ttk.Frame object that contains two ttk.Entry and
-    a ttk.Button used to enter a connection string and
+    two ttk.Button used to enter a connection string and
     encryption key and to connect to the database.
     """
     def __init__(self, parent: tkinter.Widget):
