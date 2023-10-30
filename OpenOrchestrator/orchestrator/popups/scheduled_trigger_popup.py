@@ -23,7 +23,11 @@ def show_popup() -> tkinter.Toplevel:
     window = tkinter.Toplevel()
     window.grab_set()
     window.title("New Single Trigger")
-    window.geometry("300x300")
+    window.geometry("300x350")
+
+    ttk.Label(window, text="Trigger Name:").pack()
+    trigger_entry = ttk.Entry(window)
+    trigger_entry.pack()
 
     ttk.Label(window, text="Process Name:").pack()
     name_entry = ttk.Entry(window)
@@ -52,14 +56,14 @@ def show_popup() -> tkinter.Toplevel:
     ttk.Checkbutton(window, text="Is Blocking?", variable=blocking_check).pack()
 
     def create_command():
-        create_trigger(window, name_entry, cron_entry, path_entry, args_entry, git_check, blocking_check)
+        create_trigger(window, trigger_entry, name_entry, cron_entry, path_entry, args_entry, git_check, blocking_check)
     ttk.Button(window, text='Create', command=create_command).pack()
     ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
     return window
 
 
-def create_trigger(window: tkinter.Toplevel,
+def create_trigger(window: tkinter.Toplevel, trigger_entry: ttk.Entry,
                    name_entry: ttk.Entry, cron_entry: ttk.Entry,
                    path_entry: ttk.Entry, args_entry: ttk.Entry,
                    git_check: tkinter.IntVar, blocking_check: tkinter.IntVar):
@@ -76,14 +80,19 @@ def create_trigger(window: tkinter.Toplevel,
         blocking_check: The intvar holding the 'blocking' value.
     """
 
-    name = name_entry.get()
+    trigger_name = trigger_entry.get()
+    process_name = name_entry.get()
     cron_string = cron_entry.get()
     path = path_entry.get()
     args = args_entry.get()
     is_git = git_check.get()
     is_blocking = blocking_check.get()
 
-    if not name:
+    if not trigger_name:
+        messagebox.showerror('Error', 'Please enter a trigger name')
+        return
+
+    if not process_name:
         messagebox.showerror('Error', 'Please enter a process name')
         return
 
@@ -99,6 +108,6 @@ def create_trigger(window: tkinter.Toplevel,
         return
 
     # Create trigger in database
-    db_util.create_scheduled_trigger(name, cron_string, date, path, args, is_git, is_blocking)
+    db_util.create_scheduled_trigger(trigger_name, process_name, cron_string, date, path, args, is_git, is_blocking)
 
     window.destroy()
