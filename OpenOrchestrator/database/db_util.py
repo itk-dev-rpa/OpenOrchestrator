@@ -78,7 +78,7 @@ def initialize_database() -> None:
 
 
 @catch_db_error
-def get_scheduled_triggers() -> tuple(ScheduledTrigger):
+def get_scheduled_triggers() -> tuple[ScheduledTrigger]:
     """Get all scheduled triggers from the database.
 
     Returns:
@@ -91,7 +91,7 @@ def get_scheduled_triggers() -> tuple(ScheduledTrigger):
 
 
 @catch_db_error
-def get_single_triggers() -> tuple(SingleTrigger):
+def get_single_triggers() -> tuple[SingleTrigger]:
     """Get all single triggers from the database.
 
     Returns:
@@ -104,42 +104,42 @@ def get_single_triggers() -> tuple(SingleTrigger):
 
 
 @catch_db_error
-def get_queue_triggers() -> tuple(QueueTrigger):
+def get_queue_triggers() -> tuple[QueueTrigger]:
     """Get all queue triggers from the database.
 
     Returns:
         tuple(QueueTrigger): A list of all queue triggers in the database.
     """
     with Session(_connection_engine) as session:
-        query = select(SingleTrigger)
+        query = select(QueueTrigger)
         result = session.scalars(query).all()
         return tuple(result)
 
 
 @catch_db_error
-def delete_trigger(trigger: Trigger) -> None:
+def delete_trigger(trigger_id: str) -> None:
     """Delete the given trigger from the database.
 
     Args:
-        Trigger: The trigger to delete.
+        trigger_id: The id of the trigger to delete.
     """
     with Session(_connection_engine) as session:
-        trigger = session.get(Trigger, trigger.id)
+        trigger = session.get(Trigger, trigger_id)
         session.delete(trigger)
         session.commit()
 
 
 @catch_db_error
 def get_logs(offset: int, limit: int,
-             from_date: datetime, to_date: datetime,
-             process_name: str|None, log_level: LogLevel|None) -> tuple(Log):
+             from_date: datetime|None, to_date: datetime|None,
+             process_name: str|None, log_level: LogLevel|None) -> tuple[Log]:
     """Get the logs from the database using filters and pagination.
 
     Args:
         offset: The index of the first log to get.
         limit: The number of logs to get.
-        from_date: The datetime where the log time must be at or after.
-        to_date: The datetime where the log time must be at or earlier.
+        from_date: The datetime where the log time must be at or after. If none the filter is disabled.
+        to_date: The datetime where the log time must be at or earlier. If none the filter is disabled.
         process_name: The process name to filter on. If none the filter is disabled.
         log_level: The log level to filter on. If none the filter is disabled.
 
@@ -373,6 +373,7 @@ def delete_constant(name: str) -> None:
 @catch_db_error
 def get_credential(name: str) -> Credential:
     """Get a credential from the database.
+    The password of the credential is decrypted.
 
     Args:
         name: The name of the credential.
@@ -384,21 +385,24 @@ def get_credential(name: str) -> Credential:
         ValueError: If no credential with the given name exists.
     """
     with Session(_connection_engine) as session:
-        credential = session.get(Constant, name)
+        credential = session.get(Credential, name)
         if credential is None:
             raise ValueError(f"No credential with name '{name}' was found.")
+
+        credential.credential_password = crypto_util.decrypt_string(credential.credential_password)
         return credential
 
 
 @catch_db_error
 def get_credentials() -> tuple[Credential]:
     """Get all credentials in the database.
+    The passwords of the credentials are encrypted.
 
     Returns:
         tuple[Credential]: A list of credentials.
     """
     with Session(_connection_engine) as session:
-        query = select(Credential).order_by(Credential.constant_name)
+        query = select(Credential).order_by(Credential.credential_name)
         result = session.scalars(query).all()
         return tuple(result)
 
@@ -452,7 +456,7 @@ def delete_credential(name: str) -> None:
         name: The name of the credential to delete.
     """
     with Session(_connection_engine) as session:
-        constant = session.get(Constant, name)
+        constant = session.get(Credential, name)
         session.delete(constant)
         session.commit()
 
