@@ -522,7 +522,7 @@ def get_next_scheduled_trigger() -> ScheduledTrigger | None:
 
 
 @catch_db_error
-def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> None:
+def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> bool:
     """Set the status of a scheduled trigger to 'running', 
     set the last run time to the current time,
     and set the next run time to the given datetime.
@@ -571,6 +571,30 @@ def get_next_queue_trigger() -> QueueTrigger | None:
                 return trigger
 
     return None
+
+
+@catch_db_error
+def begin_queue_trigger(trigger_id: str) -> None:
+    """Set the status of a queue trigger to 'running' and 
+    set the last run time to the current time.
+
+    Args:
+        UUID: The UUID of the trigger to begin.
+    
+    Returns:
+        bool: True if the trigger was 'idle' and now 'running'.
+    """
+    with Session(_connection_engine) as session:
+        trigger = session.get(QueueTrigger, trigger_id)
+
+        if trigger.process_status != TriggerStatus.IDLE:
+            return False
+
+        trigger.process_status = TriggerStatus.RUNNING
+        trigger.last_run = datetime.now()
+
+        session.commit()
+        return True
 
 
 @catch_db_error
