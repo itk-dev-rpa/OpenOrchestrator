@@ -44,7 +44,7 @@ class Trigger(Base):
     process_args: Mapped[Optional[str]] = mapped_column(String(1000))
     process_status: Mapped[TriggerStatus] = mapped_column(default=TriggerStatus.IDLE)
     is_git_repo: Mapped[bool]
-    blocking: Mapped[bool]
+    is_blocking: Mapped[bool]
     type: Mapped[TriggerType]
 
     __mapper_args__ = {
@@ -64,6 +64,25 @@ class SingleTrigger(Trigger):
     next_run: Mapped[datetime]
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.SINGLE}
+ 
+    def as_tuple(self) -> tuple:
+        """Convert the trigger to a tuple of values.
+
+        Returns:
+            tuple: A tuple of all the triggers values.
+        """
+        return [
+            self.trigger_name,
+            self.process_name,
+            self.last_run,
+            self.next_run,
+            self.process_path,
+            self.process_args,
+            self.process_status.value,
+            self.is_git_repo,
+            self.is_blocking,
+            self.id
+        ]
 
 
 class ScheduledTrigger(Trigger):
@@ -76,6 +95,26 @@ class ScheduledTrigger(Trigger):
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.SCHEDULED}
 
+    def as_tuple(self) -> tuple:
+        """Convert the trigger to a tuple of values.
+
+        Returns:
+            tuple: A tuple of all the triggers values.
+        """
+        return [
+            self.trigger_name,
+            self.process_name,
+            self.cron_expr,
+            self.last_run,
+            self.next_run,
+            self.process_path,
+            self.process_args,
+            self.process_status.value,
+            self.is_git_repo,
+            self.is_blocking,
+            self.id
+        ]
+
 
 class QueueTrigger(Trigger):
     """A class representing queue trigger objects in the ORM."""
@@ -87,6 +126,25 @@ class QueueTrigger(Trigger):
     max_batch_size: Mapped[Optional[int]]
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.QUEUE}
+
+    def as_tuple(self) -> tuple:
+        """Convert the trigger to a tuple of values.
+
+        Returns:
+            tuple: A tuple of all the triggers values.
+        """
+        return [
+            self.trigger_name,
+            self.process_name,
+            self.queue_name,
+            self.last_run,
+            self.process_path,
+            self.process_args,
+            self.process_status.value,
+            self.is_git_repo,
+            self.is_blocking,
+            self.id
+        ]
 
 
 def create_tables(engine: Engine):
