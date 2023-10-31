@@ -176,11 +176,13 @@ def end_job(job: Job) -> None:
         job: The job whose trigger to mark as ended.
     """
     if isinstance(job.trigger, SingleTrigger):
-        db_util.set_trigger_status(job.trigger_id, TriggerStatus.DONE)
+        db_util.set_trigger_status(job.trigger.id, TriggerStatus.DONE)
+
     elif isinstance(job.trigger, ScheduledTrigger):
-        db_util.set_trigger_status(job.trigger_id, TriggerStatus.IDLE)
+        db_util.set_trigger_status(job.trigger.id, TriggerStatus.IDLE)
+
     elif isinstance(job.trigger, QueueTrigger):
-        db_util.set_trigger_status(job.trigger_id, TriggerStatus.IDLE)
+        db_util.set_trigger_status(job.trigger.id, TriggerStatus.IDLE)
 
 
 def fail_job(job: Job) -> None:
@@ -193,12 +195,12 @@ def fail_job(job: Job) -> None:
 
 
 def run_process(trigger: Trigger) -> subprocess.Popen | None:
-    """Runs the process at the given path with the necessary inputs:
+    """Runs the process of the given trigger with the necessary inputs:
     Process name
     Connection string
     Crypto key
 
-    If the process_path is pointing to a git repo the repo is cloned
+    If the trigger's process_path is pointing to a git repo the repo is cloned
     and the main.* file in the repo is found and run.
 
     Supports .py and .bat files.
