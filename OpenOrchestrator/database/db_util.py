@@ -567,7 +567,7 @@ def get_next_queue_trigger() -> QueueTrigger | None:
         for trigger in session.scalars(query):
             query = text("SELECT COUNT(*) FROM :table WHERE Status='New'")
             count = session.scalar(query, {":table": trigger.queue_name})
-            if count >= trigger.min_batch_size:
+            if count >= trigger.min_batch_size or trigger.min_batch_size is None:
                 return trigger
 
     return None
