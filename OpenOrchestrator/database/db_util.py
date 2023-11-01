@@ -711,12 +711,14 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
 
 
 @catch_db_error
-def bulk_get_queue_elements(queue_name: str, reference: str = None, limit: int = 100) -> tuple[QueueElement]:
-    """Get multiple queue elements from a queue in bulk. The elements are ordered by created_date.
+def get_queue_elements(queue_name: str, reference: str = None, status: QueueStatus = None,
+                            limit: int = 100) -> tuple[QueueElement]:
+    """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
     Args:
         queue_name: The queue to get elements from.
         reference (optional): The reference to filter by if any.
+        status (optional): The status to filter by if any.
         limit (optional): The number of queue elements to get.
 
     Returns:
@@ -731,6 +733,9 @@ def bulk_get_queue_elements(queue_name: str, reference: str = None, limit: int =
         )
         if reference is not None:
             query = query.where(QueueElement.reference == reference)
+        
+        if status is not None:
+            query = query.where(QueueElement.status == status)
 
         result = session.scalars(query).all()
         return tuple(result)
