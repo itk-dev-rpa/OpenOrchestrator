@@ -48,7 +48,7 @@ def poll_triggers(app) -> Job | None:
     next_queue_trigger = db_util.get_next_queue_trigger()
 
     if next_queue_trigger and not (next_queue_trigger.is_blocking and other_processes_running):
-        run_queue_trigger(next_queue_trigger)
+        return run_queue_trigger(next_queue_trigger)
 
     return None
 
@@ -109,6 +109,8 @@ def run_queue_trigger(trigger: QueueTrigger) -> Job | None:
     Returns:
         Job: A Job object describing the process if successful.
     """
+    print('Running trigger: ', trigger.trigger_name)
+
     if db_util.begin_queue_trigger(trigger.id):
         process = run_process(trigger)
 

@@ -3,8 +3,9 @@
 from datetime import datetime
 from tkinter import messagebox
 
-from sqlalchemy import Engine, create_engine, select, text, insert
+from sqlalchemy import Engine, create_engine, select, insert
 from sqlalchemy import exc as alc_exc
+from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session
 
 from OpenOrchestrator.common import crypto_util
@@ -271,7 +272,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
 @catch_db_error
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int=None, max_batch_size: int=None) -> None:
+                         min_batch_size: int=0, max_batch_size: int=None) -> None:
     """Create a new queue trigger in the database.
 
     Args:
@@ -562,17 +563,20 @@ def get_next_queue_trigger() -> QueueTrigger | None:
     """
 
     with Session(_connection_engine) as session:
+
+        sub_query = (
+            select(alc_func.count()) # pylint: disable=not-callable
+            .where(QueueElement.queue_name == QueueTrigger.queue_name)
+            .scalar_subquery()
+        )
+
         query = (
             select(QueueTrigger)
             .where(QueueTrigger.process_status == TriggerStatus.IDLE)
+            .where(sub_query >= QueueTrigger.min_batch_size)
+            .limit(1)
         )
-        for trigger in session.scalars(query):
-            query = text("SELECT COUNT(*) FROM :table WHERE Status='New'")
-            count = session.scalar(query, {":table": trigger.queue_name})
-            if count >= trigger.min_batch_size or trigger.min_batch_size is None:
-                return trigger
-
-    return None
+        return session.scalar(query)
 
 
 @catch_db_error
