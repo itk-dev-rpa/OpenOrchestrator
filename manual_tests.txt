@@ -1,0 +1,55 @@
+This document is a checklist for manual tests of OpenOrchestrator.
+It's not pretty but it's what we got for now.
+
+Orchestrator:
+    Settings tab:
+        New key
+        Connect
+        Disconnect
+        Initialize
+
+    Trigger tab:
+        Update empty 
+        New trigger x3
+        Update full
+        Reset
+        Delete x3
+
+    Logs tab:
+        Update empty
+        cli: Create log
+        Update full
+        Filter log level
+        Filter process name
+        Filter date from
+        Filter date to
+        Filter date from/to
+
+    Constants tab:
+        Update empty
+        New constant
+        Change constant
+        New credential
+        Change credential
+        Update full
+        Delete constant
+        Delete credential
+
+
+Scheduler:
+    Settings tab:
+        Connect
+        Disconnect
+    
+    Run
+    Pause
+    Scheduled trigger
+    Single trigger
+    Queue trigger
+    Is_git_repo
+    Is_blocking
+    Wrong path
+    Process with raise
+    Pause while running
+    Pause then Run while running
+
