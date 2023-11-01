@@ -20,7 +20,7 @@ def show_popup():
     window = tkinter.Toplevel()
     window.grab_set()
     window.title("New Single Trigger")
-    window.geometry("300x300")
+    window.geometry("300x350")
 
     ttk.Label(window, text="Trigger Name:").pack()
     trigger_entry = ttk.Entry(window)
