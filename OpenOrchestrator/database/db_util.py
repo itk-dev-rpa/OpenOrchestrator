@@ -3,7 +3,7 @@
 from datetime import datetime
 from tkinter import messagebox
 
-from sqlalchemy import Engine, create_engine, select, text
+from sqlalchemy import Engine, create_engine, select, text, insert
 from sqlalchemy import exc as alc_exc
 from sqlalchemy.orm import Session
 
@@ -12,6 +12,7 @@ from OpenOrchestrator.database import logs, triggers, constants
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
+from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 
 _connection_engine: Engine
 _connection_string: str
@@ -608,4 +609,160 @@ def set_trigger_status(trigger_id: str, status: TriggerStatus) -> None:
     with Session(_connection_engine) as session:
         trigger = session.get(Trigger, trigger_id)
         trigger.process_status = status
+        session.commit()
+
+
+@catch_db_error
+def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None):
+    """Adds a queue element to the given queue.
+
+    Args:
+        queue_name: The name of the queue to add the element to.
+        reference (optional): The reference of the queue element.
+        data (optional): The data of the queue element.
+        created_by (optional): The name of the creator of the queue element.
+    """
+    with Session(_connection_engine) as session:
+        q_element = QueueElement(
+            queue_name = queue_name,
+            data = data,
+            reference = reference,
+            created_by = created_by
+        )
+        session.add(q_element)
+        session.commit()
+
+
+@catch_db_error
+def bulk_create_queue_elements(queue_name: str, references: tuple[str], data: tuple[str], created_by: str = None) -> None:
+    """Insert multiple queue elements into a queue in an optimized manner.
+    The lengths of both 'references' and 'data' must be equal to the number of elements to insert.
+
+    Args:
+        queue_name: The name of the queue to insert into.
+        references: A tuple of reference strings for each queue element.
+        data: A tuple of data strings for each queue element.
+        created_by (Optional): The name of the creator of the queue elements.
+
+    Raises:
+        ValueError: If either 'references' or 'data' are empty, or if they are not equal in length.
+    """
+    if len(references) == 0:
+        raise ValueError("No reference strings were given.")
+
+    if len(data) == 0:
+        raise ValueError("No data strings were given.")
+
+    if len(references) != len(data):
+        raise ValueError(f"The number of references and data strings don't match: {len(references)} != {len(data)}.")
+
+    q_elements = (
+        {
+            "queue_name": queue_name,
+            "reference": ref,
+            "data": dat,
+            "created_by": created_by
+        }
+        for ref, dat in zip(references, data)
+    )
+
+    with Session(_connection_engine) as session:
+        session.execute(insert(QueueElement), q_elements)
+        session.commit()
+
+
+@catch_db_error
+def get_next_queue_element(queue_name: str, reference: str = None, set_status: bool = True) -> QueueElement | None:
+    """Gets the next queue element form the given queue that has the status 'new'.
+
+    Args:
+        queue_name: The name of the queue to retrieve from.
+        reference (optional): The reference to filter on if any.
+        set_status (optional): If true the queue element's status is set to 'in progress' and the start time is noted.
+
+    Returns:
+        QueueElement | None: The next queue element in the queue if any.
+    """
+
+    with Session(_connection_engine) as session:
+        query =(
+            select(QueueElement)
+            .where(QueueElement.queue_name == queue_name)
+            .where(QueueElement.status == QueueStatus.NEW)
+            .order_by(QueueElement.created_date)
+            .limit(1)
+        )
+
+        if reference is not None:
+            query = query.where(QueueElement.reference == reference)
+
+        q_element = session.scalar(query)
+
+        if set_status:
+            q_element.status = QueueStatus.IN_PROGRESS
+            q_element.start_date = datetime.now()
+            session.commit()
+
+        return q_element
+
+
+@catch_db_error
+def bulk_get_queue_elements(queue_name: str, reference: str = None, limit: int = 100) -> tuple[QueueElement]:
+    """Get multiple queue elements from a queue in bulk. The elements are ordered by created_date.
+
+    Args:
+        queue_name: The queue to get elements from.
+        reference (optional): The reference to filter by if any.
+        limit (optional): The number of queue elements to get.
+
+    Returns:
+        tuple[QueueElement]: A tuple of queue elements.
+    """
+    with Session(_connection_engine) as session:
+        query = (
+            select(QueueElement)
+            .where(QueueElement.queue_name == queue_name)
+            .order_by(QueueElement.created_date)
+            .limit(limit)
+        )
+        if reference is not None:
+            query = query.where(QueueElement.reference == reference)
+
+        result = session.scalars(query).all()
+        return tuple(result)
+
+
+@catch_db_error
+def set_queue_element_status(element_id: str, status: QueueStatus) -> None:
+    """Set the status of the queue element.
+    If the new status is 'in progress' the start date is noted.
+    If the new status is 'Done' or 'Failed' the end date is noted.
+
+    Args:
+        element_id: The id of the queue element to change status on.
+        status: The new status of the queue element.
+    """
+    with Session(_connection_engine) as session:
+        q_element = session.get(QueueElement, element_id)
+        q_element.status = status
+
+        match status:
+            case QueueStatus.IN_PROGRESS:
+                QueueElement.start_date = datetime.now()
+            case QueueStatus.DONE | QueueStatus.FAILED:
+                QueueElement.end_date = datetime.now()
+
+        session.commit()
+
+
+@catch_db_error
+def delete_queue_element(element_id: str) -> None:
+    """Delete a queue element from the database.
+
+    Args:
+        element_id: The id of the queue element.
+    """
+    with Session(_connection_engine) as session:
+        q_element = session.get(QueueElement, element_id)
+        session.delete(q_element)
         session.commit()
