@@ -69,10 +69,8 @@ def run_single_trigger(trigger: SingleTrigger) -> Job | None:
     if db_util.begin_single_trigger(trigger.id):
         process = run_process(trigger)
 
-        if process is None:
-            return None
-
-        return Job(process, trigger)
+        if process is not None:
+            return Job(process, trigger)
 
     return None
 
@@ -95,10 +93,8 @@ def run_scheduled_trigger(trigger: ScheduledTrigger) -> Job | None:
     if db_util.begin_scheduled_trigger(trigger.id, next_run):
         process = run_process(trigger)
 
-        if process is None:
-            return None
-
-        return Job(process, trigger)
+        if process is not None:
+            return Job(process, trigger)
 
     return None
 
@@ -116,10 +112,8 @@ def run_queue_trigger(trigger: QueueTrigger) -> Job | None:
     if db_util.begin_queue_trigger(trigger.id):
         process = run_process(trigger)
 
-        if process is None:
-            return None
-
-        return Job(process, trigger)
+        if process is not None:
+            return Job(process, trigger)
 
     return None
 
