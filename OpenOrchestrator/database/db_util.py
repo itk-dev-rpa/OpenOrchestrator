@@ -733,7 +733,7 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
         )
         if reference is not None:
             query = query.where(QueueElement.reference == reference)
-        
+
         if status is not None:
             query = query.where(QueueElement.status == status)
 
@@ -742,7 +742,7 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
 
 
 @catch_db_error
-def set_queue_element_status(element_id: str, status: QueueStatus) -> None:
+def set_queue_element_status(element_id: str, status: QueueStatus, message: str = None) -> None:
     """Set the status of the queue element.
     If the new status is 'in progress' the start date is noted.
     If the new status is 'Done' or 'Failed' the end date is noted.
@@ -750,16 +750,20 @@ def set_queue_element_status(element_id: str, status: QueueStatus) -> None:
     Args:
         element_id: The id of the queue element to change status on.
         status: The new status of the queue element.
+        message (Optional): The message to attach to the queue element. This overrides any existing messages.
     """
     with Session(_connection_engine) as session:
         q_element = session.get(QueueElement, element_id)
         q_element.status = status
 
+        if message is not None:
+            q_element.message = message
+
         match status:
             case QueueStatus.IN_PROGRESS:
-                QueueElement.start_date = datetime.now()
+                q_element.start_date = datetime.now()
             case QueueStatus.DONE | QueueStatus.FAILED:
-                QueueElement.end_date = datetime.now()
+                q_element.end_date = datetime.now()
 
         session.commit()
 
