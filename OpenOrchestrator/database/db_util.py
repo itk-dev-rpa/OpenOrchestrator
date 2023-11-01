@@ -8,7 +8,7 @@ from sqlalchemy import exc as alc_exc
 from sqlalchemy.orm import Session
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import logs, triggers, constants
+from OpenOrchestrator.database import logs, triggers, constants, queues
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
@@ -75,6 +75,7 @@ def initialize_database() -> None:
     logs.create_tables(_connection_engine)
     triggers.create_tables(_connection_engine)
     constants.create_tables(_connection_engine)
+    queues.create_tables(_connection_engine)
     messagebox.showinfo("Database initialized", "Database has been initialized!")
 
 
