@@ -123,7 +123,6 @@ class QueueTrigger(Trigger):
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("Triggers.id"), primary_key=True)
     queue_name: Mapped[str] = mapped_column(String(200))
     min_batch_size: Mapped[int]
-    max_batch_size: Mapped[Optional[int]]
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.QUEUE}
 
@@ -137,6 +136,7 @@ class QueueTrigger(Trigger):
             self.trigger_name,
             self.process_name,
             self.queue_name,
+            self.min_batch_size,
             self.last_run,
             self.process_path,
             self.process_args,

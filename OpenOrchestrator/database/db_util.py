@@ -272,7 +272,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
 @catch_db_error
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int=0, max_batch_size: int=None) -> None:
+                         min_batch_size: int=0) -> None:
     """Create a new queue trigger in the database.
 
     Args:
@@ -292,8 +292,7 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
             is_git_repo = is_git_repo,
             is_blocking = is_blocking,
             queue_name = queue_name,
-            min_batch_size = min_batch_size,
-            max_batch_size = max_batch_size
+            min_batch_size = min_batch_size
         )
         session.add(trigger)
         session.commit()

@@ -34,7 +34,7 @@ def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     ttk.Label(tab, text="Queue Triggers").grid(row=2, column=0)
     q_table_frame = ttk.Frame(tab)
     q_table_frame.grid(row=3, column=0, sticky='nsew')
-    q_table = table_util.create_table(q_table_frame, ('Trigger Name', 'Process Name', 'Queue Name', 'Last run', 'Path', 'Arguments', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
+    q_table = table_util.create_table(q_table_frame, ('Trigger Name', 'Process Name', 'Queue Name', 'Min batch size', 'Last run', 'Path', 'Arguments', 'Status', 'Is GIT?', 'Blocking?', 'UUID'))
 
     #Single table
     ttk.Label(tab, text="Single Triggers").grid(row=4, column=0)
