@@ -22,7 +22,7 @@ class QueueElement(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     queue_name: Mapped[str] = mapped_column(String(100), index=True)
-    status: Mapped[QueueStatus]
+    status: Mapped[QueueStatus] = mapped_column(default=QueueStatus.NEW)
     data: Mapped[Optional[str]]
     reference: Mapped[Optional[str]] = mapped_column(String(100))
     created_date: Mapped[datetime] = mapped_column(default=datetime.now)
