@@ -73,12 +73,12 @@ class SingleTrigger(Trigger):
         """
         return [
             self.trigger_name,
+            self.process_status.value,
             self.process_name,
             self.last_run,
             self.next_run,
             self.process_path,
             self.process_args,
-            self.process_status.value,
             self.is_git_repo,
             self.is_blocking,
             self.id
@@ -103,13 +103,13 @@ class ScheduledTrigger(Trigger):
         """
         return [
             self.trigger_name,
+            self.process_status.value,
             self.process_name,
             self.cron_expr,
             self.last_run,
             self.next_run,
             self.process_path,
             self.process_args,
-            self.process_status.value,
             self.is_git_repo,
             self.is_blocking,
             self.id
@@ -134,13 +134,13 @@ class QueueTrigger(Trigger):
         """
         return [
             self.trigger_name,
+            self.process_status.value,
             self.process_name,
             self.queue_name,
             self.min_batch_size,
             self.last_run,
             self.process_path,
             self.process_args,
-            self.process_status.value,
             self.is_git_repo,
             self.is_blocking,
             self.id
