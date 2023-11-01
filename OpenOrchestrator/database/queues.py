@@ -1,3 +1,5 @@
+"""This module defines ORM classes for queue elements."""
+
 from datetime import datetime
 import enum
 from typing import Optional
@@ -6,7 +8,11 @@ import uuid
 from sqlalchemy import String, Engine
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 
+# All classes in this module are effectively dataclasses without methods.
+# pylint: disable=too-few-public-methods
+
 class QueueStatus(enum.Enum):
+    """An enum representing the status of a queue element."""
     NEW = 'New'
     IN_PROGRESS = 'In Progress'
     DONE = 'Done'
@@ -18,6 +24,7 @@ class Base(DeclarativeBase):
 
 
 class QueueElement(Base):
+    """A class representing a queue element in the ORM."""
     __tablename__ = "Queues"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
