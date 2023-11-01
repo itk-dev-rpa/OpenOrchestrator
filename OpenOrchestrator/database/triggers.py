@@ -64,7 +64,7 @@ class SingleTrigger(Trigger):
     next_run: Mapped[datetime]
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.SINGLE}
- 
+
     def as_tuple(self) -> tuple:
         """Convert the trigger to a tuple of values.
 
