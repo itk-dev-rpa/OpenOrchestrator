@@ -25,7 +25,7 @@ class QueueElement(Base):
     status: Mapped[QueueStatus] = mapped_column(default=QueueStatus.NEW)
     data: Mapped[Optional[str]] = mapped_column(String(2000))
     reference: Mapped[Optional[str]] = mapped_column(String(100))
-    created_date: Mapped[datetime] = mapped_column(default=datetime.now)
+    created_date: Mapped[datetime] = mapped_column(default=datetime.now, index=True)
     start_date: Mapped[Optional[datetime]]
     end_date: Mapped[Optional[datetime]]
     Message: Mapped[Optional[str]] = mapped_column(String(1000))
