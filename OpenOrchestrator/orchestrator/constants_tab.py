@@ -136,7 +136,7 @@ def double_click_constant_table(event: tkinter.Event, const_table:ttk.Treeview, 
     """
     row = const_table.identify_row(event.y)
     if row:
-        name, value, _ = const_table.item(row, 'values')
+        name, value, *_ = const_table.item(row, 'values')
         show_constant_popup(on_close, name, value)
 
 
