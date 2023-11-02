@@ -16,8 +16,8 @@ class Constant(Base):
     """A class representing a constant object in the ORM."""
     __tablename__ = "Constants"
 
-    constant_name: Mapped[str] = mapped_column(String(100), primary_key=True)
-    constant_value: Mapped[str] = mapped_column(String(1000))
+    name: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[str] = mapped_column(String(1000))
     change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
     def as_tuple(self) -> tuple:
