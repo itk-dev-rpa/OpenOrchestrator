@@ -26,16 +26,16 @@ class Constant(Base):
         Returns:
             tuple: A tuple of all the triggers values.
         """
-        return (self.constant_name, self.constant_value, self.change_date)
+        return (self.name, self.value, self.change_date)
 
 
 class Credential(Base):
     """A class representing a credential object in the ORM."""
     __tablename__ = "Credentials"
 
-    credential_name: Mapped[str] = mapped_column(String(100), primary_key=True)
-    credential_username: Mapped[str] = mapped_column(String(250))
-    credential_password: Mapped[str] = mapped_column(String(1000))
+    name: Mapped[str] = mapped_column(String(100), primary_key=True)
+    username: Mapped[str] = mapped_column(String(250))
+    password: Mapped[str] = mapped_column(String(1000))
     change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
     def as_tuple(self) -> tuple:
@@ -45,9 +45,9 @@ class Credential(Base):
             tuple: A tuple of all the triggers values.
         """
         return (
-            self.credential_name,
-            self.credential_username,
-            self.credential_password,
+            self.name,
+            self.username,
+            self.password,
             self.change_date
         )
 

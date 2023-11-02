@@ -391,7 +391,7 @@ def get_credential(name: str) -> Credential:
         if credential is None:
             raise ValueError(f"No credential with name '{name}' was found.")
 
-        credential.credential_password = crypto_util.decrypt_string(credential.credential_password)
+        credential.password = crypto_util.decrypt_string(credential.password)
         return credential
 
 
@@ -404,7 +404,7 @@ def get_credentials() -> tuple[Credential]:
         tuple[Credential]: A list of credentials.
     """
     with Session(_connection_engine) as session:
-        query = select(Credential).order_by(Credential.credential_name)
+        query = select(Credential).order_by(Credential.name)
         result = session.scalars(query).all()
         return tuple(result)
 
@@ -445,8 +445,8 @@ def update_credential(name: str, new_username: str, new_password: str) -> None:
 
     with Session(_connection_engine) as session:
         credential = session.get(Credential, name)
-        credential.credential_username = new_username
-        credential.credential_password = new_password
+        credential.username = new_username
+        credential.password = new_password
         session.commit()
 
 
