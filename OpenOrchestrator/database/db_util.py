@@ -16,7 +16,6 @@ from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, Scheduled
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 
 _connection_engine: Engine
-_connection_string: str
 
 
 def connect(conn_string: str) -> bool:
@@ -28,17 +27,15 @@ def connect(conn_string: str) -> bool:
     Returns:
         bool: True if successful.
     """
-    global _connection_engine, _connection_string # pylint: disable=global-statement
+    global _connection_engine # pylint: disable=global-statement
 
     try:
         engine = create_engine(conn_string)
         engine.connect()
         _connection_engine = engine
-        _connection_string = conn_string
         return True
     except alc_exc.InterfaceError as exc:
         _connection_engine = None
-        _connection_string = None
         messagebox.showerror("Connection failed", str(exc))
 
     return False
@@ -49,7 +46,6 @@ def disconnect() -> None:
     global _connection_engine #pylint: disable=global-statement
     _connection_engine.dispose()
     _connection_engine = None
-    _connection_string = None
 
 
 def catch_db_error(func: callable) -> callable:
@@ -67,9 +63,12 @@ def get_conn_string() -> str:
     """Get the connection string.
 
     Returns:
-        str: The connection string if any.
+        str: The connection string.
     """
-    return _connection_string
+    try:
+        return _connection_engine.url
+    except AttributeError as exc:
+        raise RuntimeError("Unable to get the connection string from the database engine. Has the connection been established?") from exc
 
 
 @catch_db_error
