@@ -22,7 +22,7 @@ def show_popup() -> tkinter.Toplevel:
     """
     window = tkinter.Toplevel()
     window.grab_set()
-    window.title("New Single Trigger")
+    window.title("New Scheduled Trigger")
     window.geometry("300x350")
 
     ttk.Label(window, text="Trigger Name:").pack()

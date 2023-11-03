@@ -17,7 +17,7 @@ def show_popup():
     """
     window = tkinter.Toplevel()
     window.grab_set()
-    window.title("New Email Trigger")
+    window.title("New Queue Trigger")
     window.geometry("300x350")
 
     ttk.Label(window, text="Trigger Name:").pack()
