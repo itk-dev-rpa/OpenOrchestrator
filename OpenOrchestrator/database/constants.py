@@ -18,7 +18,7 @@ class Constant(Base):
 
     name: Mapped[str] = mapped_column(String(100), primary_key=True)
     value: Mapped[str] = mapped_column(String(1000))
-    change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
+    changed_at: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
     def as_tuple(self) -> tuple:
         """Convert the constant to a tuple of values.
@@ -26,7 +26,7 @@ class Constant(Base):
         Returns:
             tuple: A tuple of all the triggers values.
         """
-        return (self.name, self.value, self.change_date)
+        return (self.name, self.value, self.changed_at)
 
 
 class Credential(Base):
@@ -36,7 +36,7 @@ class Credential(Base):
     name: Mapped[str] = mapped_column(String(100), primary_key=True)
     username: Mapped[str] = mapped_column(String(250))
     password: Mapped[str] = mapped_column(String(1000))
-    change_date: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
+    changed_at: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
     def as_tuple(self) -> tuple:
         """Convert the credential to a tuple of values.
@@ -48,7 +48,7 @@ class Credential(Base):
             self.name,
             self.username,
             self.password,
-            self.change_date
+            self.changed_at
         )
 
 

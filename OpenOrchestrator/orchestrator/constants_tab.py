@@ -29,13 +29,13 @@ def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     ttk.Label(tab, text="Constants").grid(row=0, column=0)
     const_table_frame = ttk.Frame(tab)
     const_table_frame.grid(row=1, column=0, sticky='nsew')
-    const_table = table_util.create_table(const_table_frame, ('Name', 'Value', 'Change Date'))
+    const_table = table_util.create_table(const_table_frame, ('Name', 'Value', 'Changed at'))
 
     #Credentials table
     ttk.Label(tab, text="Credentials").grid(row=2, column=0)
     cred_table_frame = ttk.Frame(tab)
     cred_table_frame.grid(row=3, column=0, sticky='nsew')
-    cred_table = table_util.create_table(cred_table_frame, ('Name', 'Username', 'Password', 'Change Date'))
+    cred_table = table_util.create_table(cred_table_frame, ('Name', 'Username', 'Password', 'Changed at'))
 
     # Controls 1
     controls_frame = ttk.Frame(tab)
