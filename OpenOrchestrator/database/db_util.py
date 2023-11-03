@@ -38,6 +38,7 @@ def connect(conn_string: str) -> bool:
         return True
     except alc_exc.InterfaceError as exc:
         _connection_engine = None
+        _connection_string = None
         messagebox.showerror("Connection failed", str(exc))
 
     return False
@@ -48,6 +49,7 @@ def disconnect() -> None:
     global _connection_engine #pylint: disable=global-statement
     _connection_engine.dispose()
     _connection_engine = None
+    _connection_string = None
 
 
 def catch_db_error(func: callable) -> callable:
