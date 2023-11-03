@@ -86,7 +86,7 @@ def get_scheduled_triggers() -> tuple[ScheduledTrigger]:
     """Get all scheduled triggers from the database.
 
     Returns:
-        tuple(ScheduledTrigger): A list of all scheduled triggers in the database.
+        tuple[ScheduledTrigger]: A list of all scheduled triggers in the database.
     """
     with Session(_connection_engine) as session:
         query = select(ScheduledTrigger)
@@ -99,7 +99,7 @@ def get_single_triggers() -> tuple[SingleTrigger]:
     """Get all single triggers from the database.
 
     Returns:
-        tuple(SingleTrigger): A list of all single triggers in the database.
+        tuple[SingleTrigger]: A list of all single triggers in the database.
     """
     with Session(_connection_engine) as session:
         query = select(SingleTrigger)
@@ -112,7 +112,7 @@ def get_queue_triggers() -> tuple[QueueTrigger]:
     """Get all queue triggers from the database.
 
     Returns:
-        tuple(QueueTrigger): A list of all queue triggers in the database.
+        tuple[QueueTrigger]: A list of all queue triggers in the database.
     """
     with Session(_connection_engine) as session:
         query = select(QueueTrigger)
@@ -148,7 +148,7 @@ def get_logs(offset: int, limit: int,
         log_level: The log level to filter on. If none the filter is disabled.
 
     Returns:
-        tuple(Log): A list of logs matching the given filters.
+        tuple[Log]: A list of logs matching the given filters.
     """
     query = (
             select(Log)
@@ -180,7 +180,7 @@ def create_log(process_name: str, level: LogLevel, message: str) -> None:
 
     Args:
         process_name: The name of the process generating the log.
-        level: The level of the log (0,1,2).
+        level: The level of the log.
         message: The message of the log.
     """
     with Session(_connection_engine) as session:
@@ -247,13 +247,14 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
     """Create a new scheduled trigger in the database.
 
     Args:
-        name: The process name.
-        cron: The cron expression of the trigger.
-        date: The date to first run the trigger.
-        path: The path of the process.
-        args: The argument string of the process.
-        is_git: The is_git value of the process.
-        is_blocking: The is_blocking value of the process.
+        trigger_name: The name of the trigger.
+        process_name: The process name.
+        cron_expr: The cron expression of the trigger.
+        next_run: The date to first run the trigger.
+        process_path: The path of the process.
+        process_args: The argument string of the process.
+        is_git_repo: If the process_path points to a git repo.
+        is_blocking: If the process should be blocking.
     """
     with Session(_connection_engine) as session:
         trigger = ScheduledTrigger(
@@ -277,12 +278,14 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
     """Create a new queue trigger in the database.
 
     Args:
-        name: The process name.
-        folder: The email folder of the trigger.
-        path: The path of the process.
-        args: The argument string of the process.
-        is_git: The is_git value of the process.
+        trigger_name: The name of the trigger.
+        process_name: The process name.
+        queue_name: The name of the queue.
+        process_path: The path of the process.
+        process_args: The argument string of the process.
+        is_git_repo: The is_git value of the process.
         is_blocking: The is_blocking value of the process.
+        min_batch_size: The minimum number of queue elements before triggering.
     """
     with Session(_connection_engine) as session:
         trigger = QueueTrigger(
@@ -327,7 +330,7 @@ def get_constants() -> tuple[Constant]:
         tuple[Constants]: A list of constants.
     """
     with Session(_connection_engine) as session:
-        query = select(Constant).order_by(Constant.constant_name)
+        query = select(Constant).order_by(Constant.name)
         result = session.scalars(query).all()
         return tuple(result)
 
@@ -341,7 +344,7 @@ def create_constant(name: str, value: str) -> None:
         value: The value of the constant.
     """
     with Session(_connection_engine) as session:
-        constant = Constant(constant_name = name, constant_value = value)
+        constant = Constant(name = name, value = value)
         session.add(constant)
         session.commit()
 
@@ -356,7 +359,7 @@ def update_constant(name: str, new_value: str) -> None:
     """
     with Session(_connection_engine) as session:
         constant = session.get(Constant, name)
-        constant.constant_value = new_value
+        constant.value = new_value
         session.commit()
 
 
@@ -389,11 +392,11 @@ def get_credential(name: str) -> Credential:
     """
     with Session(_connection_engine) as session:
         credential = session.get(Credential, name)
-        if credential is None:
-            raise ValueError(f"No credential with name '{name}' was found.")
 
-        credential.password = crypto_util.decrypt_string(credential.password)
-        return credential
+    if credential is None:
+        raise ValueError(f"No credential with name '{name}' was found.")
+    credential.password = crypto_util.decrypt_string(credential.password)
+    return credential
 
 
 @catch_db_error
@@ -425,9 +428,9 @@ def create_credential(name: str, username: str, password: str) -> None:
 
     with Session(_connection_engine) as session:
         credential = Credential(
-            credential_name = name,
-            credential_username= username,
-            credential_password = password
+            name = name,
+            username= username,
+            password = password
         )
         session.add(credential)
         session.commit()
@@ -470,7 +473,7 @@ def begin_single_trigger(trigger_id: str) -> bool:
     set the last run time to the current time.
 
     Args:
-        UUID: The UUID of the trigger to begin.
+        trigger_id: The id of the trigger to begin.
     
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
@@ -531,7 +534,7 @@ def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> bool:
     and set the next run time to the given datetime.
 
     Args:
-        UUID: The UUID of the trigger to begin.
+        trigger_id: The id of the trigger to begin.
         next_run: The next datetime the trigger should run.
     
     Returns:
@@ -585,7 +588,7 @@ def begin_queue_trigger(trigger_id: str) -> None:
     set the last run time to the current time.
 
     Args:
-        UUID: The UUID of the trigger to begin.
+        trigger_id: The id of the trigger to begin.
     
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
@@ -608,7 +611,7 @@ def set_trigger_status(trigger_id: str, status: TriggerStatus) -> None:
     """Set the status of a trigger.
 
     Args:
-        UUID: The UUID of the trigger.
+        trigger_id: The id of the trigger.
         status: The new status of the trigger.
     """
     with Session(_connection_engine) as session:
@@ -678,11 +681,11 @@ def bulk_create_queue_elements(queue_name: str, references: tuple[str], data: tu
 
 @catch_db_error
 def get_next_queue_element(queue_name: str, reference: str = None, set_status: bool = True) -> QueueElement | None:
-    """Gets the next queue element form the given queue that has the status 'new'.
+    """Gets the next queue element from the given queue that has the status 'new'.
 
     Args:
         queue_name: The name of the queue to retrieve from.
-        reference (optional): The reference to filter on if any.
+        reference (optional): The reference to filter on. If None the filter is disabled.
         set_status (optional): If true the queue element's status is set to 'in progress' and the start time is noted.
 
     Returns:
@@ -713,14 +716,15 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
 
 @catch_db_error
 def get_queue_elements(queue_name: str, reference: str = None, status: QueueStatus = None,
-                            limit: int = 100) -> tuple[QueueElement]:
+                            offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
     Args:
         queue_name: The queue to get elements from.
-        reference (optional): The reference to filter by if any.
-        status (optional): The status to filter by if any.
-        limit (optional): The number of queue elements to get.
+        reference (optional): The reference to filter by. If None the filter is disabled.
+        status (optional): The status to filter by if any. If None the filter is disabled.
+        offset: The number of queue elements to skip.
+        limit: The number of queue elements to get.
 
     Returns:
         tuple[QueueElement]: A tuple of queue elements.
@@ -730,6 +734,7 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
             select(QueueElement)
             .where(QueueElement.queue_name == queue_name)
             .order_by(QueueElement.created_date)
+            .offset(offset)
             .limit(limit)
         )
         if reference is not None:
@@ -744,7 +749,7 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
 
 @catch_db_error
 def set_queue_element_status(element_id: str, status: QueueStatus, message: str = None) -> None:
-    """Set the status of the queue element.
+    """Set the status of a queue element.
     If the new status is 'in progress' the start date is noted.
     If the new status is 'Done' or 'Failed' the end date is noted.
 
