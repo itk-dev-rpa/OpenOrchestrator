@@ -113,13 +113,13 @@ def update_tables(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.T
         si_table: The single table.
     """
     scheduled_triggers = db_util.get_scheduled_triggers()
-    sc_list = [t.as_tuple() for t in scheduled_triggers]
+    sc_list = [t.to_tuple() for t in scheduled_triggers]
 
     queue_triggers = db_util.get_queue_triggers()
-    q_list = [t.as_tuple() for t in queue_triggers]
+    q_list = [t.to_tuple() for t in queue_triggers]
 
     single_triggers = db_util.get_single_triggers()
-    si_list = [t.as_tuple() for t in single_triggers]
+    si_list = [t.to_tuple() for t in single_triggers]
 
     table_util.update_table(sc_table, sc_list)
     table_util.update_table(q_table, q_list)

@@ -65,7 +65,7 @@ class SingleTrigger(Trigger):
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.SINGLE}
 
-    def as_tuple(self) -> tuple:
+    def to_tuple(self) -> tuple:
         """Convert the trigger to a tuple of values.
 
         Returns:
@@ -95,7 +95,7 @@ class ScheduledTrigger(Trigger):
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.SCHEDULED}
 
-    def as_tuple(self) -> tuple:
+    def to_tuple(self) -> tuple:
         """Convert the trigger to a tuple of values.
 
         Returns:
@@ -126,7 +126,7 @@ class QueueTrigger(Trigger):
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.QUEUE}
 
-    def as_tuple(self) -> tuple:
+    def to_tuple(self) -> tuple:
         """Convert the trigger to a tuple of values.
 
         Returns:

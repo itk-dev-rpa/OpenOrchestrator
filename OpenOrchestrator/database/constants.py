@@ -20,7 +20,7 @@ class Constant(Base):
     value: Mapped[str] = mapped_column(String(1000))
     changed_at: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
-    def as_tuple(self) -> tuple:
+    def to_tuple(self) -> tuple:
         """Convert the constant to a tuple of values.
 
         Returns:
@@ -38,7 +38,7 @@ class Credential(Base):
     password: Mapped[str] = mapped_column(String(1000))
     changed_at: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
-    def as_tuple(self) -> tuple:
+    def to_tuple(self) -> tuple:
         """Convert the credential to a tuple of values.
 
         Returns:

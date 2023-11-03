@@ -78,8 +78,8 @@ def update_tables(const_table: ttk.Treeview, cred_table: ttk.Treeview) -> None:
     """
 
     # Convert ORM objects to lists of values
-    const_list = [c.as_tuple() for c in db_util.get_constants()]
-    cred_list = [c.as_tuple() for c in db_util.get_credentials()]
+    const_list = [c.to_tuple() for c in db_util.get_constants()]
+    cred_list = [c.to_tuple() for c in db_util.get_credentials()]
 
     table_util.update_table(const_table, const_list)
     table_util.update_table(cred_table, cred_list)
