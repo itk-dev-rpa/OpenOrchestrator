@@ -8,7 +8,7 @@
 import tkinter
 from tkinter import ttk, messagebox
 
-from OpenOrchestrator.common import db_util
+from OpenOrchestrator.database import db_util
 
 def show_popup(name=None, username=None):
     """Creates and shows a popup to create a new credential.
@@ -72,15 +72,18 @@ def create_credential(window: tkinter.Toplevel, name_entry: ttk.Entry,
         messagebox.showerror('Error', 'Please enter a password')
         return
 
-    credentials = db_util.get_credentials()
-    exists = any(c[0] == name for c in credentials)
+    try:
+        db_util.get_credential(name)
+        exists = True
+    except ValueError:
+        exists = False
 
     if exists:
         if messagebox.askyesno('Error', 'A credential with that name already exists. Do you want to overwrite it?'):
-            db_util.delete_credential(name)
+            db_util.update_credential(name, username, password)
         else:
             return
-
-    db_util.create_credential(name, username, password)
+    else:
+        db_util.create_credential(name, username, password)
 
     window.destroy()

@@ -9,7 +9,7 @@ import tkinter
 from tkinter import ttk, messagebox
 import tkcalendar
 
-from OpenOrchestrator.common import db_util
+from OpenOrchestrator.database import db_util
 
 def show_popup():
     """Creates and shows a popup to create a new single trigger.
@@ -20,7 +20,11 @@ def show_popup():
     window = tkinter.Toplevel()
     window.grab_set()
     window.title("New Single Trigger")
-    window.geometry("300x300")
+    window.geometry("300x350")
+
+    ttk.Label(window, text="Trigger Name:").pack()
+    trigger_entry = ttk.Entry(window)
+    trigger_entry.pack()
 
     ttk.Label(window, text="Process Name:").pack()
     name_entry = ttk.Entry(window)
@@ -50,13 +54,13 @@ def show_popup():
     ttk.Checkbutton(window, text="Is Blocking?", variable=blocking_check).pack()
 
     def create_command():
-        create_trigger(window, name_entry, date_entry, time_entry, path_entry, args_entry, git_check, blocking_check)
+        create_trigger(window, trigger_entry, name_entry, date_entry, time_entry, path_entry, args_entry, git_check, blocking_check)
     ttk.Button(window, text='Create', command=create_command).pack()
     ttk.Button(window, text='Cancel', command=window.destroy).pack()
 
     return window
 
-def create_trigger(window: tkinter.Toplevel,
+def create_trigger(window: tkinter.Toplevel, trigger_entry: ttk.Entry,
                    name_entry: ttk.Entry, date_entry: tkcalendar.DateEntry,
                    time_entry: ttk.Entry, path_entry: ttk.Entry, args_entry: ttk.Entry,
                    git_check: tkinter.IntVar, blocking_check: tkinter.IntVar):
@@ -73,6 +77,7 @@ def create_trigger(window: tkinter.Toplevel,
         git_check: The intvar holding the 'is_git' value.
         blocking_check: The intvar holding the 'blocking' value.
     """
+    trigger_name = trigger_entry.get()
     name = name_entry.get()
     date = date_entry.get_date()
     time = time_entry.get()
@@ -80,6 +85,10 @@ def create_trigger(window: tkinter.Toplevel,
     args = args_entry.get()
     is_git = git_check.get()
     is_blocking = blocking_check.get()
+
+    if not trigger_name:
+        messagebox.showerror('Error', 'Please enter a trigger name')
+        return
 
     if not name:
         messagebox.showerror('Error', 'Please enter a process name')
@@ -101,6 +110,6 @@ def create_trigger(window: tkinter.Toplevel,
         return
 
     # Create trigger in database
-    db_util.create_single_trigger(name, date, path, args, is_git, is_blocking)
+    db_util.create_single_trigger(trigger_name, name, date, path, args, is_git, is_blocking)
 
     window.destroy()

@@ -5,7 +5,8 @@ import tkinter
 from tkinter import ttk
 import sys
 
-from OpenOrchestrator.common import db_util, crypto_util
+from OpenOrchestrator.common import crypto_util
+from OpenOrchestrator.database import db_util
 from OpenOrchestrator.scheduler import runner
 
 def create_tab(parent: ttk.Notebook, app) -> ttk.Frame:
@@ -130,14 +131,14 @@ def check_heartbeats(app) -> None:
             app.running_jobs.remove(job)
 
             if job.process.returncode == 0:
-                print(f"Process '{job.process_name}' is done")
+                print(f"Process '{job.trigger.process_name}' is done")
                 runner.end_job(job)
             else:
-                print(f"Process '{job.process_name}' failed")
+                print(f"Process '{job.trigger.process_name}' failed")
                 runner.fail_job(job)
 
         else:
-            print(f"Process '{job.process_name}' is still running")
+            print(f"Process '{job.trigger.process_name}' is still running")
 
 
 def check_triggers(app) -> None:
@@ -150,8 +151,8 @@ def check_triggers(app) -> None:
     #Check if process is blocking
     blocking = False
     for job in app.running_jobs:
-        if job.blocking:
-            print(f"Process '{job.process_name}' is blocking\n")
+        if job.trigger.is_blocking:
+            print(f"Process '{job.trigger.process_name}' is blocking\n")
             blocking = True
 
     # Check triggers

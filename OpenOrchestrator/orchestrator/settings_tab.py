@@ -3,7 +3,7 @@ in Orchestrator."""
 
 from tkinter import ttk
 
-from OpenOrchestrator.common import db_util
+from OpenOrchestrator.database import db_util
 from OpenOrchestrator.common.connection_frame import ConnectionFrame
 
 
