@@ -4,6 +4,7 @@ in Orchestrator."""
 from tkinter import ttk, messagebox
 
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.database.triggers import Trigger, TriggerStatus
 from OpenOrchestrator.orchestrator import table_util
 from OpenOrchestrator.orchestrator.popups import queue_trigger_popup, single_trigger_popup, scheduled_trigger_popup
 
@@ -48,8 +49,14 @@ def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     def update_command():
         update_tables(sc_table, q_table, si_table)
 
-    update_button = ttk.Button(controls_frame, text='Update', command=update_command)
+    update_button = ttk.Button(controls_frame, text='Update tables', command=update_command)
     update_button.pack(side='left')
+
+    reenable_button = ttk.Button(controls_frame, text="Reenable", command=lambda: set_trigger_status(TriggerStatus.IDLE, sc_table, q_table, si_table))
+    reenable_button.pack(side='left')
+
+    pause_button = ttk.Button(controls_frame, text="Pause", command=lambda: set_trigger_status(TriggerStatus.PAUSED, sc_table, q_table, si_table))
+    pause_button.pack(side='left')
 
     delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(sc_table, q_table, si_table))
     delete_button.pack(side='left')
@@ -109,7 +116,7 @@ def update_tables(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.T
 
     Args:
         sc_table: The scheduled table.
-        e_table: The email table.
+        q_table: The queue table.
         si_table: The single table.
     """
     scheduled_triggers = db_util.get_scheduled_triggers()
@@ -126,31 +133,71 @@ def update_tables(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.T
     table_util.update_table(si_table, si_list)
 
 
-def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
+def delete_trigger(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
     """Deletes the currently selected trigger from either
     of the three trigger tables.
     Shows a confirmation dialog before deleting.
 
     Args:
         sc_table: The scheduled table.
-        e_table: The email table.
+        q_table: The queue table.
         si_table: The single table.
+    """
+    trigger = get_selected_trigger(sc_table, q_table, si_table)
+
+    if trigger is None:
+        messagebox.showinfo("No trigger selected", "No trigger is selected.")
+        return
+
+    if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{trigger.trigger_name} - {trigger.id}'?"):
+        return
+
+    db_util.delete_trigger(trigger.id)
+
+    update_tables(sc_table, q_table, si_table)
+
+
+def set_trigger_status(status: TriggerStatus, sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
+    """Set the status of the currently selected trigger.
+
+    Args:
+        status: The new status to apply.
+        sc_table: The scheduled table.
+        q_table: The queue table.
+        si_table: The single table.
+    """
+    trigger = get_selected_trigger(sc_table, q_table, si_table)
+
+    if trigger is None:
+        messagebox.showinfo("No trigger selected", "No trigger is selected.")
+        return
+
+    db_util.set_trigger_status(trigger.id, status)
+
+    update_tables(sc_table, q_table, si_table)
+
+    messagebox.showinfo("Trigger status changed", f"The status of {trigger.trigger_name} has been set to {status.value}")
+
+
+def get_selected_trigger(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.Treeview) -> Trigger:
+    """Get the currently selected trigger across all three tables.
+
+    Args:
+        sc_table: The scheduled table.
+        q_table: The queue table.
+        si_table: The single table.
+
+    Returns:
+        Trigger: The ORM trigger object with the given id.
     """
     if sc_table.selection():
         table = sc_table
-    elif e_table.selection():
-        table = e_table
+    elif q_table.selection():
+        table = q_table
     elif si_table.selection():
         table = si_table
     else:
-        return
+        return None
 
-    trigger_name = table.item(table.selection()[0])['values'][0]
     trigger_id = table.item(table.selection()[0])['values'][-1]
-
-    if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{trigger_name} - {trigger_id}'?"):
-        return
-
-    db_util.delete_trigger(trigger_id)
-
-    update_tables(sc_table, e_table, si_table)
+    return db_util.get_trigger(trigger_id)

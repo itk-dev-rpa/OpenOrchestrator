@@ -82,6 +82,21 @@ def initialize_database() -> None:
 
 
 @catch_db_error
+def get_trigger(trigger_id) -> Trigger:
+    """Get the trigger with the given id.
+
+    Args:
+        trigger_id: The id of the trigger.
+
+    Returns:
+        Trigger: The trigger with the given id.
+    """
+    with Session(_connection_engine) as session:
+        return session.get(Trigger, trigger_id)
+
+
+
+@catch_db_error
 def get_scheduled_triggers() -> tuple[ScheduledTrigger]:
     """Get all scheduled triggers from the database.
 
