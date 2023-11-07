@@ -230,9 +230,10 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
 
         raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{process_path}'")
 
+    # We actually want to catch any exception here
     # pylint: disable=broad-exception-caught
     except Exception as exc:
-        db_util.set_trigger_status(trigger.id, 2)
+        db_util.set_trigger_status(trigger.id, TriggerStatus.FAILED)
         error_msg = f"Scheduler couldn't launch the process:\n{exc.__class__.__name__}:\n{exc}"
         db_util.create_log(trigger.process_name, 2, error_msg)
         print(error_msg)
