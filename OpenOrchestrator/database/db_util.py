@@ -6,7 +6,7 @@ from tkinter import messagebox
 from sqlalchemy import Engine, create_engine, select, insert
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import logs, triggers, constants, queues
@@ -82,7 +82,7 @@ def initialize_database() -> None:
 
 
 @catch_db_error
-def get_trigger(trigger_id) -> Trigger:
+def get_trigger(trigger_id: str) -> Trigger:
     """Get the trigger with the given id.
 
     Args:
@@ -92,8 +92,24 @@ def get_trigger(trigger_id) -> Trigger:
         Trigger: The trigger with the given id.
     """
     with Session(_connection_engine) as session:
-        return session.get(Trigger, trigger_id)
+        query = (
+            select(Trigger)
+            .where(Trigger.id == trigger_id)
+            .options(selectin_polymorphic(Trigger, (ScheduledTrigger, QueueTrigger, SingleTrigger)))
+        )
+        return session.scalar(query)
 
+
+@catch_db_error
+def update_trigger(trigger: Trigger):
+    """Updates an existing trigger in the database.
+
+    Args:
+        trigger: The trigger object with updated values.
+    """
+    with Session(_connection_engine) as session:
+        session.add(trigger)
+        session.commit()
 
 
 @catch_db_error
