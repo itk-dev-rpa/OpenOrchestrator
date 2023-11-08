@@ -2,7 +2,7 @@
 
 # Disable pylint duplicate code error since it
 # mostly reacts to the layout code being similar.
-# pylint: disable=R0801
+# pylint: disable=duplicate-code
 
 import tkinter
 from tkinter import ttk, messagebox
@@ -14,7 +14,7 @@ import croniter
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import ScheduledTrigger
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable-next=too-many-instance-attributes
 class ScheduledTriggerPopup(tkinter.Toplevel):
     """A popup for creating/updating scheduled triggers."""
     def __init__(self, trigger: ScheduledTrigger = None):
