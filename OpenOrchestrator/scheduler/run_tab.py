@@ -112,6 +112,7 @@ def loop(app) -> None:
         check_triggers(app)
 
     if len(app.running_jobs) == 0:
+        print("Doing cleanup...")
         runner.clear_repo_folder()
 
     # Schedule next loop
