@@ -195,6 +195,7 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
     Process name
     Connection string
     Crypto key
+    Process args
 
     If the trigger's process_path is pointing to a git repo the repo is cloned
     and the main.* file in the repo is found and run.
@@ -223,10 +224,10 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
         crypto_key = crypto_util.get_key()
 
         if process_path.endswith(".py"):
-            return subprocess.Popen(['python', process_path, trigger.process_name, conn_string, crypto_key])
+            return subprocess.Popen(['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args])
 
         if process_path.endswith(".bat"):
-            return subprocess.Popen([process_path, trigger.process_name, conn_string, crypto_key])
+            return subprocess.Popen([process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args])
 
         raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{process_path}'")
 
