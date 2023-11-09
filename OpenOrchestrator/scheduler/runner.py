@@ -146,7 +146,7 @@ def clone_git_repo(repo_url: str) -> str:
 def clear_repo_folder() -> None:
     """Completely remove the repos folder."""
     repo_folder = get_repo_folder_path()
-    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False)
+    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False, shell=True)
 
 
 
