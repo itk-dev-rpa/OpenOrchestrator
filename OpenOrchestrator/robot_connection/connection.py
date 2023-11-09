@@ -3,7 +3,8 @@ The easiest way to create an OrchestratorConnection object is to call the
 class method create_connection_from_args."""
 
 import sys
-from OpenOrchestratorConnection import crypto_util, db_util
+from OpenOrchestrator.common import crypto_util
+from OpenOrchestrator.database import db_util
 
 
 class OrchestratorConnection:
