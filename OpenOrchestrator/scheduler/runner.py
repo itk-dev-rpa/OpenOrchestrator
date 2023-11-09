@@ -5,7 +5,6 @@ from datetime import datetime
 import subprocess
 from dataclasses import dataclass
 import uuid
-import shutil
 
 from croniter import croniter
 
@@ -147,7 +146,7 @@ def clone_git_repo(repo_url: str) -> str:
 def clear_repo_folder() -> None:
     """Completely remove the repos folder."""
     repo_folder = get_repo_folder_path()
-    shutil.rmtree(repo_folder, ignore_errors=True)
+    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False)
 
 
 
