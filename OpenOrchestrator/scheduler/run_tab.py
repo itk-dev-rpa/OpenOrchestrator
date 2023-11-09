@@ -111,6 +111,9 @@ def loop(app) -> None:
     if app.running:
         check_triggers(app)
 
+    if len(app.running_jobs) == 0:
+        runner.clear_repo_folder()
+
     # Schedule next loop
     if app.running or len(app.running_jobs) > 0:
         print('Waiting 6 seconds...\n')

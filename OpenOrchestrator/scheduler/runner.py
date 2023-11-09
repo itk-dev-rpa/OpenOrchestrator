@@ -52,11 +52,6 @@ def poll_triggers(app) -> Job | None:
     if next_queue_trigger and not (next_queue_trigger.is_blocking and other_processes_running):
         return run_queue_trigger(next_queue_trigger)
 
-    # If no triggers should run and no processes are running, do some cleanup
-    # This should definitely be done more elegantly, but that's for another time
-    if not other_processes_running:
-        clear_repo_folder()
-
     return None
 
 
