@@ -45,6 +45,7 @@ class OrchestratorConnection:
         """Create a message in the Orchestrator log with a level of 'info'.
         The log is automatically annotated with the current time and name of the process
         Args:
+            message: Message to be logged.
         """
         db_util.create_log(self.process_name, LogLevel.INFO, message)
 
@@ -157,7 +158,7 @@ class OrchestratorConnection:
         """
         db_util.set_queue_element_status(element_id=element_id, status=status, message=message)
 
-    # Method for deleting queue element
+    # Method for deleting elements
 
     def delete_queue_element(element_id: str) -> None:
         """Delete a queue element from the database.
