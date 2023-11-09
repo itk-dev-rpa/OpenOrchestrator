@@ -64,11 +64,11 @@ class OrchestratorConnection:
 
     @classmethod
     def create_connection_from_args(cls):
-        """Create an OrchestRator Connection object using the arguments passed to sys.argv.
-        If you are using OrchestratorConnection in conjuction with OpenOrchestrator's Scheduler
-        this function is the prefered way to create OrchestatorConnections"""
+        """Create a Connection object using the arguments passed to sys.argv.
+        This function is the preferred way to create a connection with OpenOrchestrator's Scheduler"""
         process_name = sys.argv[1]
         connection_string = sys.argv[2]
         crypto_key = sys.argv[3]
-        return OrchestratorConnection(process_name, connection_string, crypto_key)
+        process_arguments = sys.argv[4]
+        return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments)
 
