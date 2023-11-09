@@ -7,6 +7,7 @@ from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 from OpenOrchestrator.database.logs import LogLevel
+from OpenOrchestrator.database.constants import Constant, Credential
 
 
 class OrchestratorConnection:
@@ -18,12 +19,11 @@ class OrchestratorConnection:
 
     def __init__(self, process_name: str, connection_string: str, crypto_key: str, process_arguments: str):
         """
-
         Args:
-            process_name:
-            connection_string:
-            crypto_key:
-            process_arguments:
+            process_name: A human friendly tag to identify the process.
+            connection_string: An ODBC connection to the OpenOrchestrator database
+            crypto_key: Secret key for decrypting database content
+            process_arguments (optional): Arguments for the controlling how the process should run.
         """
         self.process_name = process_name
         self.process_arguments = process_arguments
@@ -57,26 +57,51 @@ class OrchestratorConnection:
         """
         db_util.create_log(self.process_name, LogLevel.ERROR, message)
 
-    def get_constant(self, constant_name: str) -> str:
-        """Get a constant from the Orchestrator with the given name.
-        return: The value of the named constant."""
+    def get_constant(self, constant_name: str) -> Constant:
+        """Get a constant from the database.
+
+        Args:
+            name: The name of the constant.
+
+        Returns:
+            Constant: The constant with the given name.
+
+        Raises:
+            ValueError: If no constant with the given name exists.
+        """
         return db_util.get_constant(constant_name)
 
-    def get_credential(self, credential_name: str) -> tuple[str, str]:
-        """Get a credential from the Orchestrator with the given name.
-        return: tuple(username, password)
+    def get_credential(self, credential_name: str) -> Credential:
+        """Get a credential from the database.
+        The password of the credential is decrypted.
+
+        Args:
+            name: The name of the credential.
+
+        Returns:
+            Credential: The credential with the given name.
+
+        Raises:
+            ValueError: If no credential with the given name exists.
         """
         return db_util.get_credential(credential_name)
 
     def update_constant(self, constant_name: str, new_value: str) -> None:
-        """Update an Orchestrator constant with a new value.
-        Raises an error if no constant with the given name exists.
+        """Updates an existing constant with a new value.
+
+        Args:
+            name: The name of the constant to update.
+            new_value: The new value of the constant.
         """
         db_util.update_constant(constant_name, new_value)
 
     def update_credential(self, credential_name: str, new_username: str, new_password: str) -> None:
-        """Update an Orchestrator credential with a new username and password.
-        Raises an error if no credential with the given name exists.
+        """Updates an existing credential with a new value.
+
+        Args:
+            name: The name of the credential to update.
+            new_username: The new username of the credential.
+            new_password: The new password of the credential.
         """
         db_util.update_credential(credential_name, new_username, new_password)
 
@@ -113,7 +138,8 @@ class OrchestratorConnection:
 
     # Method for reading queue elements
 
-    def get_next_queue_element(self, queue_name: str, reference: str = None, set_status: bool = True) -> QueueElement | None:
+    def get_next_queue_element(self, queue_name: str, reference: str = None,
+                               set_status: bool = True) -> QueueElement | None:
         """Gets the next queue element from the given queue that has the status 'new'.
 
         Args:
