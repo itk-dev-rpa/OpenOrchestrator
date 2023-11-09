@@ -3,7 +3,7 @@
 from datetime import datetime
 from tkinter import messagebox
 
-from sqlalchemy import Engine, create_engine, select, insert
+from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
@@ -183,7 +183,7 @@ def get_logs(offset: int, limit: int,
     """
     query = (
             select(Log)
-            .order_by(Log.log_time)
+            .order_by(desc(Log.log_time))
             .offset(offset)
             .limit(limit)
         )
