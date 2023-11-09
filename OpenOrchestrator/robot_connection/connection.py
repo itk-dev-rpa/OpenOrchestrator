@@ -83,7 +83,7 @@ class OrchestratorConnection:
 
     # Methods for creating queue elements
 
-    def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None):
+    def create_queue_element(self, queue_name: str, reference: str = None, data: str = None, created_by: str = None):
         """Adds a queue element to the given queue.
 
         Args:
@@ -94,7 +94,7 @@ class OrchestratorConnection:
         """
         db_util.create_queue_element(queue_name=queue_name, reference=reference, data=data, created_by=created_by)
 
-    def bulk_create_queue_elements(queue_name: str, references: tuple[str], data: tuple[str],
+    def bulk_create_queue_elements(self, queue_name: str, references: tuple[str], data: tuple[str],
                                    created_by: str = None) -> None:
         """Insert multiple queue elements into a queue in an optimized manner.
         The lengths of both 'references' and 'data' must be equal to the number of elements to insert.
@@ -113,7 +113,7 @@ class OrchestratorConnection:
 
     # Method for reading queue elements
 
-    def get_next_queue_element(queue_name: str, reference: str = None, set_status: bool = True) -> QueueElement | None:
+    def get_next_queue_element(self, queue_name: str, reference: str = None, set_status: bool = True) -> QueueElement | None:
         """Gets the next queue element from the given queue that has the status 'new'.
 
         Args:
@@ -127,7 +127,7 @@ class OrchestratorConnection:
         """
         return db_util.get_next_queue_element(queue_name=queue_name, reference=reference, set_status=set_status)
 
-    def get_queue_elements(queue_name: str, reference: str = None, status: QueueStatus = None,
+    def get_queue_elements(self, queue_name: str, reference: str = None, status: QueueStatus = None,
                            offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
         """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
@@ -146,7 +146,7 @@ class OrchestratorConnection:
 
     # Method for updating status
 
-    def set_queue_element_status(element_id: str, status: QueueStatus, message: str = None) -> None:
+    def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str = None) -> None:
         """Set the status of a queue element.
         If the new status is 'in progress' the start date is noted.
         If the new status is 'Done' or 'Failed' the end date is noted.
@@ -160,7 +160,7 @@ class OrchestratorConnection:
 
     # Method for deleting elements
 
-    def delete_queue_element(element_id: str) -> None:
+    def delete_queue_element(self, element_id: str) -> None:
         """Delete a queue element from the database.
 
         Args:
@@ -178,4 +178,3 @@ class OrchestratorConnection:
         crypto_key = sys.argv[3]
         process_arguments = sys.argv[4]
         return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments)
-
