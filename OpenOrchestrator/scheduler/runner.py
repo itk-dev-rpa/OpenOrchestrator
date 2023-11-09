@@ -5,6 +5,7 @@ from datetime import datetime
 import subprocess
 from dataclasses import dataclass
 import uuid
+import shutil
 
 from croniter import croniter
 
@@ -49,6 +50,11 @@ def poll_triggers(app) -> Job | None:
 
     if next_queue_trigger and not (next_queue_trigger.is_blocking and other_processes_running):
         return run_queue_trigger(next_queue_trigger)
+
+    # If no triggers should run and no processes are running, do some cleanup
+    # This should definitely be done more elegantly, but that's for another time
+    if not other_processes_running:
+        clear_repo_folder()
 
     return None
 
@@ -129,9 +135,9 @@ def clone_git_repo(repo_url: str) -> str:
     Returns:
         str: The path to the cloned repo on the desktop.
     """
-    desktop_path = os.path.expanduser("~\\Desktop")
+    repo_folder = get_repo_folder_path()
     unique_id = str(uuid.uuid4())
-    repo_path = os.path.join(desktop_path, "Scheduler_Repos", unique_id)
+    repo_path = os.path.join(repo_folder, unique_id)
 
     os.makedirs(repo_path)
     try:
@@ -139,6 +145,24 @@ def clone_git_repo(repo_url: str) -> str:
     except subprocess.CalledProcessError as exc:
         raise ValueError(f"Failed to clone git repo at {repo_url}.") from exc
 
+    return repo_path
+
+
+def clear_repo_folder() -> None:
+    """Completely remove the repos folder."""
+    repo_folder = get_repo_folder_path()
+    shutil.rmtree(repo_folder, ignore_errors=True)
+
+
+
+def get_repo_folder_path() -> str:
+    """Gets the path to the folder where robot repos should be saved.
+
+    Returns:
+        str: The absolute path to the repo folder.
+    """
+    desktop_path = os.path.expanduser("~\\Desktop")
+    repo_path = os.path.join(desktop_path, "Scheduler_Repos")
     return repo_path
 
 
