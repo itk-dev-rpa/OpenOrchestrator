@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from tkinter import messagebox
+from typing import Callable
 
 from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
@@ -48,7 +49,7 @@ def disconnect() -> None:
     _connection_engine = None
 
 
-def catch_db_error(func: callable) -> callable:
+def catch_db_error(func: Callable) -> Callable:
     """A decorator that catches errors in SQL calls."""
     def inner(*args, **kwargs):
         try:
@@ -66,7 +67,7 @@ def get_conn_string() -> str:
         str: The connection string.
     """
     try:
-        return _connection_engine.url
+        return str(_connection_engine.url)
     except AttributeError as exc:
         raise RuntimeError("Unable to get the connection string from the database engine. Has the connection been established?") from exc
 
