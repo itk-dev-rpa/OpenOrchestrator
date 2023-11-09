@@ -35,20 +35,26 @@ class OrchestratorConnection:
 
     def log_trace(self, message: str) -> None:
         """Create a message in the Orchestrator log with a level of 'trace'.
-        The log is automatically annotated with the current time and name of the process"""
-        db_util.create_log(self.process_name, 0, message)
+        The log is automatically annotated with the current time and name of the process
+        Args:
+            message: Message to be logged.
+        """
+        db_util.create_log(self.process_name, LogLevel.TRACE, message)
 
     def log_info(self, message: str) -> None:
         """Create a message in the Orchestrator log with a level of 'info'.
         The log is automatically annotated with the current time and name of the process
+        Args:
         """
-        db_util.create_log(self.process_name, 1, message)
+        db_util.create_log(self.process_name, LogLevel.INFO, message)
 
     def log_error(self, message: str) -> None:
         """Create a message in the Orchestrator log with a level of 'error'.
         The log is automatically annotated with the current time and name of the process
+        Args:
+            message: Message to be logged.
         """
-        db_util.create_log(self.process_name, 2, message)
+        db_util.create_log(self.process_name, LogLevel.ERROR, message)
 
     def get_constant(self, constant_name: str) -> str:
         """Get a constant from the Orchestrator with the given name.
