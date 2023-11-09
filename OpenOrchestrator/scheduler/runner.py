@@ -12,6 +12,7 @@ from croniter import croniter
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
+from OpenOrchestrator.database.logs import LogLevel
 
 @dataclass
 class Job():
@@ -260,7 +261,7 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
     except Exception as exc:
         db_util.set_trigger_status(trigger.id, TriggerStatus.FAILED)
         error_msg = f"Scheduler couldn't launch the process:\n{exc.__class__.__name__}:\n{exc}"
-        db_util.create_log(trigger.process_name, 2, error_msg)
+        db_util.create_log(trigger.process_name, LogLevel.ERROR, error_msg)
         print(error_msg)
 
     return None
