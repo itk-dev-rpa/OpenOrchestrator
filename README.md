@@ -4,12 +4,33 @@ Read the documentation [here](https://itk-dev-rpa.github.io/OpenOrchestrator-doc
 
 Package is located at https://pypi.org/project/OpenOrchestrator/
 
-## Usage
+## Usage for Orchestrator admins
 This module is used to run Orchestrator or Scheduler from the command line.
 
 `python -m OpenOrchestrator -o`  for orchestrator.
 
 `python -m OpenOrchestrator -s`  for scheduler.
+
+## Usage for RPA developers
+Import the connection module to your RPA code and get access to the orchestrator methods;
+
+- logging status to OpenOrchestrator
+- getting credentials and constants from OpenOrchestrator
+- creating, getting and updating job elements the queue
+
+Run the code with arguments
+```bash
+python run.py "my_process" "Driver={ODBC Driver 17 for SQL Server};Server=SRVSQLHOTEL03;Database=MKB-ITK-RPA;Trusted_Connection=yes;" "<secret key>" "arg1,arg2,arg3"
+```
+
+```python
+# run.py
+# connect to OpenOprchestrator and log something
+from OpenOrchestrator.robot_connection.connection import OrchestratorConnection
+oc = OrchestratorConnection.create_connection_from_args()
+oc.log_trace("open orchestrator connected.")
+``` 
+
 
 ## Setup
 Requires Python 3.10 or later.
