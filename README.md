@@ -16,7 +16,7 @@ Import the connection module to your RPA code and get access to the orchestrator
 
 - logging status to OpenOrchestrator
 - getting credentials and constants from OpenOrchestrator
-- creating, getting and updating job elements the queue
+- creating, getting and updating job elements in a queue
 
 Run the code with arguments
 ```bash
