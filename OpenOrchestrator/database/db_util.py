@@ -653,7 +653,7 @@ def set_trigger_status(trigger_id: str, status: TriggerStatus) -> None:
 
 
 @catch_db_error
-def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None):
+def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None) -> None:
     """Adds a queue element to the given queue.
 
     Args:
@@ -748,7 +748,7 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
 
 @catch_db_error
 def get_queue_elements(queue_name: str, reference: str = None, status: QueueStatus = None,
-                            offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
+                       offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
     Args:
