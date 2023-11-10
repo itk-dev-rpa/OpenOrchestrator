@@ -16,11 +16,11 @@ Import the connection module to your RPA code and get access to the orchestrator
 
 - logging status to OpenOrchestrator
 - getting credentials and constants from OpenOrchestrator
-- creating, getting and updating job elements the queue
+- creating, getting and updating job elements in a queue
 
 Run the code with arguments
 ```bash
-python run.py "my_process" "Driver={ODBC Driver 17 for SQL Server};Server=SRVSQLHOTEL03;Database=MKB-ITK-RPA;Trusted_Connection=yes;" "<secret key>" "arg1,arg2,arg3"
+python run.py "<process name>" "<connection string>" "<secret key>" "<arguments>"
 ```
 
 ```python
