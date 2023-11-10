@@ -161,7 +161,7 @@ class OrchestratorConnection:
         Returns:
             tuple[QueueElement]: A tuple of queue elements.
         """
-        return db_util.get_queue_elements(queue_name, reference, status, QueueStatus, offset, limit)
+        return db_util.get_queue_elements(queue_name, reference, status, QueueStatus, offset, limit)  # pylint: disable= (too-many-function-args)
 
     def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str = None) -> None:
         """Set the status of a queue element.
@@ -193,4 +193,3 @@ class OrchestratorConnection:
         crypto_key = sys.argv[3]
         process_arguments = sys.argv[4]
         return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments)
-
