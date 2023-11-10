@@ -114,7 +114,7 @@ class OrchestratorConnection:
             data (optional): The data of the queue element.
             created_by (optional): The name of the creator of the queue element.
         """
-        db_util.create_queue_element(queue_name=queue_name, reference=reference, data=data, created_by=created_by)
+        db_util.create_queue_element(queue_name, reference, data, created_by)
 
     def bulk_create_queue_elements(self, queue_name: str, references: tuple[str], data: tuple[str],
                                    created_by: str = None) -> None:
@@ -130,8 +130,7 @@ class OrchestratorConnection:
         Raises:
             ValueError: If either 'references' or 'data' are empty, or if they are not equal in length.
         """
-        db_util.bulk_create_queue_elements(queue_name=queue_name, references=references, data=data,
-                                           created_by=created_by)
+        db_util.bulk_create_queue_elements(queue_name, references, data, created_by)
 
     def get_next_queue_element(self, queue_name: str, reference: str = None,
                                set_status: bool = True) -> QueueElement | None:
@@ -146,7 +145,7 @@ class OrchestratorConnection:
         Returns:
             QueueElement | None: The next queue element in the queue if any.
         """
-        return db_util.get_next_queue_element(queue_name=queue_name, reference=reference, set_status=set_status)
+        return db_util.get_next_queue_element(queue_name, reference, set_status)
 
     def get_queue_elements(self, queue_name: str, reference: str = None, status: QueueStatus = None,
                            offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
@@ -162,8 +161,7 @@ class OrchestratorConnection:
         Returns:
             tuple[QueueElement]: A tuple of queue elements.
         """
-        return db_util.get_queue_elements(queue_name=queue_name, reference=reference, status=status,
-                                          QueueStatus=QueueStatus, offset=offset, limit=limit)
+        return db_util.get_queue_elements(queue_name, reference, status, QueueStatus, offset, limit)
 
     def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str = None) -> None:
         """Set the status of a queue element.
@@ -175,7 +173,7 @@ class OrchestratorConnection:
             status: The new status of the queue element.
             message (Optional): The message to attach to the queue element. This overrides any existing messages.
         """
-        db_util.set_queue_element_status(element_id=element_id, status=status, message=message)
+        db_util.set_queue_element_status(element_id, status, message)
 
     def delete_queue_element(self, element_id: str) -> None:
         """Delete a queue element from the database.
