@@ -26,7 +26,8 @@ python run.py "my_process" "Driver={ODBC Driver 17 for SQL Server};Server=SRVSQL
 ```python
 # run.py
 # connect to OpenOprchestrator and log something
-from OpenOrchestrator.robot_connection.connection import OrchestratorConnection
+from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConnection
+
 oc = OrchestratorConnection.create_connection_from_args()
 oc.log_trace("open orchestrator connected.")
 ``` 

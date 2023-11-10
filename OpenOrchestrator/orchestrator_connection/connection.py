@@ -204,3 +204,8 @@ class OrchestratorConnection:
         crypto_key = sys.argv[3]
         process_arguments = sys.argv[4]
         return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments)
+
+
+if __name__ == '__main__':
+    oc = OrchestratorConnection.create_connection_from_args()
+    breakpoint()
