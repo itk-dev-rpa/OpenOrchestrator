@@ -1,4 +1,4 @@
-"""The main module of this package. It contains a single class called OrchestratorConnection.
+"""This module contains a single class called OrchestratorConnection.
 The easiest way to create an OrchestratorConnection object is to call the
 class method create_connection_from_args."""
 
@@ -12,7 +12,7 @@ from OpenOrchestrator.database.constants import Constant, Credential
 
 class OrchestratorConnection:
     """An OrchestratorConnection is used to easier communicate with
-    OpenOrchestrator within a running process. If used in conjuction with
+    OpenOrchestrator within a running process. If used in conjunction with
     OpenOrchestrator's Scheduler use orchestrator_connection.create_connection_from_args
     to instead of initializing the object manually.
     """
@@ -105,9 +105,6 @@ class OrchestratorConnection:
         """
         db_util.update_credential(credential_name, new_username, new_password)
 
-
-    # Methods for creating queue elements
-
     def create_queue_element(self, queue_name: str, reference: str = None, data: str = None, created_by: str = None):
         """Adds a queue element to the given queue.
 
@@ -135,8 +132,6 @@ class OrchestratorConnection:
         """
         db_util.bulk_create_queue_elements(queue_name=queue_name, references=references, data=data,
                                            created_by=created_by)
-
-    # Method for reading queue elements
 
     def get_next_queue_element(self, queue_name: str, reference: str = None,
                                set_status: bool = True) -> QueueElement | None:
@@ -170,8 +165,6 @@ class OrchestratorConnection:
         return db_util.get_queue_elements(queue_name=queue_name, reference=reference, status=status,
                                           QueueStatus=QueueStatus, offset=offset, limit=limit)
 
-    # Method for updating status
-
     def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str = None) -> None:
         """Set the status of a queue element.
         If the new status is 'in progress' the start date is noted.
@@ -183,8 +176,6 @@ class OrchestratorConnection:
             message (Optional): The message to attach to the queue element. This overrides any existing messages.
         """
         db_util.set_queue_element_status(element_id=element_id, status=status, message=message)
-
-    # Method for deleting elements
 
     def delete_queue_element(self, element_id: str) -> None:
         """Delete a queue element from the database.
