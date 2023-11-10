@@ -206,7 +206,7 @@ def fail_job(job: Job) -> None:
     Args:
         job: The job whose trigger to mark as failed.
     """
-    db_util.set_trigger_status(job.trigger_id, TriggerStatus.FAILED)
+    db_util.set_trigger_status(job.trigger.id, TriggerStatus.FAILED)
 
 
 def run_process(trigger: Trigger) -> subprocess.Popen | None:
