@@ -162,7 +162,7 @@ def get_repo_folder_path() -> str:
 
 
 def find_main_file(folder_path: str) -> str:
-    """Finds the file in the given folder with the name 'main.py' or 'main.bat'.
+    """Finds the file in the given folder with the name 'main.py'.
     The search checks subfolders recursively.
     Only the first found file is returned.
 
@@ -170,15 +170,14 @@ def find_main_file(folder_path: str) -> str:
         folder_path: The path to the folder.
 
     Returns:
-        str: The path to the main.* file.
+        str: The path to the main.py file.
     """
     for dir_path, _, file_names in os.walk(folder_path):
         for file_name in file_names:
-            name, ext = os.path.splitext(file_name)
-            if name == 'main' and ext in ('.py', '.bat'):
+            if file_name == 'main.py':
                 return os.path.join(dir_path, file_name)
 
-    raise ValueError("No 'main.*' file found in the folder or its subfolders.")
+    raise ValueError("No 'main.py' file found in the folder or its subfolders.")
 
 
 def end_job(job: Job) -> None:
@@ -217,9 +216,9 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
     Process args
 
     If the trigger's process_path is pointing to a git repo the repo is cloned
-    and the main.* file in the repo is found and run.
+    and the main.py file in the repo is found and run.
 
-    Supports .py and .bat files.
+    Supports only .py files.
 
     If any exceptions occur during launch the trigger will be marked as failed.
 
@@ -239,16 +238,13 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
         if not os.path.isfile(process_path):
             raise ValueError(f"The process path didn't point to a file on the system. Path: '{process_path}'")
 
-        if not (process_path.endswith(".py") or process_path.endswith(".bat")):
-            raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{process_path}'")
+        if not process_path.endswith(".py"):
+            raise ValueError(f"The process path didn't point to a valid file. Supported files are [.py]. Path: '{process_path}'")
 
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
-        command_args = [process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
-
-        if process_path.endswith(".py"):
-            command_args = ['python'] + command_args
+        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
 
         return subprocess.Popen(command_args)
 
