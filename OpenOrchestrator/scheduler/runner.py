@@ -239,16 +239,18 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
         if not os.path.isfile(process_path):
             raise ValueError(f"The process path didn't point to a file on the system. Path: '{process_path}'")
 
+        if not (process_path.endswith(".py") or process_path.endswith(".bat")):
+            raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{process_path}'")
+
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
+        command_args = [process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
+
         if process_path.endswith(".py"):
-            return subprocess.Popen(['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args])
+            command_args = ['python'] + command_args
 
-        if process_path.endswith(".bat"):
-            return subprocess.Popen([process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args])
-
-        raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{process_path}'")
+        return subprocess.Popen(command_args)
 
     # We actually want to catch any exception here
     # pylint: disable=broad-exception-caught
