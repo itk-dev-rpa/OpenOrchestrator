@@ -738,10 +738,11 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
 
         q_element = session.scalar(query)
 
-        if set_status:
+        if q_element and set_status:
             q_element.status = QueueStatus.IN_PROGRESS
             q_element.start_date = datetime.now()
             session.commit()
+            session.refresh(q_element)
 
         return q_element
 
