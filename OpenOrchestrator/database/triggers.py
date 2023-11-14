@@ -71,7 +71,7 @@ class SingleTrigger(Trigger):
         Returns:
             tuple: A tuple of all the triggers values.
         """
-        return [
+        return (
             self.trigger_name,
             self.process_status.value,
             self.process_name,
@@ -82,7 +82,7 @@ class SingleTrigger(Trigger):
             self.is_git_repo,
             self.is_blocking,
             self.id
-        ]
+        )
 
 
 class ScheduledTrigger(Trigger):
@@ -101,7 +101,7 @@ class ScheduledTrigger(Trigger):
         Returns:
             tuple: A tuple of all the triggers values.
         """
-        return [
+        return (
             self.trigger_name,
             self.process_status.value,
             self.process_name,
@@ -113,7 +113,7 @@ class ScheduledTrigger(Trigger):
             self.is_git_repo,
             self.is_blocking,
             self.id
-        ]
+        )
 
 
 class QueueTrigger(Trigger):
@@ -132,7 +132,7 @@ class QueueTrigger(Trigger):
         Returns:
             tuple: A tuple of all the triggers values.
         """
-        return [
+        return (
             self.trigger_name,
             self.process_status.value,
             self.process_name,
@@ -144,7 +144,7 @@ class QueueTrigger(Trigger):
             self.is_git_repo,
             self.is_blocking,
             self.id
-        ]
+        )
 
 
 def create_tables(engine: Engine):

@@ -2,11 +2,12 @@
 
 from datetime import datetime
 from tkinter import messagebox
+from typing import Callable
 
-from sqlalchemy import Engine, create_engine, select, insert
+from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import logs, triggers, constants, queues
@@ -48,7 +49,7 @@ def disconnect() -> None:
     _connection_engine = None
 
 
-def catch_db_error(func: callable) -> callable:
+def catch_db_error(func: Callable) -> Callable:
     """A decorator that catches errors in SQL calls."""
     def inner(*args, **kwargs):
         try:
@@ -66,7 +67,7 @@ def get_conn_string() -> str:
         str: The connection string.
     """
     try:
-        return _connection_engine.url
+        return str(_connection_engine.url)
     except AttributeError as exc:
         raise RuntimeError("Unable to get the connection string from the database engine. Has the connection been established?") from exc
 
@@ -79,6 +80,37 @@ def initialize_database() -> None:
     constants.create_tables(_connection_engine)
     queues.create_tables(_connection_engine)
     messagebox.showinfo("Database initialized", "Database has been initialized!")
+
+
+@catch_db_error
+def get_trigger(trigger_id: str) -> Trigger:
+    """Get the trigger with the given id.
+
+    Args:
+        trigger_id: The id of the trigger.
+
+    Returns:
+        Trigger: The trigger with the given id.
+    """
+    with Session(_connection_engine) as session:
+        query = (
+            select(Trigger)
+            .where(Trigger.id == trigger_id)
+            .options(selectin_polymorphic(Trigger, (ScheduledTrigger, QueueTrigger, SingleTrigger)))
+        )
+        return session.scalar(query)
+
+
+@catch_db_error
+def update_trigger(trigger: Trigger):
+    """Updates an existing trigger in the database.
+
+    Args:
+        trigger: The trigger object with updated values.
+    """
+    with Session(_connection_engine) as session:
+        session.add(trigger)
+        session.commit()
 
 
 @catch_db_error
@@ -152,7 +184,7 @@ def get_logs(offset: int, limit: int,
     """
     query = (
             select(Log)
-            .order_by(Log.log_time)
+            .order_by(desc(Log.log_time))
             .offset(offset)
             .limit(limit)
         )
@@ -274,7 +306,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
 @catch_db_error
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int=0) -> None:
+                         min_batch_size: int) -> None:
     """Create a new queue trigger in the database.
 
     Args:
@@ -621,7 +653,7 @@ def set_trigger_status(trigger_id: str, status: TriggerStatus) -> None:
 
 
 @catch_db_error
-def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None):
+def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None) -> None:
     """Adds a queue element to the given queue.
 
     Args:
@@ -706,17 +738,18 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
 
         q_element = session.scalar(query)
 
-        if set_status:
+        if q_element and set_status:
             q_element.status = QueueStatus.IN_PROGRESS
             q_element.start_date = datetime.now()
             session.commit()
+            session.refresh(q_element)
 
         return q_element
 
 
 @catch_db_error
 def get_queue_elements(queue_name: str, reference: str = None, status: QueueStatus = None,
-                            offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
+                       offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
     Args:

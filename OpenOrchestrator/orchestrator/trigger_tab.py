@@ -4,8 +4,11 @@ in Orchestrator."""
 from tkinter import ttk, messagebox
 
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.database.triggers import Trigger, TriggerStatus, ScheduledTrigger, SingleTrigger, QueueTrigger
 from OpenOrchestrator.orchestrator import table_util
-from OpenOrchestrator.orchestrator.popups import queue_trigger_popup, single_trigger_popup, scheduled_trigger_popup
+from OpenOrchestrator.orchestrator.popups.scheduled_trigger_popup import ScheduledTriggerPopup
+from OpenOrchestrator.orchestrator.popups.single_trigger_popup import SingleTriggerPopup
+from OpenOrchestrator.orchestrator.popups.queue_trigger_popup import QueueTriggerPopup
 
 
 def create_tab(parent: ttk.Notebook) -> ttk.Frame:
@@ -45,11 +48,18 @@ def create_tab(parent: ttk.Notebook) -> ttk.Frame:
     # Controls 1
     controls_frame = ttk.Frame(tab)
     controls_frame.grid(row=6, column=0)
+
     def update_command():
         update_tables(sc_table, q_table, si_table)
 
-    update_button = ttk.Button(controls_frame, text='Update', command=update_command)
+    update_button = ttk.Button(controls_frame, text='Update tables', command=update_command)
     update_button.pack(side='left')
+
+    enable_button = ttk.Button(controls_frame, text="Enable", command=lambda: set_trigger_status(TriggerStatus.IDLE, sc_table, q_table, si_table))
+    enable_button.pack(side='left')
+
+    disable_button = ttk.Button(controls_frame, text="Disable", command=lambda: set_trigger_status(TriggerStatus.PAUSED, sc_table, q_table, si_table))
+    disable_button.pack(side='left')
 
     delete_button = ttk.Button(controls_frame, text='Delete', command=lambda: delete_trigger(sc_table, q_table, si_table))
     delete_button.pack(side='left')
@@ -64,42 +74,48 @@ def create_tab(parent: ttk.Notebook) -> ttk.Frame:
 
     # Bindings
     sc_table.bind('<FocusIn>', lambda e: table_util.deselect_tables(q_table, si_table))
+    sc_table.bind('<Double-1>', lambda e: double_click_trigger_tables(sc_table, q_table, si_table))
+
     q_table.bind('<FocusIn>', lambda e: table_util.deselect_tables(sc_table, si_table))
+    q_table.bind('<Double-1>', lambda e: double_click_trigger_tables(sc_table, q_table, si_table))
+
     si_table.bind('<FocusIn>', lambda e: table_util.deselect_tables(sc_table, q_table))
+    si_table.bind('<Double-1>', lambda e: double_click_trigger_tables(sc_table, q_table, si_table))
 
     return tab
 
 
-def show_scheduled_trigger_popup(on_close: callable) -> None:
+def show_scheduled_trigger_popup(on_close: callable, trigger: ScheduledTrigger = None) -> None:
     """Shows the new scheduled trigger popup.
     Binds a callable to the popup's on_close event.
 
     Args:
         on_close: on_close: A function to be called when the popup closes.
+        trigger: The trigger to edit if any.
     """
-    popup = scheduled_trigger_popup.show_popup()
+    popup = ScheduledTriggerPopup(trigger)
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 
-def show_single_trigger_popup(on_close: callable) -> None:
+def show_single_trigger_popup(on_close: callable, trigger: SingleTrigger = None) -> None:
     """Shows the new single trigger popup.
     Binds a callable to the popup's on_close event.
 
     Args:
         on_close: on_close: A function to be called when the popup closes.
     """
-    popup = single_trigger_popup.show_popup()
+    popup = SingleTriggerPopup(trigger)
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 
-def show_queue_trigger_popup(on_close: callable) -> None:
+def show_queue_trigger_popup(on_close: callable, trigger: QueueTrigger = None) -> None:
     """Shows the new queue trigger popup.
     Binds a callable to the popup's on_close event.
 
     Args:
         on_close: on_close: A function to be called when the popup closes.
     """
-    popup = queue_trigger_popup.show_popup()
+    popup = QueueTriggerPopup(trigger)
     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
 
 
@@ -109,7 +125,7 @@ def update_tables(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.T
 
     Args:
         sc_table: The scheduled table.
-        e_table: The email table.
+        q_table: The queue table.
         si_table: The single table.
     """
     scheduled_triggers = db_util.get_scheduled_triggers()
@@ -126,31 +142,90 @@ def update_tables(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.T
     table_util.update_table(si_table, si_list)
 
 
-def delete_trigger(sc_table: ttk.Treeview, e_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
+def delete_trigger(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
     """Deletes the currently selected trigger from either
     of the three trigger tables.
     Shows a confirmation dialog before deleting.
 
     Args:
         sc_table: The scheduled table.
-        e_table: The email table.
+        q_table: The queue table.
         si_table: The single table.
+    """
+    trigger = get_selected_trigger(sc_table, q_table, si_table)
+
+    if trigger is None:
+        messagebox.showinfo("No trigger selected", "No trigger is selected.")
+        return
+
+    if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{trigger.trigger_name} - {trigger.id}'?"):
+        return
+
+    db_util.delete_trigger(trigger.id)
+
+    update_tables(sc_table, q_table, si_table)
+
+
+def set_trigger_status(status: TriggerStatus, sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.Treeview) -> None:
+    """Set the status of the currently selected trigger.
+
+    Args:
+        status: The new status to apply.
+        sc_table: The scheduled table.
+        q_table: The queue table.
+        si_table: The single table.
+    """
+    trigger = get_selected_trigger(sc_table, q_table, si_table)
+
+    if trigger is None:
+        messagebox.showinfo("No trigger selected", "No trigger is selected.")
+        return
+
+    db_util.set_trigger_status(trigger.id, status)
+
+    update_tables(sc_table, q_table, si_table)
+
+    messagebox.showinfo("Trigger status changed", f"The status of '{trigger.trigger_name}' has been set to {status.value}")
+
+
+def get_selected_trigger(sc_table: ttk.Treeview, q_table: ttk.Treeview, si_table: ttk.Treeview) -> Trigger:
+    """Get the currently selected trigger across all three tables.
+
+    Args:
+        sc_table: The scheduled table.
+        q_table: The queue table.
+        si_table: The single table.
+
+    Returns:
+        Trigger: The ORM trigger object with the given id.
     """
     if sc_table.selection():
         table = sc_table
-    elif e_table.selection():
-        table = e_table
+    elif q_table.selection():
+        table = q_table
     elif si_table.selection():
         table = si_table
     else:
-        return
+        return None
 
-    trigger_name = table.item(table.selection()[0])['values'][0]
     trigger_id = table.item(table.selection()[0])['values'][-1]
+    return db_util.get_trigger(trigger_id)
 
-    if not messagebox.askyesno('Delete trigger', f"Are you sure you want to delete trigger '{trigger_name} - {trigger_id}'?"):
-        return
 
-    db_util.delete_trigger(trigger_id)
+def double_click_trigger_tables(sc_table, q_table, si_table):
+    """This triggers when one of the trigger tables are double clicked.
+    Opens the corresponding dialog to edit a trigger.
 
-    update_tables(sc_table, e_table, si_table)
+    Args:
+        sc_table: The scheduled table.
+        q_table: The queue table.
+        si_table: The single table.
+    """
+    trigger = get_selected_trigger(sc_table, q_table, si_table)
+
+    if isinstance(trigger, ScheduledTrigger):
+        show_scheduled_trigger_popup(lambda: update_tables(sc_table, q_table, si_table), trigger=trigger)
+    elif isinstance(trigger, SingleTrigger):
+        show_single_trigger_popup(lambda: update_tables(sc_table, q_table, si_table), trigger=trigger)
+    elif isinstance(trigger, QueueTrigger):
+        show_queue_trigger_popup(lambda: update_tables(sc_table, q_table, si_table), trigger=trigger)

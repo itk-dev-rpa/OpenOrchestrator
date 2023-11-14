@@ -11,6 +11,7 @@ from croniter import croniter
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
+from OpenOrchestrator.database.logs import LogLevel
 
 @dataclass
 class Job():
@@ -129,9 +130,9 @@ def clone_git_repo(repo_url: str) -> str:
     Returns:
         str: The path to the cloned repo on the desktop.
     """
-    desktop_path = os.path.expanduser("~\\Desktop")
+    repo_folder = get_repo_folder_path()
     unique_id = str(uuid.uuid4())
-    repo_path = os.path.join(desktop_path, "Scheduler_Repos", unique_id)
+    repo_path = os.path.join(repo_folder, unique_id)
 
     os.makedirs(repo_path)
     try:
@@ -142,8 +143,26 @@ def clone_git_repo(repo_url: str) -> str:
     return repo_path
 
 
+def clear_repo_folder() -> None:
+    """Completely remove the repos folder."""
+    repo_folder = get_repo_folder_path()
+    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False, shell=True)
+
+
+
+def get_repo_folder_path() -> str:
+    """Gets the path to the folder where robot repos should be saved.
+
+    Returns:
+        str: The absolute path to the repo folder.
+    """
+    user_path = os.path.expanduser("~")
+    repo_path = os.path.join(user_path, "Desktop", "Scheduler_Repos")
+    return repo_path
+
+
 def find_main_file(folder_path: str) -> str:
-    """Finds the file in the given folder with the name 'main.py' or 'main.bat'.
+    """Finds the file in the given folder with the name 'main.py'.
     The search checks subfolders recursively.
     Only the first found file is returned.
 
@@ -151,15 +170,14 @@ def find_main_file(folder_path: str) -> str:
         folder_path: The path to the folder.
 
     Returns:
-        str: The path to the main.* file.
+        str: The path to the main.py file.
     """
     for dir_path, _, file_names in os.walk(folder_path):
         for file_name in file_names:
-            name, ext = os.path.splitext(file_name)
-            if name == 'main' and ext in ('.py', '.bat'):
+            if file_name == 'main.py':
                 return os.path.join(dir_path, file_name)
 
-    raise ValueError("No 'main.*' file found in the folder or its subfolders.")
+    raise ValueError("No 'main.py' file found in the folder or its subfolders.")
 
 
 def end_job(job: Job) -> None:
@@ -187,7 +205,7 @@ def fail_job(job: Job) -> None:
     Args:
         job: The job whose trigger to mark as failed.
     """
-    db_util.set_trigger_status(job.trigger_id, TriggerStatus.FAILED)
+    db_util.set_trigger_status(job.trigger.id, TriggerStatus.FAILED)
 
 
 def run_process(trigger: Trigger) -> subprocess.Popen | None:
@@ -195,11 +213,12 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
     Process name
     Connection string
     Crypto key
+    Process args
 
     If the trigger's process_path is pointing to a git repo the repo is cloned
-    and the main.* file in the repo is found and run.
+    and the main.py file in the repo is found and run.
 
-    Supports .py and .bat files.
+    Supports only .py files.
 
     If any exceptions occur during launch the trigger will be marked as failed.
 
@@ -219,23 +238,22 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
         if not os.path.isfile(process_path):
             raise ValueError(f"The process path didn't point to a file on the system. Path: '{process_path}'")
 
+        if not process_path.endswith(".py"):
+            raise ValueError(f"The process path didn't point to a valid file. Supported files are [.py]. Path: '{process_path}'")
+
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
-        if process_path.endswith(".py"):
-            return subprocess.Popen(['python', process_path, trigger.process_name, conn_string, crypto_key])
+        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
 
-        if process_path.endswith(".bat"):
-            return subprocess.Popen([process_path, trigger.process_name, conn_string, crypto_key])
-
-        raise ValueError(f"The process path didn't point to a valid file. Supported files are .py and .bat. Path: '{process_path}'")
+        return subprocess.Popen(command_args)
 
     # We actually want to catch any exception here
     # pylint: disable=broad-exception-caught
     except Exception as exc:
         db_util.set_trigger_status(trigger.id, TriggerStatus.FAILED)
         error_msg = f"Scheduler couldn't launch the process:\n{exc.__class__.__name__}:\n{exc}"
-        db_util.create_log(trigger.process_name, 2, error_msg)
+        db_util.create_log(trigger.process_name, LogLevel.ERROR, error_msg)
         print(error_msg)
 
     return None
