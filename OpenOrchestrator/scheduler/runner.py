@@ -156,8 +156,8 @@ def get_repo_folder_path() -> str:
     Returns:
         str: The absolute path to the repo folder.
     """
-    desktop_path = os.path.expanduser("~\\Desktop")
-    repo_path = os.path.join(desktop_path, "Scheduler_Repos")
+    user_path = os.path.expanduser("~")
+    repo_path = os.path.join(user_path, "Desktop", "Scheduler_Repos")
     return repo_path
 
 
