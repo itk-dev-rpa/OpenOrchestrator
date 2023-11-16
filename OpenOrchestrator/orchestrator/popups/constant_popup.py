@@ -7,7 +7,7 @@
 import tkinter
 from tkinter import ttk, messagebox
 
-from OpenOrchestrator.common import db_util
+from OpenOrchestrator.database import db_util
 
 def show_popup(name=None, value=None):
     """Creates and shows a popup to create a new constant.
@@ -60,14 +60,18 @@ def create_constant(window, name_entry: ttk.Entry, value_entry: ttk.Entry):
         messagebox.showerror('Error', 'Please enter a value')
         return
 
-    constants = db_util.get_constants()
-    exists = any(c[0].lower() == name.lower() for c in constants)
+    try:
+        db_util.get_constant(name)
+        exists = True
+    except ValueError:
+        exists = False
 
-    if exists and not messagebox.askyesno('Error', 'A constant with that name already exists. Do you want to overwrite it?'):
-        return
-
-    db_util.delete_constant(name)
-
-    db_util.create_constant(name, value)
+    if exists:
+        if messagebox.askyesno('Error', 'A constant with that name already exists. Do you want to overwrite it?'):
+            db_util.update_constant(name, value)
+        else:
+            return
+    else:
+        db_util.create_constant(name, value)
 
     window.destroy()

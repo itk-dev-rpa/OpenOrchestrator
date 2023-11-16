@@ -3,7 +3,8 @@ in Orchestrator."""
 
 from tkinter import ttk
 
-from OpenOrchestrator.common import db_util, crypto_util, ui_util
+from OpenOrchestrator.database import db_util
+from OpenOrchestrator.common.connection_frame import ConnectionFrame
 
 
 def create_tab(parent):
@@ -18,28 +19,13 @@ def create_tab(parent):
     tab = ttk.Frame(parent)
     tab.pack(fill='both', expand=True)
 
-    conn_frame = ui_util.create_connection_frame(tab)
+    conn_frame = ConnectionFrame(tab)
     conn_frame.pack(fill='x')
 
-    key_frame, key_entry = ui_util.create_encryption_key_frame(tab)
-    key_frame.pack(fill='x')
-
-    key_button = ttk.Button(tab, text="New key", command=lambda: new_key(key_entry))
+    key_button = ttk.Button(tab, text="New key", command=conn_frame.new_key)
     key_button.pack()
 
     init_button = ttk.Button(tab, text='Initialize Database', command=db_util.initialize_database)
     init_button.pack()
 
     return tab
-
-
-def new_key(key_entry:ttk.Entry) -> None:
-    """Creates a new valid AES crypto key
-    and inserts in into the entry widget.
-
-    Args:
-        key_entry: The entry widget to insert the new key into.
-    """
-    key = crypto_util.generate_key()
-    key_entry.delete(0, 'end')
-    key_entry.insert(0, key)
