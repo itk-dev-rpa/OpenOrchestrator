@@ -28,7 +28,7 @@ def connect(conn_string: str) -> bool:
     Returns:
         bool: True if successful.
     """
-    global _connection_engine # pylint: disable=global-statement
+    global _connection_engine  # pylint: disable=global-statement
 
     try:
         engine = create_engine(conn_string)
@@ -600,8 +600,9 @@ def get_next_queue_trigger() -> QueueTrigger | None:
     with Session(_connection_engine) as session:
 
         sub_query = (
-            select(alc_func.count()) # pylint: disable=not-callable
+            select(alc_func.count())  # pylint: disable=not-callable
             .where(QueueElement.queue_name == QueueTrigger.queue_name)
+            .where(QueueElement.status == QueueStatus.NEW)
             .scalar_subquery()
         )
 
@@ -725,7 +726,7 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
     """
 
     with Session(_connection_engine) as session:
-        query =(
+        query = (
             select(QueueElement)
             .where(QueueElement.queue_name == queue_name)
             .where(QueueElement.status == QueueStatus.NEW)
