@@ -1,41 +1,26 @@
 """This module is the entry point for the Orchestrator app. It contains a single class
 that when created starts the application."""
 
-import tkinter
-from tkinter import ttk
+from nicegui import ui
 
-from OpenOrchestrator.orchestrator import logging_tab, settings_tab, trigger_tab, constants_tab
+from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
+from OpenOrchestrator.orchestrator.tabs.settings_tab import SettingsTab
 
-class Application(tkinter.Tk):
-    """The main application object of the Orchestrator app.
-    Extends the tkinter.Tk object.
-    """
-    def __init__(self):
-        # Disable pylint duplicate code error since it
-        # mostly reacts to the layout code being similar.
-        # pylint: disable=R0801
-        super().__init__()
-        self.title("OpenOrchestrator")
-        self.geometry("850x600")
-        style = ttk.Style(self)
-        style.theme_use('vista')
+with ui.header().classes('justify-between'):
+    with ui.tabs() as tabs:
+        triggers_tab = ui.tab('Triggers')
+        logging_tab = ui.tab('Logs')
+        constants_tab = ui.tab('Constants')
+        settings_tab = ui.tab('Settings')
 
-        notebook = ttk.Notebook(self)
-        notebook.pack(expand=True, fill='both')
+    ui.button(icon='refresh').props('color=white text-color=primary')
 
-        trig_tab = trigger_tab.create_tab(notebook)
-        log_tab = logging_tab.create_tab(notebook)
-        const_tab = constants_tab.create_tab(notebook)
-        set_tab = settings_tab.create_tab(notebook)
+with ui.tab_panels(tabs, value=settings_tab).classes('w-full'):
+    TriggerTab(triggers_tab)
+    with ui.tab_panel(logging_tab):
+        ui.label('Logs')
+    with ui.tab_panel(constants_tab):
+        ui.label('Constants')
+    SettingsTab(settings_tab)
 
-        notebook.add(trig_tab, text="Triggers")
-        notebook.add(log_tab, text="Logs")
-        notebook.add(const_tab, text="Constants")
-        notebook.add(set_tab, text="Settings")
-
-        notebook.select(3)
-
-        self.mainloop()
-
-if __name__=='__main__':
-    Application()
+ui.run(title="Orchestrator", favicon='🤖', native=False)

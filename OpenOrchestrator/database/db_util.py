@@ -1,13 +1,13 @@
 """This module handles the connection to the database in OpenOrchestrator."""
 
 from datetime import datetime
-from tkinter import messagebox
 from typing import Callable
 
 from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
+from nicegui import ui
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import logs, triggers, constants, queues
@@ -35,9 +35,9 @@ def connect(conn_string: str) -> bool:
         engine.connect()
         _connection_engine = engine
         return True
-    except alc_exc.InterfaceError as exc:
+    except (alc_exc.InterfaceError, alc_exc.ArgumentError) as exc:
         _connection_engine = None
-        messagebox.showerror("Connection failed", str(exc))
+        ui.notify(str(exc), type='negative', timeout=0, close_button="Dismiss")
 
     return False
 

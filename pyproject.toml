@@ -17,11 +17,11 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-    "tkcalendar >= 1.6.1",
     "cryptography >= 41.0.3",
     "croniter >= 1.4.1",
     "SQLAlchemy >= 2.0.22",
-    "pyodbc >= 4.0.39"
+    "pyodbc >= 4.0.39",
+    "nicegui"
 ]
 
 [project.urls]
