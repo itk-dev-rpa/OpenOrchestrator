@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
 
+
 class LogLevel(enum.Enum):
     """An enum representing the level of logs."""
     TRACE = "Trace"
@@ -30,6 +31,28 @@ class Log(Base):
     log_level: Mapped[LogLevel]
     process_name: Mapped[str] = mapped_column(String(100))
     log_message: Mapped[str] = mapped_column(String(8000))
+
+    def to_row_dict(self) -> dict[str, str]:
+        """Convert log to a row dictionary for display in a table."""
+        return {
+            "Log Time": self.log_time.strftime("%d-%m-%Y %H:%M:%S"),
+            "Level": self.log_level.value,
+            "Process Name": self.process_name,
+            "Message": self.format_message(),
+            "ID": str(self.id)
+        }
+
+    def format_message(self) -> str:
+        """Format the log message to be shown in a table."""
+        string = self.log_message
+
+        if "\n" in string:
+            string = repr(string)
+
+        if len(self.log_message) > 120:
+            string = string[:120] + "..."
+
+        return string
 
 
 def create_tables(engine: Engine):

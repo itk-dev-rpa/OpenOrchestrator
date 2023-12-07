@@ -5,22 +5,35 @@ from nicegui import ui
 
 from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
 from OpenOrchestrator.orchestrator.tabs.settings_tab import SettingsTab
+from OpenOrchestrator.orchestrator.tabs.logging_tab import LoggingTab
+from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
 
 with ui.header().classes('justify-between'):
     with ui.tabs() as tabs:
-        triggers_tab = ui.tab('Triggers')
-        logging_tab = ui.tab('Logs')
-        constants_tab = ui.tab('Constants')
-        settings_tab = ui.tab('Settings')
+        ui.tab('Triggers')
+        ui.tab('Logs')
+        ui.tab('Constants')
+        ui.tab('Settings')
 
-    ui.button(icon='refresh').props('color=white text-color=primary')
+    ui.button(icon='refresh', on_click=lambda e: update_tab(tab_panels.value)).props('color=white text-color=primary')
 
-with ui.tab_panels(tabs, value=settings_tab).classes('w-full'):
-    TriggerTab(triggers_tab)
-    with ui.tab_panel(logging_tab):
-        ui.label('Logs')
-    with ui.tab_panel(constants_tab):
-        ui.label('Constants')
-    SettingsTab(settings_tab)
+with ui.tab_panels(tabs, value='Settings').classes('w-full') as tab_panels:
+    t_tab = TriggerTab('Triggers')
+    l_tab = LoggingTab("Logs")
+    c_tab = ConstantTab("Constants")
+    SettingsTab('Settings')
+
+
+def update_tab(tab: str):
+    match tab:
+        case 'Triggers':
+            t_tab.update()
+        case 'Logs':
+            l_tab.update()
+        case 'Constants':
+            c_tab.update()
+
+    ui.notify("Refreshed", type='positive')
+
 
 ui.run(title="Orchestrator", favicon='🤖', native=False)

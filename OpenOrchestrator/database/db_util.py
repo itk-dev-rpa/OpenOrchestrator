@@ -16,7 +16,7 @@ from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 
-_connection_engine: Engine
+_connection_engine: Engine = None
 
 
 def connect(conn_string: str) -> bool:
@@ -28,7 +28,7 @@ def connect(conn_string: str) -> bool:
     Returns:
         bool: True if successful.
     """
-    global _connection_engine # pylint: disable=global-statement
+    global _connection_engine  # pylint: disable=global-statement
 
     try:
         engine = create_engine(conn_string)
@@ -44,7 +44,7 @@ def connect(conn_string: str) -> bool:
 
 def disconnect() -> None:
     """Disconnect from the database."""
-    global _connection_engine #pylint: disable=global-statement
+    global _connection_engine  # pylint: disable=global-statement
     _connection_engine.dispose()
     _connection_engine = None
 
@@ -52,10 +52,13 @@ def disconnect() -> None:
 def catch_db_error(func: Callable) -> Callable:
     """A decorator that catches errors in SQL calls."""
     def inner(*args, **kwargs):
+        if _connection_engine is None:
+            ui.notify("Not connected", type='negative')
+            return None
         try:
             result = func(*args, **kwargs)
         except alc_exc.ProgrammingError as exc:
-            messagebox.showerror("Error", f"Query failed:\n{exc}")
+            ui.notify(f"Query failed:\n{exc}", type='negative', timeout=0, close_button="Dismiss")
         return result
     return inner
 
@@ -100,6 +103,16 @@ def get_trigger(trigger_id: str) -> Trigger:
         )
         return session.scalar(query)
 
+
+@catch_db_error
+def get_all_triggers() -> tuple[Trigger]:
+    """Get all triggers in the database.
+
+    Returns:
+        A tuple of Trigger objects.
+    """
+    with Session(_connection_engine) as session:
+        return tuple(session.scalars(select(Trigger)))
 
 @catch_db_error
 def update_trigger(trigger: Trigger):
@@ -167,8 +180,8 @@ def delete_trigger(trigger_id: str) -> None:
 
 @catch_db_error
 def get_logs(offset: int, limit: int,
-             from_date: datetime|None, to_date: datetime|None,
-             process_name: str|None, log_level: LogLevel|None) -> tuple[Log]:
+             from_date: datetime = None, to_date: datetime = None,
+             process_name: str = None, log_level: LogLevel = None) -> tuple[Log]:
     """Get the logs from the database using filters and pagination.
 
     Args:
@@ -418,7 +431,7 @@ def get_credential(name: str) -> Credential:
 
     Returns:
         Credential: The credential with the given name.
-    
+
     Raises:
         ValueError: If no credential with the given name exists.
     """
@@ -427,6 +440,7 @@ def get_credential(name: str) -> Credential:
 
     if credential is None:
         raise ValueError(f"No credential with name '{name}' was found.")
+
     credential.password = crypto_util.decrypt_string(credential.password)
     return credential
 

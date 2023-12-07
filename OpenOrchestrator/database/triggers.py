@@ -55,6 +55,21 @@ class Trigger(Base):
     def __repr__(self) -> str:
         return f"{self.trigger_name}: {self.type.value}"
 
+    def to_row_dict(self) -> dict[str, str]:
+        """Convert trigger to a row dictionary for display in a table."""
+        return {
+            "Trigger Name": self.trigger_name,
+            "Type": self.type.value,
+            "Status": self.process_status.value,
+            "Process Name": self.process_name,
+            "Last Run": self.last_run.strftime("%d-%m-%Y %H:%M:%S"),
+            "Path": self.process_path,
+            "Arguments": self.process_args,
+            "Is Git": self.is_git_repo,
+            "Is Blocking": self.is_blocking,
+            "ID": str(self.id)
+        }
+
 
 class SingleTrigger(Trigger):
     """A class representing single trigger objects in the ORM."""
