@@ -62,11 +62,7 @@ class Trigger(Base):
             "Type": self.type.value,
             "Status": self.process_status.value,
             "Process Name": self.process_name,
-            "Last Run": self.last_run.strftime("%d-%m-%Y %H:%M:%S"),
-            "Path": self.process_path,
-            "Arguments": self.process_args,
-            "Is Git": self.is_git_repo,
-            "Is Blocking": self.is_blocking,
+            "Last Run": self.last_run.strftime("%d-%m-%Y %H:%M:%S") if self.last_run else 'Never',
             "ID": str(self.id)
         }
 
@@ -80,24 +76,10 @@ class SingleTrigger(Trigger):
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.SINGLE}
 
-    def to_tuple(self) -> tuple:
-        """Convert the trigger to a tuple of values.
-
-        Returns:
-            tuple: A tuple of all the triggers values.
-        """
-        return (
-            self.trigger_name,
-            self.process_status.value,
-            self.process_name,
-            self.last_run,
-            self.next_run,
-            self.process_path,
-            self.process_args,
-            self.is_git_repo,
-            self.is_blocking,
-            self.id
-        )
+    def to_row_dict(self) -> dict[str, str]:
+        row_dict = super().to_row_dict()
+        row_dict["Next Run"] = self.next_run.strftime("%d-%m-%Y %H:%M:%S")
+        return row_dict
 
 
 class ScheduledTrigger(Trigger):
@@ -110,25 +92,10 @@ class ScheduledTrigger(Trigger):
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.SCHEDULED}
 
-    def to_tuple(self) -> tuple:
-        """Convert the trigger to a tuple of values.
-
-        Returns:
-            tuple: A tuple of all the triggers values.
-        """
-        return (
-            self.trigger_name,
-            self.process_status.value,
-            self.process_name,
-            self.cron_expr,
-            self.last_run,
-            self.next_run,
-            self.process_path,
-            self.process_args,
-            self.is_git_repo,
-            self.is_blocking,
-            self.id
-        )
+    def to_row_dict(self) -> dict[str, str]:
+        row_dict = super().to_row_dict()
+        row_dict["Next Run"] = self.next_run.strftime("%d-%m-%Y %H:%M:%S")
+        return row_dict
 
 
 class QueueTrigger(Trigger):
@@ -141,25 +108,10 @@ class QueueTrigger(Trigger):
 
     __mapper_args__ = {"polymorphic_identity": TriggerType.QUEUE}
 
-    def to_tuple(self) -> tuple:
-        """Convert the trigger to a tuple of values.
-
-        Returns:
-            tuple: A tuple of all the triggers values.
-        """
-        return (
-            self.trigger_name,
-            self.process_status.value,
-            self.process_name,
-            self.queue_name,
-            self.min_batch_size,
-            self.last_run,
-            self.process_path,
-            self.process_args,
-            self.is_git_repo,
-            self.is_blocking,
-            self.id
-        )
+    def to_row_dict(self) -> dict[str, str]:
+        row_dict = super().to_row_dict()
+        row_dict["Next Run"] = "N/A"
+        return row_dict
 
 
 def create_tables(engine: Engine):

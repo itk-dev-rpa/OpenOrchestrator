@@ -1,44 +1,48 @@
+"""This module provides an input element for entering a datetime."""
 
 from datetime import datetime
-from typing import Callable
 
 from nicegui import ui
 
 
-# pylint: disable-next=too-few-public-methods
-class DatetimeInput():
+class DatetimeInput(ui.input):
     """A datetime input with a button to show a date and time picker dialog."""
+    PY_FORMAT = "%d-%m-%Y %H:%M"
+    VUE_FORMAT = "DD-MM-YYYY HH:mm"
+
     def __init__(self, label: str) -> None:
-        date_str = datetime.now().strftime("%d-%m-%Y %H:%M")
+        super().__init__(label)
 
         # Define dialog
         with ui.dialog() as self._dialog, ui.card():
-            self._date_input = ui.date(value=date_str, mask="DD-MM-YYYY", on_change=self._save).props("today-btn first-day-of-week=1")
-            self._time_input = ui.time(value=date_str[11:], mask="HH:mm", on_change=self._save).props("format24h")
-            ui.button("Close", on_click=self._dialog.close)
+            date_input = ui.date(mask=self.VUE_FORMAT).props("today-btn first-day-of-week=1")
+            time_input = ui.time(mask=self.VUE_FORMAT).props("format24h")
 
         # Define input
-        with ui.input(label, value=date_str, validation=self._validation()) as self._input:
+        with self:
             ui.button(icon="event", on_click=self._dialog.open).props("flat")
+            self.on("click", self._dialog.open)
 
-    def _save(self):
-        """Save the selected date and time and close the dialog."""
-        self._input.value = f"{self._date_input.value} {self._time_input.value}"
+        # Bind inputs together
+        self.bind_value(date_input)
+        date_input.bind_value(time_input)
 
     def get_datetime(self) -> datetime | None:
         """Get the text from the input as a datetime object, if
         the current text in the input is valid else None.
 
         Returns:
-            datetime: The value as a datetime object if valid.
+            datetime: The value as a datetime object if any.
         """
         try:
-            return datetime.strptime(self._input.value,  "%d-%m-%Y %H:%M")
+            return datetime.strptime(self.value,  self.PY_FORMAT)
         except ValueError:
             return None
 
-    def _validation(self) -> dict[str, Callable]:
-        def validate(_):
-            return self.get_datetime() is not None
+    def set_datetime(self, value: datetime) -> None:
+        """Set the value of the datetime input.
 
-        return {"Invalid date: DD-MM-YYYY HH:mm": validate}
+        Args:
+            value: The new datetime value.
+        """
+        self.value = value.strftime(self.PY_FORMAT)

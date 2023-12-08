@@ -112,7 +112,12 @@ def get_all_triggers() -> tuple[Trigger]:
         A tuple of Trigger objects.
     """
     with Session(_connection_engine) as session:
-        return tuple(session.scalars(select(Trigger)))
+        query = (
+            select(Trigger)
+            .options(selectin_polymorphic(Trigger, (ScheduledTrigger, QueueTrigger, SingleTrigger)))
+        )
+        return tuple(session.scalars(query))
+
 
 @catch_db_error
 def update_trigger(trigger: Trigger):

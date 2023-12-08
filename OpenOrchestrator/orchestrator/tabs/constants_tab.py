@@ -11,6 +11,7 @@ CONSTANT_COLUMNS = ("Constant Name", "Value", "Last Changed")
 CREDENTIAL_COLUMNS = ("Credential Name", "Username", "Password", "Last Changed")
 
 class ConstantTab():
+    """The 'Constants' tab object."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
             with ui.row():
@@ -18,11 +19,11 @@ class ConstantTab():
                 ui.button("New Credential", icon='add', on_click=lambda e: CredentialPopup(self))
 
             columns = [{'name': label, 'label': label, 'field': label, 'align': 'left', 'sortable': True} for label in CONSTANT_COLUMNS]
-            self.constants_table = ui.table(title="Constants", columns=columns, rows=[], row_key='Constant Name').classes("w-full")
+            self.constants_table = ui.table(title="Constants", columns=columns, rows=[], row_key='Constant Name', pagination=10).classes("w-full")
             self.constants_table.on('rowClick', self.row_click_constant)
 
             columns = [{'name': label, 'label': label, 'field': label, 'align': 'left', 'sortable': True} for label in CREDENTIAL_COLUMNS]
-            self.credentials_table = ui.table(title="Credentials", columns=columns, rows=[], row_key='Credential Name').classes("w-full")
+            self.credentials_table = ui.table(title="Credentials", columns=columns, rows=[], row_key='Credential Name', pagination=10).classes("w-full")
             self.credentials_table.on('rowClick', self.row_click_credential)
 
     def row_click_constant(self, event):
