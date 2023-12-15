@@ -28,7 +28,7 @@ class Application():
             self.l_tab = LoggingTab("Logs")
             self.c_tab = ConstantTab("Constants")
             SettingsTab('Settings')
-        
+
         ui.timer(10, self.update_loop)
 
     def update_tab(self):

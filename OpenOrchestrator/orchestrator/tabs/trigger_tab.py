@@ -4,10 +4,8 @@ in Orchestrator."""
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
-from OpenOrchestrator.database.triggers import SingleTrigger, ScheduledTrigger, QueueTrigger
-from OpenOrchestrator.orchestrator.popups.single_trigger_popup import SingleTriggerPopup
-from OpenOrchestrator.orchestrator.popups.queue_trigger_popup import QueueTriggerPopup
-from OpenOrchestrator.orchestrator.popups.scheduled_trigger_popup import ScheduledTriggerPopup
+from OpenOrchestrator.database.triggers import SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerType
+from OpenOrchestrator.orchestrator.popups.trigger_popup import TriggerPopup
 
 COLUMNS = ("Trigger Name", "Type", "Status", "Process Name", "Last Run", "Next Run", "ID")
 
@@ -17,9 +15,9 @@ class TriggerTab():
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
             with ui.row():
-                ui.button("New Single Trigger", icon="add", on_click=lambda e: SingleTriggerPopup(self))
-                ui.button("New Scheduled Trigger", icon="add", on_click=lambda e: ScheduledTriggerPopup())
-                ui.button("New Queue Trigger", icon="add", on_click=lambda e: QueueTriggerPopup())
+                ui.button("New Single Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.SINGLE))
+                ui.button("New Scheduled Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.SCHEDULED))
+                ui.button("New Queue Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.QUEUE))
 
             columns = [{'name': label, 'label': label, 'field': label, 'align': 'left', 'sortable': True} for label in COLUMNS]
             self.trigger_table = ui.table(columns, [], title="Triggers", pagination=10, row_key='ID').classes("w-full")
@@ -32,7 +30,11 @@ class TriggerTab():
         trigger = db_util.get_trigger(trigger_id)
 
         if isinstance(trigger, SingleTrigger):
-            SingleTriggerPopup(self, trigger)
+            TriggerPopup(self, TriggerType.SINGLE, trigger)
+        elif isinstance(trigger, ScheduledTrigger):
+            TriggerPopup(self, TriggerType.SCHEDULED, trigger)
+        elif isinstance(trigger, QueueTrigger):
+            TriggerPopup(self, TriggerType.QUEUE, trigger)
 
     def update(self):
         """Updates the tab and it's data."""

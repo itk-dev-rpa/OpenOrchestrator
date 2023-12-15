@@ -36,7 +36,7 @@ class DatetimeInput(ui.input):
         """
         try:
             return datetime.strptime(self.value,  self.PY_FORMAT)
-        except ValueError:
+        except (TypeError, ValueError):
             return None
 
     def set_datetime(self, value: datetime) -> None:
