@@ -105,7 +105,7 @@ class OrchestratorConnection:
         """
         db_util.update_credential(credential_name, new_username, new_password)
 
-    def create_queue_element(self, queue_name: str, reference: str = None, data: str = None, created_by: str = None):
+    def create_queue_element(self, queue_name: str, reference: str = None, data: str = None, created_by: str = None) -> QueueElement:
         """Adds a queue element to the given queue.
 
         Args:
@@ -113,8 +113,11 @@ class OrchestratorConnection:
             reference (optional): The reference of the queue element.
             data (optional): The data of the queue element.
             created_by (optional): The name of the creator of the queue element.
+
+        Returns:
+            QueueElement: The created queue element.
         """
-        db_util.create_queue_element(queue_name, reference, data, created_by)
+        return db_util.create_queue_element(queue_name, reference, data, created_by)
 
     def bulk_create_queue_elements(self, queue_name: str, references: tuple[str], data: tuple[str],
                                    created_by: str = None) -> None:
@@ -161,7 +164,7 @@ class OrchestratorConnection:
         Returns:
             tuple[QueueElement]: A tuple of queue elements.
         """
-        return db_util.get_queue_elements(queue_name, reference, status, QueueStatus, offset, limit)  # pylint: disable= (too-many-function-args)
+        return db_util.get_queue_elements(queue_name, reference, status, offset, limit)
 
     def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str = None) -> None:
         """Set the status of a queue element.
@@ -182,7 +185,6 @@ class OrchestratorConnection:
             element_id: The id of the queue element.
         """
         db_util.delete_queue_element(element_id)
-
 
     @classmethod
     def create_connection_from_args(cls):

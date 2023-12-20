@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2023-12-19
+
+### Added
+
+- db_util: Return queue element when calling create_queue_element.
+- OrchestratorConnection: Return queue element when calling create_queue_element.
+
+### Fixed
+
+- OrchestratorConnection: Bug in get_queue_elements.
+
 ## [1.0.1] - 2023-11-29
 
 ### Added
@@ -21,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.0.1...HEAD
+[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.0.2...HEAD
+[1.0.2]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.2
 [1.0.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.1
 [1.0.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.0
