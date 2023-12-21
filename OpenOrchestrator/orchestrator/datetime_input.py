@@ -37,7 +37,7 @@ class DatetimeInput(ui.input):
             datetime: The value as a datetime object if any.
         """
         try:
-            return datetime.strptime(self.value,  self.PY_FORMAT)
+            return datetime.strptime(self.value, self.PY_FORMAT)
         except (TypeError, ValueError):
             return None
 
