@@ -65,8 +65,7 @@ class CredentialPopup():
         self.username_input.validate()
         self.password_input.validate()
 
-        # pylint: disable-next=protected-access
-        if self.name_input._error or self.username_input._error or self.password_input._error:
+        if self.name_input.error or self.username_input.error or self.password_input.error:
             return
 
         name = self.name_input.value
