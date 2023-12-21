@@ -7,6 +7,7 @@ from nicegui import ui
 
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.constants import Constant
+from OpenOrchestrator.orchestrator.popups.generic_popups import question_popup
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
@@ -33,32 +34,40 @@ class ConstantPopup():
             self.value_input = ui.input("Constant Value").classes("w-full")
 
             with ui.row():
-                ui.button(button_text, on_click=self.create_constant)
+                ui.button(button_text, on_click=self._create_constant)
                 ui.button("Cancel", on_click=self.dialog.close)
 
-        if constant:
-            self.pre_populate()
+                if constant:
+                    ui.button("Delete", color='red', on_click=self._delete_constant)
 
-    def pre_populate(self):
+        self._define_validation()
+
+        if constant:
+            self._pre_populate()
+
+    def _define_validation(self):
+        """Define validation rules for input elements."""
+        self.name_input.validation = {"Please enter a name.": bool}
+        self.value_input.validation = {"Please enter a value.": bool}
+
+    def _pre_populate(self):
         """Pre populate the inputs with an existing constant."""
         self.name_input.value = self.constant.name
         self.name_input.disable()
         self.value_input.value = self.constant.value
 
-    def create_constant(self):
+    def _create_constant(self):
         """Creates a new constant in the database using the data from the
         UI.
         """
+        self.name_input.validate()
+        self.value_input.validate()
+
+        if self.name_input.error or self.value_input.error:
+            return
+
         name = self.name_input.value
         value = self.value_input.value
-
-        if not name:
-            ui.notify('Please enter a name', type='negative')
-            return
-
-        if not value:
-            ui.notify('Please enter a value', type='negative')
-            return
 
         if self.constant:
             db_util.update_constant(name, value)
@@ -78,3 +87,9 @@ class ConstantPopup():
 
         self.dialog.close()
         self.constant_tab.update()
+
+    async def _delete_constant(self):
+        if await question_popup(f"Delete constant '{self.constant.name}?", "Delete", "Cancel", color1='red'):
+            db_util.delete_constant(self.constant.name)
+            self.dialog.close()
+            self.constant_tab.update()
