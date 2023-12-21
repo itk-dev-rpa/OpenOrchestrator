@@ -21,14 +21,15 @@ COLUMNS = (
 
 
 class LoggingTab():
+    """The 'Logs' tab object."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
             with ui.row():
-                self.from_input = DatetimeInput("From Date")
-                self.to_input = DatetimeInput("To Date")
-                self.process_input = ui.select([], label="Process Name").classes("w-48")
-                self.level_input = ui.select(["", "Trace", "Info", "Error"], label="Level").classes("w-48")
-                ui.button("Update", on_click=self.update)
+                self.from_input = DatetimeInput("From Date", on_change=self.update)
+                self.to_input = DatetimeInput("To Date", on_change=self.update)
+                self.process_input = ui.select(["All"], label="Process Name", value="All", on_change=self.update).classes("w-48")
+                self.level_input = ui.select(["All", "Trace", "Info", "Error"], value="All", label="Level", on_change=self.update).classes("w-48")
+                self.limit_input = ui.select([100, 200, 500, 1000], value=100, label="Limit", on_change=self.update).classes("w-24")
 
             self.logs_table = ui.table(title="Logs", columns=COLUMNS, rows=[], row_key='ID').classes("w-full")
             self.logs_table.on("rowClick", self._row_click)
@@ -39,21 +40,25 @@ class LoggingTab():
         self._update_process_input()
 
     def _update_table(self):
+        """Update the table with logs from the database applying the filters."""
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
-        process_name = self.process_input.value
-        level = self.level_input.value
+        process_name = self.process_input.value if self.process_input.value != 'All' else None
+        level = self.level_input.value if self.level_input.value != "All" else None
+        limit = self.limit_input.value
 
-        logs = db_util.get_logs(0, 100, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name)
+        logs = db_util.get_logs(0, limit=limit, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name)
         self.logs_table.rows = [log.to_row_dict() for log in logs]
 
     def _update_process_input(self):
+        """Update the process input with names from the database."""
         process_names = list(db_util.get_unique_log_process_names())
-        process_names.insert(0, "")
+        process_names.insert(0, "All")
         self.process_input.options = process_names
         self.process_input.update()
 
     def _row_click(self, event):
+        """Display a dialog with info on the clicked log."""
         row = event.args[1]
         with ui.dialog(value=True), ui.card():
             ui.label("Log ID:").classes("font-bold")
