@@ -8,214 +8,62 @@ from ast import literal_eval
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 
 
-COLUMNS = ("Log Time", "Process Name", "Level", "Message", "ID")
+COLUMNS = (
+    {'name': "Log Time", 'label': "Log Time", 'field': "Log Time", 'align': 'left', 'sortable': True},
+    {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left'},
+    {'name': "Level", 'label': "Level", 'field': "Level", 'align': 'left'},
+    {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left', ':format': 'value => value.length < 100 ? value : value.substring(0, 100)+"..."'},
+    {'name': "ID", 'label': "ID", 'field': "ID", 'headerClasses': 'hidden', 'classes': 'hidden'}
+)
 
 
 class LoggingTab():
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
-            columns = [{'name': label, 'label': label, 'field': label, 'align': 'left', 'sortable': True} for label in COLUMNS]
-            self.logs_table = ui.table(title="Logs", columns=columns, rows=[], row_key='ID').classes("w-full")
+            with ui.row():
+                self.from_input = DatetimeInput("From Date")
+                self.to_input = DatetimeInput("To Date")
+                self.process_input = ui.select([], label="Process Name").classes("w-48")
+                self.level_input = ui.select(["", "Trace", "Info", "Error"], label="Level").classes("w-48")
+                ui.button("Update", on_click=self.update)
+
+            self.logs_table = ui.table(title="Logs", columns=COLUMNS, rows=[], row_key='ID').classes("w-full")
+            self.logs_table.on("rowClick", self._row_click)
 
     def update(self):
+        """Update the logs table and Process input list"""
         self._update_table()
+        self._update_process_input()
 
     def _update_table(self):
-        logs = db_util.get_logs(0, 100)
+        from_date = self.from_input.get_datetime()
+        to_date = self.to_input.get_datetime()
+        process_name = self.process_input.value
+        level = self.level_input.value
+
+        logs = db_util.get_logs(0, 100, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name)
         self.logs_table.rows = [log.to_row_dict() for log in logs]
 
+    def _update_process_input(self):
+        process_names = list(db_util.get_unique_log_process_names())
+        process_names.insert(0, "")
+        self.process_input.options = process_names
+        self.process_input.update()
 
-# def create_tab(parent):
-#     """Create a new Logging tab object.
-
-#     Args:
-#         parent: The ttk.Notebook object that this tab is a child of.
-
-#     Returns:
-#         ttk.Frame: The created tab object as a ttk.Frame.
-#     """
-#     tab = ttk.Frame(parent)
-#     tab.pack(fill='both', expand=True)
-
-#     tab.columnconfigure(0, weight=1)
-#     tab.rowconfigure(0, weight=2, uniform='a')
-#     tab.rowconfigure(1, weight=1, uniform='a')
-
-#     #Table
-#     table_frame = ttk.Frame(tab)
-#     table_frame.grid(row=0, column=0, sticky="nsew")
-
-#     table = table_util.create_table(table_frame, ("Time", "Level", "Process", "Message"))
-#     table.column("Time", width=120, stretch=False)
-#     table.column("Level", width=50, stretch=False)
-#     table.column("Process", width=150, stretch=False)
-#     table.bind("<Double-1>", lambda e: double_click_log(table))
-
-#     # Filters
-#     filter_frame = ttk.Frame(tab)
-#     filter_frame.grid(row=1, column=0, sticky='nsew')
-
-#     # Date filters
-#     ttk.Label(filter_frame, text="Date from:").grid(row=0, column=0, sticky='w')
-#     from_date_entry = ttk.Entry(filter_frame, width=21, validate='key')
-#     reg = tab.register(validate_date(from_date_entry))
-#     from_date_entry.configure(validatecommand=(reg, '%P'))
-#     from_date_entry.insert(0, 'dd-mm-yyyy hh:mm:ss')
-#     from_date_entry.grid(row=0, column=1)
-
-#     ttk.Label(filter_frame, text='Date to:').grid(row=0, column=2)
-#     to_date_entry = ttk.Entry(filter_frame, width=21, validate='key')
-#     reg = tab.register(validate_date(to_date_entry))
-#     to_date_entry.configure(validatecommand=(reg, '%P'))
-#     to_date_entry.insert(0, 'dd-mm-yyyy hh:mm:ss')
-#     to_date_entry.grid(row=0, column=3)
-
-#     # Process filter
-#     ttk.Label(filter_frame, text="Process name:").grid(row=1, column=0)
-#     ttk.Style().configure("TMenubutton", background='white')
-#     process_options_var = tkinter.StringVar()
-#     process_options = ttk.OptionMenu(filter_frame, process_options_var, "", *("", "hej1", "med2", "dig3","hej4", "med5", "dig6"))
-#     process_options['menu'].delete(0, 'end')
-#     process_options.grid(row=1, column=1, columnspan=3, sticky='ew', pady=2)
-
-#     # Level filter
-#     ttk.Label(filter_frame, text="Log level:").grid(row=2, column=0)
-#     log_level = tkinter.StringVar()
-#     ttk.OptionMenu(filter_frame, log_level, "", *("", "Trace", "Info", "Error")).grid(row=2, column=1, sticky='ew', pady=2)
-
-#     #Buttons
-#     def update_command():
-#         update(table, from_date_entry, to_date_entry, process_options, process_options_var, log_level)
-#     update_button = ttk.Button(filter_frame, text="Update", command=update_command)
-#     update_button.grid(row=4, column=0)
-
-#     return tab
-
-
-# def validate_date(entry: ttk.Entry) -> callable:
-#     """Creates a validator function to validate if
-#     an datetime entered in the given entry is valid.
-#     Changes the color of the Entry widget according
-#     to the validity of the datetime.
-
-#     Args:
-#         entry: The entry widget to validate on.
-
-#     Returns:
-#         callable: The validator function.
-#     """
-#     def inner(text: str):
-#         if parse_date(text) is not None:
-#             entry.configure(foreground='black')
-#         else:
-#             entry.configure(foreground='red')
-#         return True
-#     return inner
-
-
-# def update(table: ttk.Treeview, from_date_entry: ttk.Entry, to_date_entry: ttk.Entry,
-#                  process_options:ttk.OptionMenu, process_options_var:tkinter.StringVar,
-#                  log_level: tkinter.StringVar) -> None:
-#     """Updates the logs table with new values from the database
-#     using the filter options given in the UI.
-#     Updates the filter option menus with values from the database.
-
-#     Args:
-#         table: The logs table to update.
-#         from_date_entry: The entry with the from date.
-#         to_date_entry: The entry with the to date.
-#         process_options: The options menu with process names.
-#         process_options_var: The StringVar connected to process_options.
-#         log_level: The log level to filter on.
-#     """
-#     offset = 0
-#     limit = 100
-
-#     from_date = parse_date(from_date_entry.get()) or datetime(1900, 1, 1)
-#     to_date = parse_date(to_date_entry.get()) or datetime(2100, 12, 31)
-
-#     process_name = process_options_var.get()
-#     log_level = log_level.get()
-
-#     logs = db_util.get_logs(offset, limit, from_date, to_date, process_name, log_level)
-
-#     # Convert log objects to lists of strings
-#     logs_list = [
-#         [
-#             l.log_time.strftime('%d-%m-%Y %H:%M:%S'),
-#             l.log_level.value,
-#             l.process_name,
-#             repr(l.log_message) # Convert message to single line text
-#         ]
-#         for l in logs
-#     ]
-
-#     table_util.update_table(table, logs_list)
-#     resize_table(table)
-
-#     # Update process_name OptionMenu
-#     process_names = list(db_util.get_unique_log_process_names())
-#     process_names.insert(0, "")
-#     replace_options(process_options, process_options_var, process_names)
-
-
-# def parse_date(date_str: str) -> datetime | None:
-#     """Tries to parse a string to a datetime object with
-#     a selection of different formats.
-
-#     Args:
-#         date_str: The string to parse.
-
-#     Returns:
-#         datetime: The parsed datetime if possible else None.
-#     """
-#     formats = (
-#         '%d-%m-%Y %H:%M:%S',
-#         '%d-%m-%Y %H:%M',
-#         '%d-%m-%Y'
-#     )
-
-#     for format_ in formats:
-#         try:
-#             return datetime.strptime(date_str, format_)
-#         except ValueError:
-#             ...
-
-#     return None
-
-
-# def double_click_log(table: ttk.Treeview) -> None:
-#     """Handles double clicks on the logs table.
-#     Opens a popup with the selected log's text.
-
-#     Args:
-#         table (ttk.Treeview): _description_
-#     """
-#     item = table.selection()
-
-#     if item:
-#         values = list(table.item(item[0], 'values'))
-
-#         # Convert message back to multiline text
-#         values[-1] = literal_eval(values[-1])
-
-#         text = "\n".join(values)
-#         messagebox.showinfo("Info", text)
-
-
-# def replace_options(option_menu: ttk.OptionMenu, option_menu_var: tkinter.StringVar, new_options: tuple[str]) -> None:
-#     """Replaces the options in a ttk.OptionsMenu.
-
-#     Args:
-#         option_menu: The OptionsMenu whose options to replace.
-#         option_menu_var: The StringVar connected to the OptionsMenu.
-#         new_options (tuple[str]): _description_
-#     """
-#     selected = option_menu_var.get()
-
-#     option_menu.set_menu(None, *new_options)
-
-#     if selected in new_options:
-#         option_menu_var.set(selected)
+    def _row_click(self, event):
+        row = event.args[1]
+        with ui.dialog(value=True), ui.card():
+            ui.label("Log ID:").classes("font-bold")
+            ui.label(row['ID'])
+            ui.label("Log Time:").classes("font-bold")
+            ui.label(row['Log Time'])
+            ui.label("Process Name:").classes("font-bold")
+            ui.label(row['Process Name'])
+            ui.label("Log Level:").classes("font-bold")
+            ui.label(row['Level'])
+            ui.label("Message:").classes("font-bold")
+            for line in row['Message'].splitlines():
+                ui.label(line)

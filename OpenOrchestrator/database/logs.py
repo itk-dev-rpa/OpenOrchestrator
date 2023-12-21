@@ -38,21 +38,9 @@ class Log(Base):
             "Log Time": self.log_time.strftime("%d-%m-%Y %H:%M:%S"),
             "Level": self.log_level.value,
             "Process Name": self.process_name,
-            "Message": self.format_message(),
+            "Message": self.log_message,
             "ID": str(self.id)
         }
-
-    def format_message(self) -> str:
-        """Format the log message to be shown in a table."""
-        string = self.log_message
-
-        if "\n" in string:
-            string = repr(string)
-
-        if len(self.log_message) > 120:
-            string = string[:120] + "..."
-
-        return string
 
 
 def create_tables(engine: Engine):
