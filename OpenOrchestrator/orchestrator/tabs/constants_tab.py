@@ -10,6 +10,7 @@ from OpenOrchestrator.orchestrator.popups.credential_popup import CredentialPopu
 CONSTANT_COLUMNS = ("Constant Name", "Value", "Last Changed")
 CREDENTIAL_COLUMNS = ("Credential Name", "Username", "Password", "Last Changed")
 
+
 class ConstantTab():
     """The 'Constants' tab object."""
     def __init__(self, tab_name: str) -> None:
@@ -49,105 +50,3 @@ class ConstantTab():
         credentials = db_util.get_credentials()
         self.credentials_table.rows = [c.to_row_dict() for c in credentials]
         self.credentials_table.update()
-
-
-
-# def update_tables(const_table: ttk.Treeview, cred_table: ttk.Treeview) -> None:
-#     """Update the constant and credential tables with
-#     new values from the database.
-
-#     Args:
-#         const_table: The constants table object.
-#         cred_table: The credentials table object.
-#     """
-
-#     # Convert ORM objects to lists of values
-#     const_list = [c.to_tuple() for c in db_util.get_constants()]
-#     cred_list = [c.to_tuple() for c in db_util.get_credentials()]
-
-#     table_util.update_table(const_table, const_list)
-#     table_util.update_table(cred_table, cred_list)
-
-
-# def delete_selected(const_table: ttk.Treeview, cred_table: ttk.Treeview) -> None:
-#     """Deletes the currently selected constant or credential
-#     from the database. Updates the tables afterwards.
-
-#     Args:
-#         const_table: The constants table object.
-#         cred_table: The credentials table object.
-#     """
-#     if const_table.selection():
-#         name = const_table.item(const_table.selection()[0], 'values')[0]
-#         if not messagebox.askyesno('Delete constant?', f"Are you sure you want to delete constant '{name}'?"):
-#             return
-#         db_util.delete_constant(name)
-
-#     elif cred_table.selection():
-#         name = cred_table.item(cred_table.selection()[0], 'values')[0]
-#         if not messagebox.askyesno('Delete credential?', f"Are you sure you want to delete credential '{name}'?"):
-#             return
-#         db_util.delete_credential(name)
-
-#     else:
-#         return
-
-#     update_tables(const_table, cred_table)
-
-
-# def show_constant_popup(on_close: callable, name: str=None, value: str=None) -> None:
-#     """Shows the new constant popup.
-#     Optionally populates the entry widgets in the popup with 'name' and 'value'.
-#     Binds a callable to the popup's on_close event.
-
-#     Args:
-#         on_close: A function to be called when the popup closes.
-#         name (optional): A value to pre-populate the name entry widget with. Defaults to None.
-#         value (optional): A value to pre-populate the value entry widget with. Defaults to None.
-#     """
-#     popup = constant_popup.show_popup(name, value)
-#     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
-
-
-# def double_click_constant_table(event: tkinter.Event, const_table:ttk.Treeview, on_close:callable) -> None:
-#     """This function is called whenever the constants table is double clicked.
-#     It opens the new constant popup with pre-populated values.
-
-#     Args:
-#         event: The event of the double click.
-#         const_table: The constants table.
-#         on_close: A function to be called when the popup is closed.
-#     """
-#     row = const_table.identify_row(event.y)
-#     if row:
-#         name, value, *_ = const_table.item(row, 'values')
-#         show_constant_popup(on_close, name, value)
-
-
-# def double_click_credential_table(event: tkinter.Event, cred_table: ttk.Treeview, on_close: callable) -> None:
-#     """This function is called whenever the credentials table is double clicked.
-#     It opens the new credential popup with pre-populated values.
-
-#     Args:
-#         event: The event of the double click.
-#         cred_table: The credentials table.
-#         on_close: A function to be called when the popup is closed.
-#     """
-#     row = cred_table.identify_row(event.y)
-#     if row:
-#         name, value, *_ = cred_table.item(row, 'values')
-#         show_credential_popup(on_close, name, value)
-
-
-# def show_credential_popup(on_close: callable, name: str=None, username: str=None) -> None:
-#     """Shows the new credential popup.
-#     Optionally populates the entry widgets in the popup with 'name' and 'username'.
-#     Binds a callable to the popup's on_close event.
-
-#     Args:
-#         on_close: A function to be called when the popup closes.
-#         name (optional): A value to pre-populate the name entry widget with. Defaults to None.
-#         username (optional): A value to pre-populate the username entry widget with. Defaults to None.
-#     """
-#     popup = credential_popup.show_popup(name, username)
-#     popup.bind('<Destroy>', lambda e: on_close() if e.widget == popup else ...)
