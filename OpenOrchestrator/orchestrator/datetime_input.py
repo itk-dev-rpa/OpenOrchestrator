@@ -1,6 +1,7 @@
 """This module provides an input element for entering a datetime."""
 
 from datetime import datetime
+from typing import Optional, Callable, Any
 
 from nicegui import ui
 
@@ -10,8 +11,9 @@ class DatetimeInput(ui.input):
     PY_FORMAT = "%d-%m-%Y %H:%M"
     VUE_FORMAT = "DD-MM-YYYY HH:mm"
 
-    def __init__(self, label: str) -> None:
-        super().__init__(label)
+    def __init__(self, label: str, on_change: Optional[Callable[..., Any]] = None) -> None:
+        super().__init__(label, on_change=on_change)
+        self.props("clearable")
 
         # Define dialog
         with ui.dialog() as self._dialog, ui.card():
