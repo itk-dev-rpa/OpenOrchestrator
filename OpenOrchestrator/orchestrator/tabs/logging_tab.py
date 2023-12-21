@@ -1,10 +1,6 @@
 """This module is responsible for the layout and functionality of the Logging tab
 in Orchestrator."""
 
-
-from datetime import datetime
-from ast import literal_eval
-
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
@@ -20,6 +16,7 @@ COLUMNS = (
 )
 
 
+# pylint: disable-next=too-few-public-methods
 class LoggingTab():
     """The 'Logs' tab object."""
     def __init__(self, tab_name: str) -> None:
