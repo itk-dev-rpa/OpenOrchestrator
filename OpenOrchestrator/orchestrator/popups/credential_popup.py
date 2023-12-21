@@ -7,6 +7,7 @@ from nicegui import ui
 
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.constants import Credential
+from OpenOrchestrator.orchestrator.popups.generic_popups import question_popup
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
@@ -35,35 +36,42 @@ class CredentialPopup():
             self.password_input = ui.input("Password").classes("w-full")
 
             with ui.row():
-                ui.button(button_text, on_click=self.create_credential)
+                ui.button(button_text, on_click=self._save_credential)
                 ui.button("Cancel", on_click=self.dialog.close)
 
-        if credential:
-            self.pre_populate()
+                if credential:
+                    ui.button("Delete", color='red', on_click=self._delete_credential)
 
-    def pre_populate(self):
+        self._define_validation()
+
+        if credential:
+            self._pre_populate()
+
+    def _define_validation(self):
+        """Define validation functions for ui elements."""
+        self.name_input.validation = {"Please enter a name": bool}
+        self.username_input.validation = {"Please enter a username": bool}
+        self.password_input.validation = {"Please enter a password": bool}
+
+    def _pre_populate(self):
         """Pre populate the inputs with an existing credential."""
         self.name_input.value = self.credential.name
         self.name_input.disable()
         self.username_input.value = self.credential.username
 
-    def create_credential(self):
-        """Creates a new credential in the database using the data from the UI."""
+    def _save_credential(self):
+        """Create or update a credential in the database using the data from the UI."""
+        self.name_input.validate()
+        self.username_input.validate()
+        self.password_input.validate()
+
+        # pylint: disable-next=protected-access
+        if self.name_input._error or self.username_input._error or self.password_input._error:
+            return
+
         name = self.name_input.value
         username = self.username_input.value
         password = self.password_input.value
-
-        if not name:
-            ui.notify('Please enter a name', type='negative')
-            return
-
-        if not username:
-            ui.notify('Please enter a username', type='negative')
-            return
-
-        if not password:
-            ui.notify('Please enter a password', type='negative')
-            return
 
         if self.credential:
             db_util.update_credential(name, username, password)
@@ -83,3 +91,10 @@ class CredentialPopup():
 
         self.dialog.close()
         self.constant_tab.update()
+
+    async def _delete_credential(self):
+        """Delete the selected credential."""
+        if await question_popup(f"Delete credential '{self.credential.name}'?", "Delete", "Cancel", color1='red'):
+            db_util.delete_credential(self.credential.name)
+            self.dialog.close()
+            self.constant_tab.update()
