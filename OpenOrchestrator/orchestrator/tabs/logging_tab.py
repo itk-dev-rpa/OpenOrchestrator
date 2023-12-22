@@ -67,5 +67,4 @@ class LoggingTab():
             ui.label("Log Level:").classes("font-bold")
             ui.label(row['Level'])
             ui.label("Message:").classes("font-bold")
-            for line in row['Message'].splitlines():
-                ui.label(line)
+            ui.html(f"<pre>{row['Message']}</pre>")
