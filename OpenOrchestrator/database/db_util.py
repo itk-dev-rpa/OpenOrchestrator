@@ -1,7 +1,7 @@
 """This module handles the connection to the database in OpenOrchestrator."""
 
 from datetime import datetime
-from typing import Callable
+from typing import Callable, TypeVar, ParamSpec
 
 from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
@@ -15,6 +15,10 @@ from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
+
+# Type hint helpers for decorators
+T = TypeVar("T")
+P = ParamSpec("P")
 
 _connection_engine: Engine = None
 
@@ -49,17 +53,20 @@ def disconnect() -> None:
     _connection_engine = None
 
 
-def catch_db_error(func: Callable) -> Callable:
+def catch_db_error(func: Callable[P, T]) -> Callable[P, T]:
     """A decorator that catches errors in SQL calls."""
-    def inner(*args, **kwargs):
+    def inner(*args, **kwargs) -> T:
         if _connection_engine is None:
             ui.notify("Not connected", type='negative')
             return None
+
         try:
-            result = func(*args, **kwargs)
+            return func(*args, **kwargs)
         except alc_exc.ProgrammingError as exc:
             ui.notify(f"Query failed:\n{exc}", type='negative', timeout=0, close_button="Dismiss")
-        return result
+
+        return None
+
     return inner
 
 
@@ -82,7 +89,7 @@ def initialize_database() -> None:
     triggers.create_tables(_connection_engine)
     constants.create_tables(_connection_engine)
     queues.create_tables(_connection_engine)
-    messagebox.showinfo("Database initialized", "Database has been initialized!")
+    ui.notify("Database has been initialized!", type='positive')
 
 
 @catch_db_error
@@ -797,6 +804,32 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
 
         result = session.scalars(query).all()
         return tuple(result)
+
+
+@catch_db_error
+def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
+    """Count the number of queue elements of each status for every queue.
+
+    Returns:
+        A dict for each queue with the count for each status. E.g. result[queue_name][status] => count.
+    """
+    with Session(_connection_engine) as session:
+        query = (
+            select(QueueElement.queue_name, QueueElement.status, alc_func.count())  # pylint: disable=not-callable
+            .group_by(QueueElement.queue_name)
+            .group_by(QueueElement.status)
+        )
+        rows = session.execute(query)
+        rows = tuple(rows)
+
+    # Aggregate result into a dict
+    result = {}
+    for queue_name, status, count in rows:
+        if queue_name not in result:
+            result[queue_name] = {}
+        result[queue_name][status] = count
+
+    return result
 
 
 @catch_db_error
