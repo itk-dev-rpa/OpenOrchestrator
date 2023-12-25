@@ -368,7 +368,7 @@ def get_constant(name: str) -> Constant:
 
     Returns:
         Constant: The constant with the given name.
-    
+
     Raises:
         ValueError: If no constant with the given name exists.
     """
@@ -527,12 +527,12 @@ def delete_credential(name: str) -> None:
 
 @catch_db_error
 def begin_single_trigger(trigger_id: str) -> bool:
-    """Set the status of a single trigger to 'running' and 
+    """Set the status of a single trigger to 'running' and
     set the last run time to the current time.
 
     Args:
         trigger_id: The id of the trigger to begin.
-    
+
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
@@ -587,14 +587,14 @@ def get_next_scheduled_trigger() -> ScheduledTrigger | None:
 
 @catch_db_error
 def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> bool:
-    """Set the status of a scheduled trigger to 'running', 
+    """Set the status of a scheduled trigger to 'running',
     set the last run time to the current time,
     and set the next run time to the given datetime.
 
     Args:
         trigger_id: The id of the trigger to begin.
         next_run: The next datetime the trigger should run.
-    
+
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
@@ -626,7 +626,7 @@ def get_next_queue_trigger() -> QueueTrigger | None:
     with Session(_connection_engine) as session:
 
         sub_query = (
-            select(alc_func.count()) # pylint: disable=not-callable
+            select(alc_func.count())  # pylint: disable=not-callable
             .where(QueueElement.queue_name == QueueTrigger.queue_name)
             .scalar_subquery()
         )
@@ -642,12 +642,12 @@ def get_next_queue_trigger() -> QueueTrigger | None:
 
 @catch_db_error
 def begin_queue_trigger(trigger_id: str) -> None:
-    """Set the status of a queue trigger to 'running' and 
+    """Set the status of a queue trigger to 'running' and
     set the last run time to the current time.
 
     Args:
         trigger_id: The id of the trigger to begin.
-    
+
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
@@ -751,7 +751,7 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
     """
 
     with Session(_connection_engine) as session:
-        query =(
+        query = (
             select(QueueElement)
             .where(QueueElement.queue_name == queue_name)
             .where(QueueElement.status == QueueStatus.NEW)
