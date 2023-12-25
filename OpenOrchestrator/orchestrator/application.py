@@ -1,12 +1,13 @@
 """This module is the entry point for the Orchestrator app. It contains a single class
 that when created starts the application."""
 
-from nicegui import ui
+from nicegui import ui, app
 
 from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
 from OpenOrchestrator.orchestrator.tabs.settings_tab import SettingsTab
 from OpenOrchestrator.orchestrator.tabs.logging_tab import LoggingTab
 from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
+from OpenOrchestrator.orchestrator.tabs.queue_tab import QueueTab
 
 
 class Application():
@@ -19,6 +20,7 @@ class Application():
                 ui.tab('Triggers')
                 ui.tab('Logs')
                 ui.tab('Constants')
+                ui.tab('Queues')
                 ui.tab('Settings')
 
             ui.button(icon='refresh', on_click=self.update_tab).props('color=white text-color=primary')
@@ -27,9 +29,8 @@ class Application():
             self.t_tab = TriggerTab('Triggers')
             self.l_tab = LoggingTab("Logs")
             self.c_tab = ConstantTab("Constants")
+            self.q_tab = QueueTab("Queues")
             SettingsTab('Settings')
-
-        ui.timer(10, self.update_loop)
 
     def update_tab(self):
         """Update the date in the currently selected tab."""
@@ -40,6 +41,8 @@ class Application():
                 self.l_tab.update()
             case 'Constants':
                 self.c_tab.update()
+            case 'Queues':
+                self.q_tab.update()
 
     async def update_loop(self):
         """Update the selected tab on a timer but only if the page is in focus."""
@@ -47,6 +50,9 @@ class Application():
         if in_focus:
             self.update_tab()
 
+        ui.timer(10, self.update_loop, once=True)
 
+
+orchestrator = Application()
 ui.run(title="Orchestrator", favicon='🤖', native=False)
-Application()
+app.on_connect(orchestrator.update_loop)
