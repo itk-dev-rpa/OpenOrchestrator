@@ -17,18 +17,20 @@ if TYPE_CHECKING:
 
 
 class TriggerPopup():
-    """A popup for creating/updating single triggers."""
+    """A popup for creating/updating triggers."""
     def __init__(self, trigger_tab: TriggerTab, trigger_type: TriggerType, trigger: Trigger = None):
         """Create a new popup.
         If a trigger is given it will be updated instead of creating a new trigger.
 
         Args:
-            trigger: The Single Trigger to update if any.
+            trigger_tab: The tab parent of the popup.
+            trigger_type: The type of trigger popup to show.
+            trigger: The Trigger to update if any.
         """
         self.trigger_tab = trigger_tab
         self.trigger_type = trigger_type
         self.trigger = trigger
-        title = 'Update Single Trigger' if trigger else 'New Single Trigger'
+        title = f'Update {trigger_type.value} Trigger' if trigger else f'New {trigger_type.value} Trigger'
 
         with ui.dialog(value=True) as self.dialog, ui.card().classes('w-full'):
             ui.label(title).classes("text-xl")
@@ -57,9 +59,25 @@ class TriggerPopup():
                 ui.button("Cancel", on_click=self.dialog.close)
 
         self._disable_unused()
+        self._define_validation()
 
         if trigger:
             self._pre_populate()
+
+    def _define_validation(self):
+        self.trigger_input.validation = {"Please enter a trigger name.": bool}
+        self.name_input.validation = {"Please enter a process name.": bool}
+        self.path_input.validation = {"Please enter a process path.": bool}
+        self.queue_input.validation = {"Please enter a queue name.": bool}
+
+        def validate_cron(value: str):
+            try:
+                croniter(value)
+                return True
+            except CroniterBadCronError:
+                return False
+
+        self.cron_input.validation = {"Invalid cron expression.": validate_cron}
 
     def _pre_populate(self):
         """Populate the form with values from an existing trigger"""
@@ -92,10 +110,38 @@ class TriggerPopup():
             self.queue_input.visible = False
             self.batch_input.visible = False
 
+    async def _validate(self) -> bool:
+        result = True
+
+        result &= self.trigger_input.validate()
+        result &= self.name_input.validate()
+        result &= self.path_input.validate()
+
+        if self.trigger_type == TriggerType.SINGLE:
+            result &= self.time_input.validate()
+
+            next_run = self.time_input.get_datetime()
+            if next_run and next_run < datetime.now():
+                result &= await generic_popups.question_popup(
+                        "The selected datetime is in the past. Do you want to create the trigger anyway?",
+                        "Create", "Cancel")
+
+        if self.trigger_type == TriggerType.SCHEDULED:
+            result &= self.cron_input.validate()
+
+        if self.trigger_type == TriggerType.QUEUE:
+            result &= self.queue_input.validate()
+
+        return result
+
     async def _create_trigger(self):
         """Creates a new single trigger in the database using the data entered in the UI.
         If an existing trigger was given when creating the popup it is updated instead.
         """
+        if not await self._validate():
+            ui.notify("Please fill out required information.", type='warning')
+            return
+
         trigger_name = self.trigger_input.value
         process_name = self.name_input.value
         next_run = self.time_input.get_datetime()
@@ -107,37 +153,9 @@ class TriggerPopup():
         is_git = self.git_check.value
         is_blocking = self.blocking_check.value
 
-        if not trigger_name:
-            ui.notify('Please enter a trigger name', type='negative')
-            return
-
-        if not process_name:
-            ui.notify('Please enter a process name', type='negative')
-            return
-
-        if self.trigger_type == TriggerType.SINGLE:
-            if next_run < datetime.now():
-                if not await generic_popups.question_popup(
-                        "The selected datetime is in the past. Do you want to create the trigger anyway?",
-                        "Create", "Cancel"):
-                    return
-
         if self.trigger_type == TriggerType.SCHEDULED:
-            try:
-                cron_iter = croniter(cron_expr, datetime.now())
-                next_run = cron_iter.get_next(datetime)
-            except CroniterBadCronError as exc:
-                ui.notify(f"Please enter a valid cron expression: {exc}", type='negative', timeout=0, close_button='Dismiss')
-                return
-
-        if self.trigger_type == TriggerType.QUEUE:
-            if not queue_name:
-                ui.notify("Please enter a queue name.", type='negative')
-                return
-
-        if not path:
-            ui.notify('Please enter a process path', type='negative')
-            return
+            cron_iter = croniter(cron_expr, datetime.now())
+            next_run = cron_iter.get_next(datetime)
 
         if self.trigger is None:
             # Create new trigger in database
@@ -175,7 +193,7 @@ class TriggerPopup():
         self.trigger_tab.update()
 
     async def _delete_trigger(self):
-        if await generic_popups.question_popup(f"Delete trigger '{self.trigger.trigger_name}'?", "Delete", "Cancel"):
+        if await generic_popups.question_popup(f"Delete trigger '{self.trigger.trigger_name}'?", "Delete", "Cancel", color1='red'):
             db_util.delete_trigger(self.trigger.id)
             ui.notify("Trigger deleted", type='positive')
             self.dialog.close()
