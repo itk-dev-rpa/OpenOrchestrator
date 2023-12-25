@@ -11,7 +11,14 @@ class DatetimeInput(ui.input):
     PY_FORMAT = "%d-%m-%Y %H:%M"
     VUE_FORMAT = "DD-MM-YYYY HH:mm"
 
-    def __init__(self, label: str, on_change: Optional[Callable[..., Any]] = None) -> None:
+    def __init__(self, label: str, on_change: Optional[Callable[..., Any]] = None, allow_empty: bool = False) -> None:
+        """Create a new DatetimeInput.
+
+        Args:
+            label: The label for the input element.
+            on_change: A callable to execute on change. Defaults to None.
+            allow_empty: Whether to allow an empty input on validation. Defaults to False.
+        """
         super().__init__(label, on_change=on_change)
         self.props("clearable")
 
@@ -28,6 +35,24 @@ class DatetimeInput(ui.input):
         # Bind inputs together
         self.bind_value(date_input)
         date_input.bind_value(time_input)
+
+        self._define_validation(allow_empty)
+
+    def _define_validation(self, allow_empty: bool):
+        if not allow_empty:
+            self.validation = {
+                "Please enter a datetime.": bool,
+                f"Invalid datetime: {self.PY_FORMAT}": lambda v: self.get_datetime() is not None
+            }
+
+        else:
+            def validate(value: str):
+                if value is None:
+                    return True
+
+                return self.get_datetime() is not None
+
+            self.validation = {f"Invalid datetime: {self.PY_FORMAT}": validate}
 
     def get_datetime(self) -> datetime | None:
         """Get the text from the input as a datetime object, if
