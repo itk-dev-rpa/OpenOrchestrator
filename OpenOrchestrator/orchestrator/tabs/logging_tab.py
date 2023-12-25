@@ -22,8 +22,8 @@ class LoggingTab():
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
             with ui.row():
-                self.from_input = DatetimeInput("From Date", on_change=self.update)
-                self.to_input = DatetimeInput("To Date", on_change=self.update)
+                self.from_input = DatetimeInput("From Date", on_change=self.update, allow_empty=True)
+                self.to_input = DatetimeInput("To Date", on_change=self.update, allow_empty=True)
                 self.process_input = ui.select(["All"], label="Process Name", value="All", on_change=self.update).classes("w-48")
                 self.level_input = ui.select(["All", "Trace", "Info", "Error"], value="All", label="Level", on_change=self.update).classes("w-48")
                 self.limit_input = ui.select([100, 200, 500, 1000], value=100, label="Limit", on_change=self.update).classes("w-24")
