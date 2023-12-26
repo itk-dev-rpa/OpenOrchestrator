@@ -38,6 +38,19 @@ class QueueElement(Base):
     message: Mapped[Optional[str]] = mapped_column(String(1000))
     created_by: Mapped[Optional[str]] = mapped_column(String(100))
 
+    def to_row_dict(self):
+        return {
+            "ID": self.id,
+            "Reference": self.reference,
+            "Status": self.status,
+            "Data": self.data,
+            "Created Date": self.created_date.strftime("%d-%m-%Y %H:%M:%S"),
+            "Start Date": self.start_date.strftime("%d-%m-%Y %H:%M:%S") if self.start_date else 'N/A',
+            "End Date": self.end_date.strftime("%d-%m-%Y %H:%M:%S") if self.end_date else 'N/A',
+            "Message": self.message,
+            "Created By": self.created_by
+        }
+
 
 def create_tables(engine: Engine):
     """Create all SQL tables related to ORM classes in this module.
