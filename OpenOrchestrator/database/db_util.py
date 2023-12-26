@@ -137,6 +137,7 @@ def update_trigger(trigger: Trigger):
     with Session(_connection_engine) as session:
         session.add(trigger)
         session.commit()
+        session.refresh(trigger)
 
 
 @catch_db_error
