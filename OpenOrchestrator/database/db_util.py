@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Callable, TypeVar, ParamSpec
 
+from croniter import croniter
 from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
@@ -586,7 +587,7 @@ def get_next_scheduled_trigger() -> ScheduledTrigger | None:
 
 
 @catch_db_error
-def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> bool:
+def begin_scheduled_trigger(trigger_id: str) -> bool:
     """Set the status of a scheduled trigger to 'running',
     set the last run time to the current time,
     and set the next run time to the given datetime.
@@ -606,6 +607,8 @@ def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> bool:
 
         trigger.process_status = TriggerStatus.RUNNING
         trigger.last_run = datetime.now()
+
+        next_run = croniter(trigger.cron_expr, trigger.next_run).get_next(datetime)
         trigger.next_run = next_run
 
         session.commit()
