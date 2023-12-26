@@ -15,7 +15,7 @@ class Application():
     It contains a header and the four tabs of the application.
     """
     def __init__(self) -> None:
-        with ui.header().classes('justify-between'):
+        with ui.header():
             with ui.tabs() as self.tabs:
                 ui.tab('Triggers')
                 ui.tab('Logs')
@@ -23,6 +23,7 @@ class Application():
                 ui.tab('Queues')
                 ui.tab('Settings')
 
+            ui.space()
             ui.button(icon='refresh', on_click=self.update_tab).props('color=white text-color=primary')
 
         with ui.tab_panels(self.tabs, value='Settings', on_change=self.update_tab).classes('w-full') as self.tab_panels:
