@@ -2,7 +2,7 @@
 
 import os
 
-from nicegui import ui
+from nicegui import ui, run
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
@@ -12,6 +12,7 @@ class ConnectionFrame():
     def __init__(self):
         self.conn_input = ui.input("Connection String").classes("w-4/6")
         self.key_input = ui.input("Encryption Key").classes("w-4/6")
+        self._define_validation()
         with ui.row().classes("w-full"):
             self.conn_button = ui.button("Connect", on_click=self._connect)
             self.disconn_button = ui.button("Disconnect", on_click=self._disconnect, )
@@ -19,16 +20,19 @@ class ConnectionFrame():
 
         self._initial_connect()
 
+    def _define_validation(self):
+        self.conn_input.validation = {"Please enter a connection string": bool}
+        self.key_input.validation = {"Invalid AES key": crypto_util.validate_key}
+
     def _connect(self) -> None:
         """Validate the connection string and encryption key
         and connect to the database.
         """
+        if not self.conn_input.validate() & self.key_input.validate():
+            return
+
         conn_string = self.conn_input.value
         crypto_key = self.key_input.value
-
-        if not crypto_util.validate_key(crypto_key):
-            ui.notify("The entered encryption key is not a valid AES key.", type='negative')
-            return
 
         if db_util.connect(conn_string):
             crypto_util.set_key(crypto_key)
