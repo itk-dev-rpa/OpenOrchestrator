@@ -39,7 +39,7 @@ def connect(conn_string: str) -> bool:
         engine.connect()
         _connection_engine = engine
         return True
-    except (alc_exc.InterfaceError, alc_exc.ArgumentError) as exc:
+    except (alc_exc.InterfaceError, alc_exc.ArgumentError, alc_exc.OperationalError) as exc:
         _connection_engine = None
         ui.notify(str(exc), type='negative', timeout=0, close_button="Dismiss")
 
