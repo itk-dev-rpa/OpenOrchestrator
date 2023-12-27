@@ -17,11 +17,7 @@ class TestDBUtil(unittest.TestCase):
     """Test functionality of db_util."""
     @classmethod
     def setUpClass(cls) -> None:
-        db_util.connect(r"mssql+pyodbc://localhost\SQLEXPRESS/OO_Unittest?driver=ODBC+Driver+17+for+SQL+Server")
-        crypto_util.set_key(crypto_util.generate_key())
-
-        db_test_util.drop_all_tables()
-        db_util.initialize_database()
+        db_test_util.establish_clean_database()
 
     def test_logs(self):
         """Test creation of logs and retrieval by different filters."""

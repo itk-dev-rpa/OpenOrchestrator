@@ -3,6 +3,18 @@
 from datetime import datetime, timedelta
 
 from OpenOrchestrator.database import db_util, logs, triggers, constants, queues
+from OpenOrchestrator.common import crypto_util
+
+CONNECTION_STRING = r"mssql+pyodbc://localhost\SQLEXPRESS/OO_Unittest?driver=ODBC+Driver+17+for+SQL+Server"
+
+
+def establish_clean_database():
+    """Connect to the database, drop all tables and recreate them."""
+    db_util.connect(CONNECTION_STRING)
+    crypto_util.set_key(crypto_util.generate_key())
+
+    drop_all_tables()
+    db_util.initialize_database()
 
 
 def drop_all_tables():
