@@ -6,6 +6,7 @@ from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConn
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.logs import LogLevel
+from OpenOrchestrator.database.queues import QueueStatus
 
 from tests import db_test_util
 
@@ -74,7 +75,44 @@ class TestOrchestratorConnection(unittest.TestCase):
         self.assertEqual(credential.password, "New Password")
 
     def test_queue_elements(self):
-        pass
+        # Create elements
+        self.connection.create_queue_element("Queue")
+        self.connection.create_queue_element("Queue", reference="Ref", data="data", created_by="Me")
+
+        self.connection.bulk_create_queue_elements(
+            "Bulk Queue",
+            references=[None]*10,
+            data=["data"]*10,
+            created_by="Me"
+        )
+
+        # Get elements
+        elements = self.connection.get_queue_elements("Queue")
+        self.assertEqual(len(elements), 2)
+
+        elements = self.connection.get_queue_elements("Queue", "Ref")
+        self.assertEqual(len(elements), 1)
+
+        # Get next
+        element = self.connection.get_next_queue_element("Bulk Queue", set_status=False)
+        self.assertEqual(element.status, QueueStatus.NEW)
+
+        element = self.connection.get_next_queue_element("Bulk Queue")
+        self.assertEqual(element.status, QueueStatus.IN_PROGRESS)
+
+        element2 = self.connection.get_next_queue_element("Bulk Queue")
+        self.assertNotEqual(element, element2)
+
+        # Set status
+        self.connection.set_queue_element_status(element.id, QueueStatus.DONE)
+        elements = self.connection.get_queue_elements("Bulk Queue", status=QueueStatus.DONE)
+        self.assertEqual(len(elements), 1)
+
+        # Delete element
+        self.connection.delete_queue_element(element.id)
+        print(element.id)
+        elements = self.connection.get_queue_elements("Bulk Queue")
+        self.assertEqual(len(elements), 9)
 
     def test_create_from_args(self):
         """I have no idea how to do this..."""

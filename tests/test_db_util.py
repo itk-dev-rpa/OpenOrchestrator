@@ -127,6 +127,9 @@ class TestDBUtil(unittest.TestCase):
         data = [None] * 10
         db_util.bulk_create_queue_elements("Bulk", references=refs, data=data)
 
+        with self.assertRaises(ValueError):
+            db_util.bulk_create_queue_elements("Bulk", ["Ref"], [])
+
         # Get elements
         elements = db_util.get_queue_elements("Queue")
         self.assertEqual(len(elements), 2)
@@ -140,6 +143,10 @@ class TestDBUtil(unittest.TestCase):
 
         element2 = db_util.get_next_queue_element("Queue")
         self.assertNotEqual(element, element2)
+
+        # Get element from empty queue
+        element = db_util.get_next_queue_element("Empty Queue")
+        self.assertIsNone(element)
 
         # Update element
         db_util.set_queue_element_status(element.id, QueueStatus.DONE, "Message")
