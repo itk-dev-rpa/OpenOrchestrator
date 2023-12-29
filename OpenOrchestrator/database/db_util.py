@@ -632,6 +632,7 @@ def get_next_queue_trigger() -> QueueTrigger | None:
         sub_query = (
             select(alc_func.count())  # pylint: disable=not-callable
             .where(QueueElement.queue_name == QueueTrigger.queue_name)
+            .where(QueueElement.status == QueueStatus.NEW)
             .scalar_subquery()
         )
 
@@ -683,7 +684,7 @@ def set_trigger_status(trigger_id: str, status: TriggerStatus) -> None:
 
 
 @catch_db_error
-def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None) -> None:
+def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None) -> QueueElement:
     """Adds a queue element to the given queue.
 
     Args:
@@ -691,6 +692,9 @@ def create_queue_element(queue_name: str, reference: str = None, data: str = Non
         reference (optional): The reference of the queue element.
         data (optional): The data of the queue element.
         created_by (optional): The name of the creator of the queue element.
+
+    Returns:
+        QueueElement: The created queue element.
     """
     with Session(_connection_engine) as session:
         q_element = QueueElement(
@@ -701,6 +705,9 @@ def create_queue_element(queue_name: str, reference: str = None, data: str = Non
         )
         session.add(q_element)
         session.commit()
+        session.refresh(q_element)
+
+    return q_element
 
 
 @catch_db_error
