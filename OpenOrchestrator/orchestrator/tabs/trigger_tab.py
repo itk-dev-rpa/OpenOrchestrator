@@ -22,6 +22,17 @@ class TriggerTab():
             columns = [{'name': label, 'label': label, 'field': label, 'align': 'left', 'sortable': True} for label in COLUMNS]
             self.trigger_table = ui.table(columns, [], title="Triggers", pagination=10, row_key='ID').classes("w-full")
             self.trigger_table.on('rowClick', self._row_click)
+            # Add coloring to the status column
+            self.trigger_table.add_slot(
+                "body-cell-Status",
+                '''
+                <q-td key="Status" :props="props">
+                    <q-badge :color="{Running: 'green', Failed: 'red'}[props.value]">
+                        {{props.value}}
+                    </q-badge>
+                </q-td>
+                '''
+            )
 
     def _row_click(self, event):
         """Callback for when a row is clicked in the table."""
