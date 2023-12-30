@@ -28,7 +28,7 @@ class LoggingTab():
                 self.level_input = ui.select(["All", "Trace", "Info", "Error"], value="All", label="Level", on_change=self.update).classes("w-48")
                 self.limit_input = ui.select([100, 200, 500, 1000], value=100, label="Limit", on_change=self.update).classes("w-24")
 
-            self.logs_table = ui.table(title="Logs", columns=COLUMNS, rows=[], row_key='ID').classes("w-full")
+            self.logs_table = ui.table(title="Logs", columns=COLUMNS, rows=[], row_key='ID', pagination=50).classes("w-full")
             self.logs_table.on("rowClick", self._row_click)
 
     def update(self):
