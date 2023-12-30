@@ -33,6 +33,9 @@ class Application():
             self.q_tab = QueueTab("Queues")
             SettingsTab('Settings')
 
+        ui.run(title="Orchestrator", favicon='🤖', native=False, port=23406)
+        app.on_connect(self.update_loop)
+
     def update_tab(self):
         """Update the date in the currently selected tab."""
         match self.tab_panels.value:
@@ -54,6 +57,5 @@ class Application():
         ui.timer(10, self.update_loop, once=True)
 
 
-orchestrator = Application()
-ui.run(title="Orchestrator", favicon='🤖', native=False)
-app.on_connect(orchestrator.update_loop)
+if __name__ in {'__main__', '__mp_main__'}:
+    Application()
