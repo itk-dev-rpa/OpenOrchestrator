@@ -41,9 +41,9 @@ class TriggerPopup():
             self.queue_input = ui.input("Queue Name").classes("w-full")  # For queue triggers
             self.batch_input = ui.number("Min Batch Size", value=1, min=1, precision=0, format="%.0f")  # For queue triggers
             self.path_input = ui.input("Process Path").classes("w-full")
+            self.git_check = ui.checkbox("Is path a Git Repo?")
             self.args_input = ui.input("Process Arguments").classes("w-full")
-            self.git_check = ui.checkbox("Is Git Repo")
-            self.blocking_check = ui.checkbox("Is blocking")
+            self.blocking_check = ui.checkbox("Is process blocking?")
 
             if trigger:
                 with ui.row():
