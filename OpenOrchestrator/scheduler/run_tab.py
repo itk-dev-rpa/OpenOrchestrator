@@ -9,6 +9,7 @@ from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.scheduler import runner
 
+
 def create_tab(parent: ttk.Notebook, app) -> ttk.Frame:
     """Create a new Run tab object.
 
@@ -152,7 +153,7 @@ def check_triggers(app) -> None:
     Args:
         app: The Scheduler Application object.
     """
-    #Check if process is blocking
+    # Check if process is blocking
     blocking = False
     for job in app.running_jobs:
         if job.trigger.is_blocking:
