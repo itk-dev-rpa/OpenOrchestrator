@@ -8,6 +8,7 @@ from OpenOrchestrator.common.connection_frame import ConnectionFrame
 
 
 class SettingsTab():
+    """The settings tab object for Orchestrator."""
     def __init__(self, tab: ui.tab) -> None:
         with ui.tab_panel(tab):
             conn_frame = ConnectionFrame()
