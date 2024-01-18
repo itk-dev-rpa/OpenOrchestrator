@@ -10,6 +10,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.logs import LogLevel
 
+
 @dataclass
 class Job():
     """An object that holds information about a running job."""
@@ -141,7 +142,7 @@ def clone_git_repo(repo_url: str) -> str:
 def clear_repo_folder() -> None:
     """Completely remove the repos folder."""
     repo_folder = get_repo_folder_path()
-    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False, shell=True)
+    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False, shell=True, capture_output=True)
 
 
 def get_repo_folder_path() -> str:
