@@ -29,6 +29,7 @@ class ConnectionFrame():
         and connect to the database.
         """
         if not self.conn_input.validate() & self.key_input.validate():
+            ui.notify("Please fill out all fields.", type='warning')
             return
 
         conn_string = self.conn_input.value
