@@ -19,12 +19,12 @@ ELEMENT_COLUMNS = (
     {'name': "Reference", 'label': "Reference", 'field': "Reference", 'align': 'left', 'sortable': True},
     {'name': "Status", 'label': "Status", 'field': "Status", 'align': 'left', 'sortable': True},
     {'name': "Data", 'label': "Data", 'field': "Data", 'align': 'left', 'sortable': True},
-    {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left'},
-    {'name': "Created Date", 'label': "Created Date", 'field': "Created Date", 'align': 'left'},
-    {'name': "Start Date", 'label': "Start Date", 'field': "Start Date", 'align': 'left'},
-    {'name': "End Date", 'label': "End Date", 'field': "End Date", 'align': 'left'},
-    {'name': "Created By", 'label': "Created By", 'field': "Created By", 'align': 'left'},
-    {'name': "ID", 'label': "ID", 'field': "ID", 'align': 'left'}
+    {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left', 'sortable': True},
+    {'name': "Created Date", 'label': "Created Date", 'field': "Created Date", 'align': 'left', 'sortable': True},
+    {'name': "Start Date", 'label': "Start Date", 'field': "Start Date", 'align': 'left', 'sortable': True},
+    {'name': "End Date", 'label': "End Date", 'field': "End Date", 'align': 'left', 'sortable': True},
+    {'name': "Created By", 'label': "Created By", 'field': "Created By", 'align': 'left', 'sortable': True},
+    {'name': "ID", 'label': "ID", 'field': "ID", 'align': 'left', 'sortable': True}
 )
 
 
