@@ -75,12 +75,14 @@ def get_conn_string() -> str:
     """Get the connection string.
 
     Returns:
-        str: The connection string.
+        str: The connection string if any.
     """
     try:
         return str(_connection_engine.url)
-    except AttributeError as exc:
-        raise RuntimeError("Unable to get the connection string from the database engine. Has the connection been established?") from exc
+    except AttributeError:
+        pass
+
+    return None
 
 
 @catch_db_error
