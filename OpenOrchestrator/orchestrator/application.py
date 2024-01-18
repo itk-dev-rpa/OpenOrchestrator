@@ -24,6 +24,7 @@ class Application():
                 ui.tab('Settings')
 
             ui.space()
+            # TODO: Dark mode
             ui.button(icon='refresh', on_click=self.update_tab).props('color=white text-color=primary')
 
         with ui.tab_panels(self.tabs, value='Settings', on_change=self.update_tab).classes('w-full') as self.tab_panels:
@@ -33,8 +34,11 @@ class Application():
             self.q_tab = QueueTab("Queues")
             SettingsTab('Settings')
 
-        ui.run(title="Orchestrator", favicon='🤖', native=False, port=23406)
+        self._define_on_close()
+
         app.on_connect(self.update_loop)
+        app.on_disconnect(app.shutdown)
+        ui.run(title="Orchestrator", favicon='🤖', native=False, port=23406, reload=False)
 
     def update_tab(self):
         """Update the date in the currently selected tab."""
@@ -50,11 +54,22 @@ class Application():
 
     async def update_loop(self):
         """Update the selected tab on a timer but only if the page is in focus."""
-        in_focus = await ui.run_javascript("document.hasFocus()")
-        if in_focus:
-            self.update_tab()
+        try:
+            in_focus = await ui.run_javascript("document.hasFocus()")
+            if in_focus:
+                self.update_tab()
+        except TimeoutError:
+            pass
 
         ui.timer(10, self.update_loop, once=True)
+
+    def _define_on_close(self) -> None:
+        """Tell the browser to ask for confirmation before leaving the page."""
+        ui.add_body_html('''
+            <script>
+                window.addEventListener("beforeunload", (event) => event.preventDefault());
+            </script>
+            ''')
 
 
 if __name__ in {'__main__', '__mp_main__'}:
