@@ -144,10 +144,6 @@ class TestDBUtil(unittest.TestCase):
         element2 = db_util.get_next_queue_element("Queue")
         self.assertNotEqual(element, element2)
 
-        # Get element from empty queue
-        element = db_util.get_next_queue_element("Empty Queue")
-        self.assertIsNone(element)
-
         # Update element
         db_util.set_queue_element_status(element.id, QueueStatus.DONE, "Message")
 
@@ -172,6 +168,10 @@ class TestDBUtil(unittest.TestCase):
         # Queue count
         count = db_util.get_queue_count()
         self.assertEqual(count["Bulk"][QueueStatus.NEW], 10)
+
+        # Get element from empty queue
+        element = db_util.get_next_queue_element("Empty Queue")
+        self.assertIsNone(element)
 
     def test_triggers(self):
         """Test generic trigger functionality."""
