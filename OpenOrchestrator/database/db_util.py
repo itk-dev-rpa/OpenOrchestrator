@@ -803,7 +803,7 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
         query = (
             select(QueueElement)
             .where(QueueElement.queue_name == queue_name)
-            .order_by(QueueElement.created_date)
+            .order_by(desc(QueueElement.created_date))
             .offset(offset)
             .limit(limit)
         )
