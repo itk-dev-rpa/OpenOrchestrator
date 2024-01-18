@@ -36,8 +36,12 @@ class TriggerPopup():
             ui.label(title).classes("text-xl")
             self.trigger_input = ui.input("Trigger Name").classes("w-full")
             self.name_input = ui.input("Process Name").classes("w-full")
-            self.time_input = DatetimeInput("Trigger Time")  # For single triggers
-            self.cron_input = ui.input("Cron expression").classes("w-full")  # For scheduled triggers
+            self.cron_input = ui.input("Cron expression", on_change=self._cron_change).classes("w-full")  # For scheduled triggers
+            self.time_input = DatetimeInput("Trigger Time")  # For scheduled/single triggers
+            with self.cron_input:
+                with ui.link(target="https://crontab.guru/", new_tab=True):
+                    with ui.button(on_click=lambda e: ui.notify("CRON!"), icon="help").props("flat dense"):
+                        ui.tooltip("Help with cron: https://crontab.guru/")
             self.queue_input = ui.input("Queue Name").classes("w-full")  # For queue triggers
             self.batch_input = ui.number("Min Batch Size", value=1, min=1, precision=0, format="%.0f")  # For queue triggers
             self.path_input = ui.input("Process Path").classes("w-full")
@@ -88,19 +92,19 @@ class TriggerPopup():
         self.git_check.value = self.trigger.is_git_repo
         self.blocking_check.value = self.trigger.is_blocking
 
-        if self.trigger_type == TriggerType.SINGLE:
-            self.time_input.set_datetime(self.trigger.next_run)
-
-        elif self.trigger_type == TriggerType.SCHEDULED:
+        if self.trigger_type == TriggerType.SCHEDULED:
             self.cron_input.value = self.trigger.cron_expr
 
-        elif self.trigger_type == TriggerType.QUEUE:
+        if self.trigger_type in (TriggerType.SINGLE, TriggerType.SCHEDULED):
+            self.time_input.set_datetime(self.trigger.next_run)
+
+        if self.trigger_type == TriggerType.QUEUE:
             self.queue_input.value = self.trigger.queue_name
             self.batch_input.value = self.trigger.min_batch_size
 
     def _disable_unused(self):
         """Disable all inputs that aren't being used by the current trigger type."""
-        if self.trigger_type != TriggerType.SINGLE:
+        if self.trigger_type == TriggerType.QUEUE:
             self.time_input.visible = False
 
         if self.trigger_type != TriggerType.SCHEDULED:
@@ -110,6 +114,11 @@ class TriggerPopup():
             self.queue_input.visible = False
             self.batch_input.visible = False
 
+    def _cron_change(self):
+        if self.cron_input.validate():
+            cron_iter = croniter(self.cron_input.value, datetime.now())
+            self.time_input.set_datetime(cron_iter.next(datetime))
+
     async def _validate(self) -> bool:
         result = True
 
@@ -117,7 +126,7 @@ class TriggerPopup():
         result &= self.name_input.validate()
         result &= self.path_input.validate()
 
-        if self.trigger_type == TriggerType.SINGLE:
+        if self.trigger_type in (TriggerType.SINGLE, TriggerType.SCHEDULED):
             result &= self.time_input.validate()
 
             next_run = self.time_input.get_datetime()
@@ -152,10 +161,6 @@ class TriggerPopup():
         args = self.args_input.value
         is_git = self.git_check.value
         is_blocking = self.blocking_check.value
-
-        if self.trigger_type == TriggerType.SCHEDULED:
-            cron_iter = croniter(cron_expr, datetime.now())
-            next_run = cron_iter.get_next(datetime)
 
         if self.trigger is None:
             # Create new trigger in database
