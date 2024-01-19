@@ -10,6 +10,7 @@ from OpenOrchestrator.orchestrator.popups.trigger_popup import TriggerPopup
 COLUMNS = ("Trigger Name", "Type", "Status", "Process Name", "Last Run", "Next Run", "ID")
 
 
+# pylint disable-next=too-few-public-methods
 class TriggerTab():
     """The 'Trigger' tab object. It contains tables and buttons for dealing with triggers."""
     def __init__(self, tab_name: str) -> None:
