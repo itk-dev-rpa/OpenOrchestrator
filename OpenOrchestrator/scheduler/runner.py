@@ -201,6 +201,9 @@ def fail_job(job: Job) -> None:
         job: The job whose trigger to mark as failed.
     """
     db_util.set_trigger_status(job.trigger.id, TriggerStatus.FAILED)
+    _, error = job.process.communicate()
+    error_msg = f"An uncaught error ocurred during the process:\n{error}"
+    db_util.create_log(job.trigger.process_name, LogLevel.ERROR, error_msg)
 
 
 def run_process(trigger: Trigger) -> subprocess.Popen | None:
@@ -241,7 +244,7 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
 
         command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
 
-        return subprocess.Popen(command_args)
+        return subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)
 
     # We actually want to catch any exception here
     # pylint: disable=broad-exception-caught
