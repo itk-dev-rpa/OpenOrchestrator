@@ -5,8 +5,10 @@ import sys
 from OpenOrchestrator.scheduler.application import Application as s_app
 from OpenOrchestrator.orchestrator.application import Application as o_app
 
+
 def _print_usage():
     print("Usage: -o to start Orchestrator. -s to start Scheduler")
+
 
 if len(sys.argv) != 2:
     _print_usage()
