@@ -40,7 +40,7 @@ class TriggerPopup():
             self.time_input = DatetimeInput("Trigger Time")  # For scheduled/single triggers
             with self.cron_input:
                 with ui.link(target="https://crontab.guru/", new_tab=True):
-                    with ui.button(on_click=lambda e: ui.notify("CRON!"), icon="help").props("flat dense"):
+                    with ui.button(icon="help").props("flat dense"):
                         ui.tooltip("Help with cron: https://crontab.guru/")
             self.queue_input = ui.input("Queue Name").classes("w-full")  # For queue triggers
             self.batch_input = ui.number("Min Batch Size", value=1, min=1, precision=0, format="%.0f")  # For queue triggers

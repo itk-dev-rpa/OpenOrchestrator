@@ -139,7 +139,7 @@ def check_heartbeats(app) -> None:
                 print(f"Process '{job.trigger.process_name}' is done")
                 runner.end_job(job)
             else:
-                print(f"Process '{job.trigger.process_name}' failed")
+                print(f"Process '{job.trigger.process_name}' failed. Check process log for more info.")
                 runner.fail_job(job)
 
         else:
