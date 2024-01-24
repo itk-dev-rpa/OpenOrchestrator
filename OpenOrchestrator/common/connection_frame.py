@@ -2,7 +2,7 @@
 
 import os
 
-from nicegui import ui, run
+from nicegui import ui
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
