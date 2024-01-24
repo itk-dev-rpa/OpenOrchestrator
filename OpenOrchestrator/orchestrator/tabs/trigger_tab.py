@@ -61,9 +61,12 @@ class TriggerTab():
             "body-cell-Status",
             '''
             <q-td key="Status" :props="props">
-                <q-badge :color="{Running: 'green', Failed: 'red'}[props.value]">
+                <q-badge v-if="{Running: 'green', Failed: 'red'}[props.value]" :color="{Running: 'green', Failed: 'red'}[props.value]">
                     {{props.value}}
                 </q-badge>
+                <p v-else>
+                    {{props.value}}
+                </p>
             </q-td>
             '''
         )
@@ -75,12 +78,10 @@ class TriggerTab():
             "body-cell-Next_Run",
             '''
             <q-td key="Next_Run" :props="props">
+                {{props.value}}
                 <q-badge v-if="new Date(+props.value.substr(6,4), +props.value.substr(3,2)-1, +props.value.substr(0,2), +props.value.substr(11,2), +props.value.substr(14,2)) < new Date()" color='red'>
-                    {{props.value}}
+                    Overdue
                 </q-badge>
-                <p v-else>
-                    {{props.value}}
-                </p>
             </q-td>
             '''
         )
