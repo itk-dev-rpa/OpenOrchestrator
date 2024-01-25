@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
 
 
+# pylint: disable-next=(too-many-instance-attributes, too-few-public-methods)
 class TriggerPopup():
     """A popup for creating/updating triggers."""
     def __init__(self, trigger_tab: TriggerTab, trigger_type: TriggerType, trigger: Trigger = None):

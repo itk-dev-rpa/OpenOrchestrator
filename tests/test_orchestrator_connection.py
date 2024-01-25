@@ -1,3 +1,5 @@
+"""This module contains tests for OrchestratorConnection."""
+
 import unittest
 from datetime import datetime
 from uuid import UUID
@@ -12,6 +14,7 @@ from tests import db_test_util
 
 
 class TestOrchestratorConnection(unittest.TestCase):
+    """Tests for OrchestratorConnection."""
     @classmethod
     def setUpClass(cls) -> None:
         db_test_util.establish_clean_database()
@@ -75,6 +78,7 @@ class TestOrchestratorConnection(unittest.TestCase):
         self.assertEqual(credential.password, "New Password")
 
     def test_queue_elements(self):
+        """Test all things queue elements."""
         # Create elements
         self.connection.create_queue_element("Queue")
         self.connection.create_queue_element("Queue", reference="Ref", data="data", created_by="Me")
@@ -112,6 +116,3 @@ class TestOrchestratorConnection(unittest.TestCase):
         self.connection.delete_queue_element(element.id)
         elements = self.connection.get_queue_elements("Bulk Queue")
         self.assertEqual(len(elements), 9)
-
-    def test_create_from_args(self):
-        """I have no idea how to do this..."""

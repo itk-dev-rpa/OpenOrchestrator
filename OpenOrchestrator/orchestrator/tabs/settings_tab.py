@@ -7,6 +7,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.common.connection_frame import ConnectionFrame
 
 
+# pylint: disable-next=too-few-public-methods
 class SettingsTab():
     """The settings tab object for Orchestrator."""
     def __init__(self, tab: ui.tab) -> None:

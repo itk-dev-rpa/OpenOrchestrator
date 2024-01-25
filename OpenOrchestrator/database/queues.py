@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
 
+
 class QueueStatus(enum.Enum):
     """An enum representing the status of a queue element."""
     NEW = 'New'
@@ -38,7 +39,8 @@ class QueueElement(Base):
     message: Mapped[Optional[str]] = mapped_column(String(1000))
     created_by: Mapped[Optional[str]] = mapped_column(String(100))
 
-    def to_row_dict(self):
+    def to_row_dict(self) -> dict:
+        """Convert the object to a dict for display in a table."""
         return {
             "ID": self.id,
             "Reference": self.reference,
