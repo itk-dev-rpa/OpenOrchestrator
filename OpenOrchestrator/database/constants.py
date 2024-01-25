@@ -5,6 +5,8 @@ from datetime import datetime
 from sqlalchemy import String, Engine
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 
+from OpenOrchestrator.common import datetime_util
+
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
 
@@ -26,7 +28,7 @@ class Constant(Base):
         return {
             "Constant Name": self.name,
             "Value": self.value,
-            "Last Changed": self.changed_at.strftime("%d-%m-%Y %H:%M:%S")
+            "Last Changed": datetime_util.format_datetime(self.changed_at)
         }
 
 
@@ -45,7 +47,7 @@ class Credential(Base):
             "Credential Name": self.name,
             "Username": self.username,
             "Password": self.format_password(),
-            "Last Changed": self.changed_at.strftime("%d-%m-%Y %H:%M:%S")
+            "Last Changed": datetime_util.format_datetime(self.changed_at)
         }
 
     def format_password(self) -> str:

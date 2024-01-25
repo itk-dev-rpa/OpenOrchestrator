@@ -8,6 +8,8 @@ import uuid
 from sqlalchemy import String, Engine
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 
+from OpenOrchestrator.common import datetime_util
+
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
 
@@ -46,9 +48,9 @@ class QueueElement(Base):
             "Reference": self.reference,
             "Status": self.status,
             "Data": self.data,
-            "Created Date": self.created_date.strftime("%d-%m-%Y %H:%M:%S"),
-            "Start Date": self.start_date.strftime("%d-%m-%Y %H:%M:%S") if self.start_date else 'N/A',
-            "End Date": self.end_date.strftime("%d-%m-%Y %H:%M:%S") if self.end_date else 'N/A',
+            "Created Date": datetime_util.format_datetime(self.created_date),
+            "Start Date": datetime_util.format_datetime(self.start_date),
+            "End Date": datetime_util.format_datetime(self.end_date),
             "Message": self.message,
             "Created By": self.created_by
         }

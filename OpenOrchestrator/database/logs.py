@@ -7,6 +7,8 @@ import uuid
 from sqlalchemy import String, Engine
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 
+from OpenOrchestrator.common import datetime_util
+
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
 
@@ -35,7 +37,7 @@ class Log(Base):
     def to_row_dict(self) -> dict[str, str]:
         """Convert log to a row dictionary for display in a table."""
         return {
-            "Log Time": self.log_time.strftime("%d-%m-%Y %H:%M:%S"),
+            "Log Time": datetime_util.format_datetime(self.log_time),
             "Level": self.log_level.value,
             "Process Name": self.process_name,
             "Message": self.log_message,

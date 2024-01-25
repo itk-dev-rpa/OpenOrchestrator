@@ -8,6 +8,8 @@ import uuid
 from sqlalchemy import String, ForeignKey, Engine
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 
+from OpenOrchestrator.common import datetime_util
+
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
 
@@ -62,7 +64,7 @@ class Trigger(Base):
             "Type": self.type.value,
             "Status": self.process_status.value,
             "Process Name": self.process_name,
-            "Last Run": self.last_run.strftime("%d-%m-%Y %H:%M:%S") if self.last_run else 'Never',
+            "Last Run": datetime_util.format_datetime(self.last_run, "Never"),
             "ID": str(self.id)
         }
 
@@ -78,7 +80,7 @@ class SingleTrigger(Trigger):
 
     def to_row_dict(self) -> dict[str, str]:
         row_dict = super().to_row_dict()
-        row_dict["Next Run"] = self.next_run.strftime("%d-%m-%Y %H:%M:%S")
+        row_dict["Next Run"] = datetime_util.format_datetime(self.next_run)
         return row_dict
 
 
@@ -94,7 +96,7 @@ class ScheduledTrigger(Trigger):
 
     def to_row_dict(self) -> dict[str, str]:
         row_dict = super().to_row_dict()
-        row_dict["Next Run"] = self.next_run.strftime("%d-%m-%Y %H:%M:%S")
+        row_dict["Next Run"] = datetime_util.format_datetime(self.next_run)
         return row_dict
 
 
