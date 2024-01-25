@@ -38,6 +38,7 @@ class Application():
 
         app.on_connect(self.update_loop)
         app.on_disconnect(app.shutdown)
+        app.on_exception(lambda exc: ui.notify(exc, type='negative'))
         ui.run(title="Orchestrator", favicon='🤖', native=False, port=23406, reload=False)
 
     def update_tab(self):

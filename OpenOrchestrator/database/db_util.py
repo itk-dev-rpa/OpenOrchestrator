@@ -8,7 +8,6 @@ from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
-from nicegui import ui
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import logs, triggers, constants, queues
@@ -40,9 +39,8 @@ def connect(conn_string: str) -> bool:
         engine.connect()
         _connection_engine = engine
         return True
-    except (alc_exc.InterfaceError, alc_exc.ArgumentError, alc_exc.OperationalError) as exc:
+    except (alc_exc.InterfaceError, alc_exc.ArgumentError, alc_exc.OperationalError):
         _connection_engine = None
-        ui.notify(str(exc), type='negative', timeout=0, close_button="Dismiss")
 
     return False
 
@@ -58,15 +56,9 @@ def catch_db_error(func: Callable[P, T]) -> Callable[P, T]:
     """A decorator that catches errors in SQL calls."""
     def inner(*args, **kwargs) -> T:
         if _connection_engine is None:
-            ui.notify("Not connected", type='negative')
-            return None
+            raise RuntimeError("Not connected to Database")
 
-        try:
-            return func(*args, **kwargs)
-        except alc_exc.ProgrammingError as exc:
-            ui.notify(f"Query failed:\n{exc}", type='negative', timeout=0, close_button="Dismiss")
-
-        return None
+        return func(*args, **kwargs)
 
     return inner
 
@@ -92,7 +84,6 @@ def initialize_database() -> None:
     triggers.create_tables(_connection_engine)
     constants.create_tables(_connection_engine)
     queues.create_tables(_connection_engine)
-    ui.notify("Database has been initialized!", type='positive')
 
 
 @catch_db_error
