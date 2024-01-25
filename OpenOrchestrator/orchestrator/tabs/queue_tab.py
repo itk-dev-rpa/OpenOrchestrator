@@ -33,7 +33,7 @@ class QueueTab():
     """The 'Queues' tab object. It contains tables and buttons for dealing with queues."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
-            self.queue_table = ui.table(title="Queues", columns=QUEUE_COLUMNS, rows=[], row_key='Queue Name').classes("w-full")
+            self.queue_table = ui.table(title="Queues", columns=QUEUE_COLUMNS, rows=[], row_key='Queue Name', pagination=10).classes("w-full")
             self.queue_table.on("rowClick", self._row_click)
 
     def update(self):
@@ -82,7 +82,7 @@ class QueuePopup():
                 ui.button(icon='refresh', on_click=self._update)
                 ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
-                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name).classes("w-full")
+                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination=100).classes("w-full")
 
         self._update()
 
