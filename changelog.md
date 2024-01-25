@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All UI logic removed from db_util.
 - Refactoring and renaming of files.
 - Scheduler log area limited to 1000 lines.
+- Updated Github Workflows
 
 ### Added
 
