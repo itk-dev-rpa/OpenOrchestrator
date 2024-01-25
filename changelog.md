@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Orchestrator rewritten to use NiceGui instead of TKinter for its UI.
+- Lots and lots of UI changes and upgrades.
+- All UI logic removed from db_util.
+- Orchestrator auto updates data when in focus.
+- Refactoring and renaming of files.
+- Scheduler log area limited to 1000 lines.
+
+### Added
+
+- Queues tab in Orchestrator to monitor queues.
+- Scheduler logs errors when a robot returns a non-zero return code.
+- Ability to change the next run time on Scheduled triggers.
+- Automated tests of database functionality and OrchestratorConnection.
+
+
+### Fixed
+
+- Scheduler doesn't spam "File not found" anymore.
+- Type hints on db functions.
+
+
 ## [1.0.2] - 2023-12-19
 
 ### Added
