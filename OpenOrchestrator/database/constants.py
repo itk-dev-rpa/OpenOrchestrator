@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
 
+
 class Base(DeclarativeBase):
     """SqlAlchemy base class for all ORM classes in this module."""
 
