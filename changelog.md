@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Orchestrator rewritten to use NiceGui instead of TKinter for its UI.
 - Lots and lots of UI changes and upgrades.
 - All UI logic removed from db_util.
-- Orchestrator auto updates data when in focus.
 - Refactoring and renaming of files.
 - Scheduler log area limited to 1000 lines.
 
@@ -22,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scheduler logs errors when a robot returns a non-zero return code.
 - Ability to change the next run time on Scheduled triggers.
 - Automated tests of database functionality and OrchestratorConnection.
+- Orchestrator auto updates data when in focus.
 
 
 ### Fixed
