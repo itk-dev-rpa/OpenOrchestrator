@@ -110,7 +110,6 @@ class TestOrchestratorConnection(unittest.TestCase):
 
         # Delete element
         self.connection.delete_queue_element(element.id)
-        print(element.id)
         elements = self.connection.get_queue_elements("Bulk Queue")
         self.assertEqual(len(elements), 9)
 
