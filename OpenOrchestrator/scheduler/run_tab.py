@@ -9,6 +9,7 @@ from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.scheduler import runner
 
+
 def create_tab(parent: ttk.Notebook, app) -> ttk.Frame:
     """Create a new Run tab object.
 
@@ -85,7 +86,7 @@ def pause(app, status_label: ttk.Label):
         app.running = False
 
 
-def print_text(text_widget: tkinter.Text, string: str) -> None:
+def print_text(text_widget: tkinter.Text, text: str) -> None:
     """Appends text to the text area.
     Is used to replace the functionality of sys.stdout.write (print).
 
@@ -93,8 +94,16 @@ def print_text(text_widget: tkinter.Text, string: str) -> None:
         print_text: The text area object.
         string: The string to append.
     """
+    # Insert text at the end
     text_widget.configure(state='normal')
-    text_widget.insert('end', string)
+    text_widget.insert('end', text)
+
+    # If the number of lines are above 1000 delete 10 lines from the top
+    num_lines = int(text_widget.index('end').split('.')[0])
+    if num_lines > 1000:
+        text_widget.delete("1.0", "10.0")
+
+    # Scroll to end
     text_widget.see('end')
     text_widget.configure(state='disabled')
 
@@ -138,7 +147,7 @@ def check_heartbeats(app) -> None:
                 print(f"Process '{job.trigger.process_name}' is done")
                 runner.end_job(job)
             else:
-                print(f"Process '{job.trigger.process_name}' failed")
+                print(f"Process '{job.trigger.process_name}' failed. Check process log for more info.")
                 runner.fail_job(job)
 
         else:
@@ -152,7 +161,7 @@ def check_triggers(app) -> None:
     Args:
         app: The Scheduler Application object.
     """
-    #Check if process is blocking
+    # Check if process is blocking
     blocking = False
     for job in app.running_jobs:
         if job.trigger.is_blocking:

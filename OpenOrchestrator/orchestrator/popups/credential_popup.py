@@ -1,89 +1,99 @@
-"""This module is responsible for the layout and functionality of the 'New credential' popup."""
+"""This module is responsible for the layout and functionality of the 'New constant' popup."""
 
-# Disable pylint duplicate code error since it
-# mostly reacts to the layout code being similar.
-# pylint: disable=R0801
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-
-import tkinter
-from tkinter import ttk, messagebox
+from nicegui import ui
 
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.database.constants import Credential
+from OpenOrchestrator.orchestrator.popups.generic_popups import question_popup
 
-def show_popup(name=None, username=None):
-    """Creates and shows a popup to create a new credential.
+if TYPE_CHECKING:
+    from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
 
-    Returns:
-        tkinter.TopLevel: The created Toplevel object (Popup Window).
-    """
-    window = tkinter.Toplevel()
-    window.grab_set()
-    window.title("New Credential")
-    window.geometry("300x300")
 
-    ttk.Label(window, text="Name:").pack()
-    name_entry = ttk.Entry(window)
-    name_entry.pack()
+# pylint: disable-next=too-few-public-methods
+class CredentialPopup():
+    """A popup for creating/updating queue triggers."""
+    def __init__(self, constant_tab: ConstantTab, credential: Credential = None):
+        """Create a new popup.
+        If a credential is given it will be updated instead of creating a new credential.
 
-    ttk.Label(window, text="Username:").pack()
-    username_entry = ttk.Entry(window)
-    username_entry.pack()
+        Args:
+            constant_tab: The tab that is opening this popup.
+            credential: The credential to update if any.
+        """
+        self.constant_tab = constant_tab
+        self.credential = credential
+        title = 'Update Credential' if credential else 'New Credential'
+        button_text = "Update" if credential else "Create"
 
-    ttk.Label(window, text="Password:").pack()
-    password_entry = ttk.Entry(window)
-    password_entry.pack()
+        with ui.dialog(value=True).props('persistent') as self.dialog, ui.card().classes('w-full'):
+            ui.label(title).classes("text-xl")
+            self.name_input = ui.input("Credential Name").classes("w-full")
+            self.username_input = ui.input("Username").classes("w-full")
+            self.password_input = ui.input("Password").classes("w-full")
 
-    def create_command():
-        create_credential(window, name_entry,username_entry, password_entry)
-    ttk.Button(window, text='Create', command=create_command).pack()
-    ttk.Button(window, text='Cancel', command=window.destroy).pack()
+            with ui.row():
+                ui.button(button_text, on_click=self._save_credential)
+                ui.button("Cancel", on_click=self.dialog.close)
 
-    if name:
-        name_entry.insert('end', name)
-    if username:
-        username_entry.insert('end', username)
+                if credential:
+                    ui.button("Delete", color='red', on_click=self._delete_credential)
 
-    return window
+        self._define_validation()
 
-def create_credential(window: tkinter.Toplevel, name_entry: ttk.Entry,
-                      username_entry: ttk.Entry, password_entry:ttk.Entry):
-    """Creates a new credential in the database using the data from the
-    UI. The password is encrypted before sending it to the database.
+        if credential:
+            self._pre_populate()
 
-    Args:
-        window: The popup window.
-        name_entry: The name entry.
-        username_entry: The username entry.
-        password_entry: The password entry.
-    """
-    name = name_entry.get()
-    username = username_entry.get()
-    password = password_entry.get()
+    def _define_validation(self):
+        """Define validation functions for ui elements."""
+        self.name_input.validation = {"Please enter a name": bool}
+        self.username_input.validation = {"Please enter a username": bool}
+        self.password_input.validation = {"Please enter a password": bool}
 
-    if not name:
-        messagebox.showerror('Error', 'Please enter a name')
-        return
+    def _pre_populate(self):
+        """Pre populate the inputs with an existing credential."""
+        self.name_input.value = self.credential.name
+        self.name_input.disable()
+        self.username_input.value = self.credential.username
 
-    if not username:
-        messagebox.showerror('Error', 'Please enter a username')
-        return
+    def _save_credential(self):
+        """Create or update a credential in the database using the data from the UI."""
+        self.name_input.validate()
+        self.username_input.validate()
+        self.password_input.validate()
 
-    if not password:
-        messagebox.showerror('Error', 'Please enter a password')
-        return
+        if self.name_input.error or self.username_input.error or self.password_input.error:
+            return
 
-    try:
-        db_util.get_credential(name)
-        exists = True
-    except ValueError:
-        exists = False
+        name = self.name_input.value
+        username = self.username_input.value
+        password = self.password_input.value
 
-    if exists:
-        if messagebox.askyesno('Error', 'A credential with that name already exists. Do you want to overwrite it?'):
+        if self.credential:
             db_util.update_credential(name, username, password)
         else:
-            return
-    else:
-        db_util.create_credential(name, username, password)
+            # Check if credential already exists
+            try:
+                db_util.get_credential(name)
+                exists = True
+            except ValueError:
+                exists = False
 
-    window.destroy()
+            if exists:
+                ui.notify("A credential with that name already exists.", type='negative')
+                return
+
+            db_util.create_credential(name, username, password)
+
+        self.dialog.close()
+        self.constant_tab.update()
+
+    async def _delete_credential(self):
+        """Delete the selected credential."""
+        if await question_popup(f"Delete credential '{self.credential.name}'?", "Delete", "Cancel", color1='red'):
+            db_util.delete_credential(self.credential.name)
+            self.dialog.close()
+            self.constant_tab.update()

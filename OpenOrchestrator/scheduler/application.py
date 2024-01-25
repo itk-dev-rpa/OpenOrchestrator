@@ -5,6 +5,7 @@ import tkinter
 from tkinter import ttk, messagebox
 from OpenOrchestrator.scheduler import settings_tab, run_tab
 
+
 class Application(tkinter.Tk):
     """The main application object of the Scheduler app.
     Extends the tkinter.Tk object.
@@ -44,6 +45,5 @@ class Application(tkinter.Tk):
             self.destroy()
 
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
     Application()
