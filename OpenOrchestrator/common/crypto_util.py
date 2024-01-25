@@ -3,9 +3,8 @@
 from cryptography.fernet import Fernet
 from cryptography.exceptions import InvalidSignature
 
-# The encryption key is a module wide variable used in
-# static functions. Linting is disabled on this.
-_encryption_key: str
+
+_encryption_key: str = None
 
 
 def generate_key() -> bytes:
