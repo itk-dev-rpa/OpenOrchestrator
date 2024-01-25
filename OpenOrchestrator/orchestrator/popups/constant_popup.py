@@ -47,8 +47,8 @@ class ConstantPopup():
 
     def _define_validation(self):
         """Define validation rules for input elements."""
-        self.name_input.validation = {"Please enter a name.": bool}
-        self.value_input.validation = {"Please enter a value.": bool}
+        self.name_input.validation = {"Please enter a name": bool}
+        self.value_input.validation = {"Please enter a value": bool}
 
     def _pre_populate(self):
         """Pre populate the inputs with an existing constant."""

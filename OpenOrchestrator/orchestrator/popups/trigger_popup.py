@@ -70,10 +70,10 @@ class TriggerPopup():
             self._pre_populate()
 
     def _define_validation(self):
-        self.trigger_input.validation = {"Please enter a trigger name.": bool}
-        self.name_input.validation = {"Please enter a process name.": bool}
-        self.path_input.validation = {"Please enter a process path.": bool}
-        self.queue_input.validation = {"Please enter a queue name.": bool}
+        self.trigger_input.validation = {"Please enter a trigger name": bool}
+        self.name_input.validation = {"Please enter a process name": bool}
+        self.path_input.validation = {"Please enter a process path": bool}
+        self.queue_input.validation = {"Please enter a queue name": bool}
 
         def validate_cron(value: str):
             try:
@@ -82,7 +82,7 @@ class TriggerPopup():
             except CroniterBadCronError:
                 return False
 
-        self.cron_input.validation = {"Invalid cron expression.": validate_cron}
+        self.cron_input.validation = {"Invalid cron expression": validate_cron}
 
     def _pre_populate(self):
         """Populate the form with values from an existing trigger"""

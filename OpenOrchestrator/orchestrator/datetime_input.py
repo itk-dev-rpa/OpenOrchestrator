@@ -41,7 +41,7 @@ class DatetimeInput(ui.input):
     def _define_validation(self, allow_empty: bool):
         if not allow_empty:
             self.validation = {
-                "Please enter a datetime.": bool,
+                "Please enter a datetime": bool,
                 f"Invalid datetime: {self.PY_FORMAT}": lambda v: self.get_datetime() is not None
             }
 
