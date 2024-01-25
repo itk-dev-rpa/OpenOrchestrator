@@ -8,7 +8,7 @@ from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 
 
-# pylint: disable-next: too-few-public-methods
+# pylint: disable-next=too-few-public-methods
 class ConnectionFrame():
     """A ui module containing input and buttons for connecting to the database."""
     def __init__(self):
