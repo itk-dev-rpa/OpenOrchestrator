@@ -1,41 +1,77 @@
 """This module is the entry point for the Orchestrator app. It contains a single class
 that when created starts the application."""
 
-import tkinter
-from tkinter import ttk
+from nicegui import ui, app
 
-from OpenOrchestrator.orchestrator import logging_tab, settings_tab, trigger_tab, constants_tab
+from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
+from OpenOrchestrator.orchestrator.tabs.settings_tab import SettingsTab
+from OpenOrchestrator.orchestrator.tabs.logging_tab import LoggingTab
+from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
+from OpenOrchestrator.orchestrator.tabs.queue_tab import QueueTab
 
-class Application(tkinter.Tk):
-    """The main application object of the Orchestrator app.
-    Extends the tkinter.Tk object.
+
+class Application():
+    """The main application of Orchestrator.
+    It contains a header and the four tabs of the application.
     """
-    def __init__(self):
-        # Disable pylint duplicate code error since it
-        # mostly reacts to the layout code being similar.
-        # pylint: disable=R0801
-        super().__init__()
-        self.title("OpenOrchestrator")
-        self.geometry("850x600")
-        style = ttk.Style(self)
-        style.theme_use('vista')
+    def __init__(self) -> None:
+        with ui.header():
+            with ui.tabs() as self.tabs:
+                ui.tab('Triggers')
+                ui.tab('Logs')
+                ui.tab('Constants')
+                ui.tab('Queues')
+                ui.tab('Settings')
 
-        notebook = ttk.Notebook(self)
-        notebook.pack(expand=True, fill='both')
+            ui.space()
+            ui.button(icon="contrast", on_click=ui.dark_mode().toggle)
+            ui.button(icon='refresh', on_click=self.update_tab)
 
-        trig_tab = trigger_tab.create_tab(notebook)
-        log_tab = logging_tab.create_tab(notebook)
-        const_tab = constants_tab.create_tab(notebook)
-        set_tab = settings_tab.create_tab(notebook)
+        with ui.tab_panels(self.tabs, value='Settings', on_change=self.update_tab).classes('w-full') as self.tab_panels:
+            self.t_tab = TriggerTab('Triggers')
+            self.l_tab = LoggingTab("Logs")
+            self.c_tab = ConstantTab("Constants")
+            self.q_tab = QueueTab("Queues")
+            SettingsTab('Settings')
 
-        notebook.add(trig_tab, text="Triggers")
-        notebook.add(log_tab, text="Logs")
-        notebook.add(const_tab, text="Constants")
-        notebook.add(set_tab, text="Settings")
+        self._define_on_close()
 
-        notebook.select(3)
+        app.on_connect(self.update_loop)
+        app.on_disconnect(app.shutdown)
+        app.on_exception(lambda exc: ui.notify(exc, type='negative'))
+        ui.run(title="Orchestrator", favicon='🤖', native=False, port=23406, reload=False)
 
-        self.mainloop()
+    def update_tab(self):
+        """Update the date in the currently selected tab."""
+        match self.tab_panels.value:
+            case 'Triggers':
+                self.t_tab.update()
+            case 'Logs':
+                self.l_tab.update()
+            case 'Constants':
+                self.c_tab.update()
+            case 'Queues':
+                self.q_tab.update()
 
-if __name__=='__main__':
+    async def update_loop(self):
+        """Update the selected tab on a timer but only if the page is in focus."""
+        try:
+            in_focus = await ui.run_javascript("document.hasFocus()")
+            if in_focus:
+                self.update_tab()
+        except TimeoutError:
+            pass
+
+        ui.timer(10, self.update_loop, once=True)
+
+    def _define_on_close(self) -> None:
+        """Tell the browser to ask for confirmation before leaving the page."""
+        ui.add_body_html('''
+            <script>
+                window.addEventListener("beforeunload", (event) => event.preventDefault());
+            </script>
+            ''')
+
+
+if __name__ in {'__main__', '__mp_main__'}:
     Application()

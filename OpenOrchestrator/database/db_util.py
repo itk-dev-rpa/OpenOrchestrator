@@ -1,9 +1,9 @@
 """This module handles the connection to the database in OpenOrchestrator."""
 
 from datetime import datetime
-from tkinter import messagebox
-from typing import Callable
+from typing import Callable, TypeVar, ParamSpec
 
+from croniter import croniter
 from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
@@ -16,7 +16,11 @@ from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 
-_connection_engine: Engine
+# Type hint helpers for decorators
+T = TypeVar("T")
+P = ParamSpec("P")
+
+_connection_engine: Engine = None
 
 
 def connect(conn_string: str) -> bool:
@@ -35,28 +39,27 @@ def connect(conn_string: str) -> bool:
         engine.connect()
         _connection_engine = engine
         return True
-    except alc_exc.InterfaceError as exc:
+    except (alc_exc.InterfaceError, alc_exc.ArgumentError, alc_exc.OperationalError):
         _connection_engine = None
-        messagebox.showerror("Connection failed", str(exc))
 
     return False
 
 
 def disconnect() -> None:
     """Disconnect from the database."""
-    global _connection_engine #pylint: disable=global-statement
+    global _connection_engine  # pylint: disable=global-statement
     _connection_engine.dispose()
     _connection_engine = None
 
 
-def catch_db_error(func: Callable) -> Callable:
+def catch_db_error(func: Callable[P, T]) -> Callable[P, T]:
     """A decorator that catches errors in SQL calls."""
-    def inner(*args, **kwargs):
-        try:
-            result = func(*args, **kwargs)
-        except alc_exc.ProgrammingError as exc:
-            messagebox.showerror("Error", f"Query failed:\n{exc}")
-        return result
+    def inner(*args, **kwargs) -> T:
+        if _connection_engine is None:
+            raise RuntimeError("Not connected to Database")
+
+        return func(*args, **kwargs)
+
     return inner
 
 
@@ -64,12 +67,14 @@ def get_conn_string() -> str:
     """Get the connection string.
 
     Returns:
-        str: The connection string.
+        str: The connection string if any.
     """
     try:
         return str(_connection_engine.url)
-    except AttributeError as exc:
-        raise RuntimeError("Unable to get the connection string from the database engine. Has the connection been established?") from exc
+    except AttributeError:
+        pass
+
+    return None
 
 
 @catch_db_error
@@ -79,7 +84,6 @@ def initialize_database() -> None:
     triggers.create_tables(_connection_engine)
     constants.create_tables(_connection_engine)
     queues.create_tables(_connection_engine)
-    messagebox.showinfo("Database initialized", "Database has been initialized!")
 
 
 @catch_db_error
@@ -102,6 +106,21 @@ def get_trigger(trigger_id: str) -> Trigger:
 
 
 @catch_db_error
+def get_all_triggers() -> tuple[Trigger]:
+    """Get all triggers in the database.
+
+    Returns:
+        A tuple of Trigger objects.
+    """
+    with Session(_connection_engine) as session:
+        query = (
+            select(Trigger)
+            .options(selectin_polymorphic(Trigger, (ScheduledTrigger, QueueTrigger, SingleTrigger)))
+        )
+        return tuple(session.scalars(query))
+
+
+@catch_db_error
 def update_trigger(trigger: Trigger):
     """Updates an existing trigger in the database.
 
@@ -111,6 +130,7 @@ def update_trigger(trigger: Trigger):
     with Session(_connection_engine) as session:
         session.add(trigger)
         session.commit()
+        session.refresh(trigger)
 
 
 @catch_db_error
@@ -167,8 +187,8 @@ def delete_trigger(trigger_id: str) -> None:
 
 @catch_db_error
 def get_logs(offset: int, limit: int,
-             from_date: datetime|None, to_date: datetime|None,
-             process_name: str|None, log_level: LogLevel|None) -> tuple[Log]:
+             from_date: datetime = None, to_date: datetime = None,
+             process_name: str = None, log_level: LogLevel = None) -> tuple[Log]:
     """Get the logs from the database using filters and pagination.
 
     Args:
@@ -343,7 +363,7 @@ def get_constant(name: str) -> Constant:
 
     Returns:
         Constant: The constant with the given name.
-    
+
     Raises:
         ValueError: If no constant with the given name exists.
     """
@@ -418,7 +438,7 @@ def get_credential(name: str) -> Credential:
 
     Returns:
         Credential: The credential with the given name.
-    
+
     Raises:
         ValueError: If no credential with the given name exists.
     """
@@ -427,6 +447,7 @@ def get_credential(name: str) -> Credential:
 
     if credential is None:
         raise ValueError(f"No credential with name '{name}' was found.")
+
     credential.password = crypto_util.decrypt_string(credential.password)
     return credential
 
@@ -501,12 +522,12 @@ def delete_credential(name: str) -> None:
 
 @catch_db_error
 def begin_single_trigger(trigger_id: str) -> bool:
-    """Set the status of a single trigger to 'running' and 
+    """Set the status of a single trigger to 'running' and
     set the last run time to the current time.
 
     Args:
         trigger_id: The id of the trigger to begin.
-    
+
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
@@ -560,15 +581,15 @@ def get_next_scheduled_trigger() -> ScheduledTrigger | None:
 
 
 @catch_db_error
-def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> bool:
-    """Set the status of a scheduled trigger to 'running', 
+def begin_scheduled_trigger(trigger_id: str) -> bool:
+    """Set the status of a scheduled trigger to 'running',
     set the last run time to the current time,
     and set the next run time to the given datetime.
 
     Args:
         trigger_id: The id of the trigger to begin.
         next_run: The next datetime the trigger should run.
-    
+
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
@@ -580,6 +601,8 @@ def begin_scheduled_trigger(trigger_id: str, next_run: datetime) -> bool:
 
         trigger.process_status = TriggerStatus.RUNNING
         trigger.last_run = datetime.now()
+
+        next_run = croniter(trigger.cron_expr, trigger.next_run).get_next(datetime)
         trigger.next_run = next_run
 
         session.commit()
@@ -617,12 +640,12 @@ def get_next_queue_trigger() -> QueueTrigger | None:
 
 @catch_db_error
 def begin_queue_trigger(trigger_id: str) -> None:
-    """Set the status of a queue trigger to 'running' and 
+    """Set the status of a queue trigger to 'running' and
     set the last run time to the current time.
 
     Args:
         trigger_id: The id of the trigger to begin.
-    
+
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
@@ -773,7 +796,7 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
         query = (
             select(QueueElement)
             .where(QueueElement.queue_name == queue_name)
-            .order_by(QueueElement.created_date)
+            .order_by(desc(QueueElement.created_date))
             .offset(offset)
             .limit(limit)
         )
@@ -785,6 +808,32 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
 
         result = session.scalars(query).all()
         return tuple(result)
+
+
+@catch_db_error
+def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
+    """Count the number of queue elements of each status for every queue.
+
+    Returns:
+        A dict for each queue with the count for each status. E.g. result[queue_name][status] => count.
+    """
+    with Session(_connection_engine) as session:
+        query = (
+            select(QueueElement.queue_name, QueueElement.status, alc_func.count())  # pylint: disable=not-callable
+            .group_by(QueueElement.queue_name)
+            .group_by(QueueElement.status)
+        )
+        rows = session.execute(query)
+        rows = tuple(rows)
+
+    # Aggregate result into a dict
+    result = {}
+    for queue_name, status, count in rows:
+        if queue_name not in result:
+            result[queue_name] = {}
+        result[queue_name][status] = count
+
+    return result
 
 
 @catch_db_error

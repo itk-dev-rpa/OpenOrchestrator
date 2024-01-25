@@ -1,17 +1,15 @@
 """This module is responsible for checking triggers and running processes."""
 
 import os
-from datetime import datetime
 import subprocess
 from dataclasses import dataclass
 import uuid
-
-from croniter import croniter
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.logs import LogLevel
+
 
 @dataclass
 class Job():
@@ -89,9 +87,7 @@ def run_scheduled_trigger(trigger: ScheduledTrigger) -> Job | None:
     """
     print('Running trigger: ', trigger.trigger_name)
 
-    next_run = croniter(trigger.cron_expr, trigger.next_run).get_next(datetime)
-
-    if db_util.begin_scheduled_trigger(trigger.id, next_run):
+    if db_util.begin_scheduled_trigger(trigger.id):
         process = run_process(trigger)
 
         if process is not None:
@@ -146,8 +142,7 @@ def clone_git_repo(repo_url: str) -> str:
 def clear_repo_folder() -> None:
     """Completely remove the repos folder."""
     repo_folder = get_repo_folder_path()
-    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False, shell=True)
-
+    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False, shell=True, capture_output=True)
 
 
 def get_repo_folder_path() -> str:
@@ -206,6 +201,9 @@ def fail_job(job: Job) -> None:
         job: The job whose trigger to mark as failed.
     """
     db_util.set_trigger_status(job.trigger.id, TriggerStatus.FAILED)
+    _, error = job.process.communicate()
+    error_msg = f"An uncaught error ocurred during the process:\n{error}"
+    db_util.create_log(job.trigger.process_name, LogLevel.ERROR, error_msg)
 
 
 def run_process(trigger: Trigger) -> subprocess.Popen | None:
@@ -246,7 +244,7 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
 
         command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
 
-        return subprocess.Popen(command_args)
+        return subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)
 
     # We actually want to catch any exception here
     # pylint: disable=broad-exception-caught

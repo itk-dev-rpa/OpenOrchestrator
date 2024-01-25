@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2024-01-25
+
+### Changed
+
+- Orchestrator rewritten to use NiceGui instead of TKinter for its UI.
+- Lots and lots of UI changes and upgrades.
+- All UI logic removed from db_util.
+- Refactoring and renaming of files.
+- Scheduler log area limited to 1000 lines.
+- Updated Github Workflows
+
+### Added
+
+- Queues tab in Orchestrator to monitor queues.
+- Scheduler logs errors when a robot returns a non-zero return code.
+- Ability to change the next run time on Scheduled triggers.
+- Automated tests of database functionality and OrchestratorConnection.
+- Orchestrator auto updates data when in focus.
+
+
+### Fixed
+
+- Scheduler doesn't spam "File not found" anymore.
+- Type hints on db functions.
+
+
 ## [1.0.2] - 2023-12-19
 
 ### Added
@@ -32,7 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.0.2...HEAD
+[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.1.0
 [1.0.2]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.2
 [1.0.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.1
 [1.0.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.0

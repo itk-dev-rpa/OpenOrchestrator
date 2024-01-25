@@ -5,8 +5,11 @@ from datetime import datetime
 from sqlalchemy import String, Engine
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 
+from OpenOrchestrator.common import datetime_util
+
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
+
 
 class Base(DeclarativeBase):
     """SqlAlchemy base class for all ORM classes in this module."""
@@ -20,13 +23,13 @@ class Constant(Base):
     value: Mapped[str] = mapped_column(String(1000))
     changed_at: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
-    def to_tuple(self) -> tuple:
-        """Convert the constant to a tuple of values.
-
-        Returns:
-            tuple: A tuple of all the triggers values.
-        """
-        return (self.name, self.value, self.changed_at)
+    def to_row_dict(self) -> dict[str, str]:
+        """Convert constant to a row dictionary for display in a table."""
+        return {
+            "Constant Name": self.name,
+            "Value": self.value,
+            "Last Changed": datetime_util.format_datetime(self.changed_at)
+        }
 
 
 class Credential(Base):
@@ -38,18 +41,21 @@ class Credential(Base):
     password: Mapped[str] = mapped_column(String(1000))
     changed_at: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
-    def to_tuple(self) -> tuple:
-        """Convert the credential to a tuple of values.
+    def to_row_dict(self) -> dict[str, str]:
+        """Convert credential to a row dictionary for display in a table."""
+        return {
+            "Credential Name": self.name,
+            "Username": self.username,
+            "Password": self.format_password(),
+            "Last Changed": datetime_util.format_datetime(self.changed_at)
+        }
 
-        Returns:
-            tuple: A tuple of all the triggers values.
-        """
-        return (
-            self.name,
-            self.username,
-            self.password,
-            self.changed_at
-        )
+    def format_password(self) -> str:
+        """Format the password to be shown in a table."""
+        length = len(self.password)
+        lower_length = int(((length-100)/20)*16)
+        upper_length = lower_length + 15
+        return f"{length} encrypted bytes. {lower_length}-{upper_length} decrypted bytes."
 
 
 def create_tables(engine: Engine):
