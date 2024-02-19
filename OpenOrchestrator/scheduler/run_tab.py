@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from OpenOrchestrator.scheduler.application import Application
 
 
+# pylint: disable-next=too-many-ancestors
 class RunTab(ttk.Frame):
     """A ttk.frame object containing the functionality of the run tab in Scheduler."""
     def __init__(self, parent: ttk.Notebook, app: Application):
@@ -91,7 +92,7 @@ class RunTab(ttk.Frame):
         self.text_area.insert('end', text)
 
         # If the number of lines are above 1000 delete 10 lines from the top
-        num_lines = int(self.text_area.index('end').split('.')[0])
+        num_lines = int(self.text_area.index('end').split('.', maxsplit=1)[0])
         if num_lines > 1000:
             self.text_area.delete("1.0", "10.0")
 
