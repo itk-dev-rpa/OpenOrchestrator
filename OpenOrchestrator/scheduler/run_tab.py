@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import tkinter
-from tkinter import ttk, font
+from tkinter import ttk
 import sys
 
 from OpenOrchestrator.common import crypto_util
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 
 class RunTab(ttk.Frame):
+    """A ttk.frame object containing the functionality of the run tab in Scheduler."""
     def __init__(self, parent: ttk.Notebook, app: Application):
         super().__init__(parent)
         self.pack(fill='both', expand=True)
