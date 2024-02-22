@@ -231,7 +231,7 @@ def run_process(trigger: Trigger) -> Job | None:
         trigger: The trigger whose process to run.
 
     Returns:
-        Job: A Job object referencing the process, if succesful.
+        Job: A Job object referencing the process if succesful.
     """
     process_path = trigger.process_path
     folder_path = None
