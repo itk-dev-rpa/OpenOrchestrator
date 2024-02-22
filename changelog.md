@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Scheduled triggers no longer try to catch up to missed runs.
+
 ### Fixed
 
 - Scheduler doesn't freeze when connection is momentarily lost.
