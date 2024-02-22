@@ -1,6 +1,8 @@
 """This module is the entry point for the Orchestrator app. It contains a single class
 that when created starts the application."""
 
+import socket
+
 from nicegui import ui, app
 
 from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
@@ -39,7 +41,7 @@ class Application():
         app.on_connect(self.update_loop)
         app.on_disconnect(app.shutdown)
         app.on_exception(lambda exc: ui.notify(exc, type='negative'))
-        ui.run(title="Orchestrator", favicon='🤖', native=False, port=23406, reload=False)
+        ui.run(title="Orchestrator", favicon='🤖', native=False, port=get_free_port(), reload=False)
 
     def update_tab(self):
         """Update the date in the currently selected tab."""
@@ -71,6 +73,21 @@ class Application():
                 window.addEventListener("beforeunload", (event) => event.preventDefault());
             </script>
             ''')
+
+
+def get_free_port():
+    """Get a free port by creating a new socket and bind it
+    on port 0 allowing the os to select the port.
+    https://docs.python.org/3/library/socket.html#socket.create_connection
+
+    Returns:
+        A port number that should be free to use.
+    """
+    with socket.socket() as sock:
+        sock.bind(("", 0))
+        port = sock.getsockname()[1]
+
+    return port
 
 
 if __name__ in {'__main__', '__mp_main__'}:
