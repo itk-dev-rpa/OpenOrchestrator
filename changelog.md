@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Orchestrator port number made dynamic allowing multiple instances.
 
+### Fixed
+
+- Scheduler doesn't freeze when connection is momentarily lost.
+
 ## [1.1.0] - 2024-01-25
 
 ### Changed
