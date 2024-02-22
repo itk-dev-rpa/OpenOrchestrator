@@ -78,6 +78,7 @@ class Application():
 def get_free_port():
     """Get a free port by creating a new socket and bind it
     on port 0 allowing the os to select the port.
+    https://docs.python.org/3/library/socket.html#socket.create_connection
 
     Returns:
         A port number that should be free to use.
