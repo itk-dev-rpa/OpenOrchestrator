@@ -602,7 +602,7 @@ def begin_scheduled_trigger(trigger_id: str) -> bool:
         trigger.process_status = TriggerStatus.RUNNING
         trigger.last_run = datetime.now()
 
-        next_run = croniter(trigger.cron_expr, trigger.next_run).get_next(datetime)
+        next_run = croniter(trigger.cron_expr, datetime.now()).get_next(datetime)
         trigger.next_run = next_run
 
         session.commit()
