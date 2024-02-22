@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Cloned repo folders are removed when the respective processes are done/failed.
+
 ### Fixed
 
 - Scheduler doesn't freeze when connection is momentarily lost.
