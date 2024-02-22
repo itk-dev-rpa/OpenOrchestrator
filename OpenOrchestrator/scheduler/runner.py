@@ -16,6 +16,7 @@ class Job():
     """An object that holds information about a running job."""
     process: subprocess.Popen
     trigger: Trigger
+    process_folder: str
 
 
 def poll_triggers(app) -> Job | None:
@@ -66,10 +67,7 @@ def run_single_trigger(trigger: SingleTrigger) -> Job | None:
     print('Running trigger: ', trigger.trigger_name)
 
     if db_util.begin_single_trigger(trigger.id):
-        process = run_process(trigger)
-
-        if process is not None:
-            return Job(process, trigger)
+        return run_process(trigger)
 
     return None
 
@@ -88,10 +86,7 @@ def run_scheduled_trigger(trigger: ScheduledTrigger) -> Job | None:
     print('Running trigger: ', trigger.trigger_name)
 
     if db_util.begin_scheduled_trigger(trigger.id):
-        process = run_process(trigger)
-
-        if process is not None:
-            return Job(process, trigger)
+        return run_process(trigger)
 
     return None
 
@@ -109,10 +104,7 @@ def run_queue_trigger(trigger: QueueTrigger) -> Job | None:
     print('Running trigger: ', trigger.trigger_name)
 
     if db_util.begin_queue_trigger(trigger.id):
-        process = run_process(trigger)
-
-        if process is not None:
-            return Job(process, trigger)
+        return run_process(trigger)
 
     return None
 
@@ -142,7 +134,7 @@ def clone_git_repo(repo_url: str) -> str:
 def clear_repo_folder() -> None:
     """Completely remove the repos folder."""
     repo_folder = get_repo_folder_path()
-    subprocess.run(['rmdir', '/s', '/q', repo_folder], check=False, shell=True, capture_output=True)
+    clear_folder(repo_folder)
 
 
 def get_repo_folder_path() -> str:
@@ -154,6 +146,15 @@ def get_repo_folder_path() -> str:
     user_path = os.path.expanduser("~")
     repo_path = os.path.join(user_path, "Desktop", "Scheduler_Repos")
     return repo_path
+
+
+def clear_folder(folder_path: str) -> None:
+    """Clear a folder on the system.
+
+    Args:
+        folder_path: The folder to remove.
+    """
+    subprocess.run(['rmdir', '/s', '/q', folder_path], check=False, shell=True, capture_output=True)
 
 
 def find_main_file(folder_path: str) -> str:
@@ -193,6 +194,9 @@ def end_job(job: Job) -> None:
     elif isinstance(job.trigger, QueueTrigger):
         db_util.set_trigger_status(job.trigger.id, TriggerStatus.IDLE)
 
+    if job.process_folder:
+        clear_folder(job.process_folder)
+
 
 def fail_job(job: Job) -> None:
     """Mark a job as failed in the triggers table in the database.
@@ -204,6 +208,9 @@ def fail_job(job: Job) -> None:
     _, error = job.process.communicate()
     error_msg = f"An uncaught error ocurred during the process:\n{error}"
     db_util.create_log(job.trigger.process_name, LogLevel.ERROR, error_msg)
+
+    if job.process_folder:
+        clear_folder(job.process_folder)
 
 
 def run_process(trigger: Trigger) -> subprocess.Popen | None:
@@ -227,11 +234,12 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
         subprocess.Popen: The Popen instance of the process if successful.
     """
     process_path = trigger.process_path
+    folder_path = None
 
     try:
         if trigger.is_git_repo:
-            git_folder_path = clone_git_repo(process_path)
-            process_path = find_main_file(git_folder_path)
+            folder_path = clone_git_repo(process_path)
+            process_path = find_main_file(folder_path)
 
         if not os.path.isfile(process_path):
             raise ValueError(f"The process path didn't point to a file on the system. Path: '{process_path}'")
@@ -244,7 +252,9 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
 
         command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
 
-        return subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)
+        process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)
+
+        return Job(process, trigger, folder_path)
 
     # We actually want to catch any exception here
     # pylint: disable=broad-exception-caught
