@@ -252,7 +252,7 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
 
         command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
 
-        process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)
+        process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
 
         return Job(process, trigger, folder_path)
 
