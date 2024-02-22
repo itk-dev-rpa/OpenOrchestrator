@@ -213,7 +213,7 @@ def fail_job(job: Job) -> None:
         clear_folder(job.process_folder)
 
 
-def run_process(trigger: Trigger) -> subprocess.Popen | None:
+def run_process(trigger: Trigger) -> Job | None:
     """Runs the process of the given trigger with the necessary inputs:
     Process name
     Connection string
@@ -231,7 +231,7 @@ def run_process(trigger: Trigger) -> subprocess.Popen | None:
         trigger: The trigger whose process to run.
 
     Returns:
-        subprocess.Popen: The Popen instance of the process if successful.
+        Job: A Job object referencing the process, if succesful.
     """
     process_path = trigger.process_path
     folder_path = None
