@@ -8,6 +8,8 @@ import tkinter
 from tkinter import ttk
 import sys
 
+from sqlalchemy import exc as alc_exc
+
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.scheduler import runner
@@ -108,10 +110,14 @@ def loop(app: Application) -> None:
     Args:
         app: The Scheduler Application object.
     """
-    check_heartbeats(app)
+    try:
+        check_heartbeats(app)
 
-    if app.running:
-        check_triggers(app)
+        if app.running:
+            check_triggers(app)
+
+    except alc_exc.OperationalError:
+        print("Couldn't connect to database.")
 
     if len(app.running_jobs) == 0:
         print("Doing cleanup...")
@@ -134,8 +140,6 @@ def check_heartbeats(app: Application) -> None:
     print('Checking heartbeats...')
     for job in app.running_jobs:
         if job.process.poll() is not None:
-            app.running_jobs.remove(job)
-
             if job.process.returncode == 0:
                 print(f"Process '{job.trigger.process_name}' is done")
                 runner.end_job(job)
@@ -143,6 +147,7 @@ def check_heartbeats(app: Application) -> None:
                 print(f"Process '{job.trigger.process_name}' failed. Check process log for more info.")
                 runner.fail_job(job)
 
+            app.running_jobs.remove(job)
         else:
             print(f"Process '{job.trigger.process_name}' is still running")
 
