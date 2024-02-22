@@ -82,10 +82,10 @@ def get_free_port():
     Returns:
         A port number that should be free to use.
     """
-    sock = socket.socket()
-    sock.bind(("", 0))
-    port = sock.getsockname()[1]
-    sock.close()
+    with socket.socket() as sock:
+        sock.bind(("", 0))
+        port = sock.getsockname()[1]
+
     return port
 
 
