@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Scheduler run tab refactored to OOP design.
 - Run tab design cleaned up.
+- Orchestrator port number made dynamic allowing multiple instances.
 
 ### Fixed
 
