@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Scheduled triggers no longer try to catch up to missed runs.
 - Orchestrator port number made dynamic allowing multiple instances.
+- Default pagination increased on trigger and queue tables.
 
 ### Fixed
 
