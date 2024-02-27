@@ -30,7 +30,7 @@ class TriggerTab():
                 ui.button("New Scheduled Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.SCHEDULED))
                 ui.button("New Queue Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.QUEUE))
 
-            self.trigger_table = ui.table(COLUMNS, [], title="Triggers", pagination=10, row_key='ID').classes("w-full")
+            self.trigger_table = ui.table(COLUMNS, [], title="Triggers", pagination=50, row_key='ID').classes("w-full")
             self.trigger_table.on('rowClick', self._row_click)
 
             self.add_column_colors()
