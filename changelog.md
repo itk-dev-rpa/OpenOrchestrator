@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Scheduler run tab refactored to OOP design.
+- Run tab design cleaned up.
 - Cloned repo folders are removed when the respective processes are done/failed.
 - Scheduled triggers no longer try to catch up to missed runs.
 - Orchestrator port number made dynamic allowing multiple instances.
