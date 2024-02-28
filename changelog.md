@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2024-02-27
+
+### Changed
+
+- Scheduler run tab refactored to OOP design.
+- Run tab design cleaned up.
+- Cloned repo folders are removed when the respective processes are done/failed.
+- Scheduled triggers no longer try to catch up to missed runs.
+- Orchestrator port number made dynamic allowing multiple instances.
+- Default pagination increased on trigger and queue tables.
+
+### Fixed
+
+- Scheduler doesn't freeze when connection is momentarily lost.
+
 ## [1.1.0] - 2024-01-25
 
 ### Changed
@@ -58,7 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.2.0
 [1.1.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.1.0
 [1.0.2]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.2
 [1.0.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.1
