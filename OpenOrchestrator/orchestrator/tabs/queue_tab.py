@@ -12,7 +12,8 @@ QUEUE_COLUMNS = (
     {'name': "New", 'label': "New", 'field': "New", 'align': 'left', 'sortable': True},
     {'name': "In Progress", 'label': "In Progress", 'field': "In Progress", 'align': 'left', 'sortable': True},
     {'name': "Done", 'label': "Done", 'field': "Done", 'align': 'left', 'sortable': True},
-    {'name': "Failed", 'label': "Failed", 'field': "Failed", 'align': 'left', 'sortable': True}
+    {'name': "Failed", 'label': "Failed", 'field': "Failed", 'align': 'left', 'sortable': True},
+    {'name': "Abandoned", 'label': "Abandoned", 'field': "Abandoned", 'align': 'left', 'sortable': True}
 )
 
 ELEMENT_COLUMNS = (
@@ -48,7 +49,8 @@ class QueueTab():
                 "New": count.get(QueueStatus.NEW, 0),
                 "In Progress": count.get(QueueStatus.IN_PROGRESS, 0),
                 "Done": count.get(QueueStatus.DONE, 0),
-                "Failed": count.get(QueueStatus.FAILED, 0)
+                "Failed": count.get(QueueStatus.FAILED, 0),
+                "Abandoned": count.get(QueueStatus.ABANDONED, 0),
             }
             rows.append(row)
 
