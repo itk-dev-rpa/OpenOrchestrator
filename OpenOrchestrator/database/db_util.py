@@ -838,7 +838,7 @@ def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
 def set_queue_element_status(element_id: str, status: QueueStatus, message: str = None) -> None:
     """Set the status of a queue element.
     If the new status is 'in progress' the start date is noted.
-    If the new status is 'Done' or 'Failed' the end date is noted.
+    If the new status is 'Done', 'Failed' or 'Abandoned' the end date is noted.
 
     Args:
         element_id: The id of the queue element to change status on.
@@ -855,7 +855,7 @@ def set_queue_element_status(element_id: str, status: QueueStatus, message: str 
         match status:
             case QueueStatus.IN_PROGRESS:
                 q_element.start_date = datetime.now()
-            case QueueStatus.DONE | QueueStatus.FAILED:
+            case QueueStatus.DONE | QueueStatus.FAILED | QueueStatus.ABANDONED:
                 q_element.end_date = datetime.now()
 
         session.commit()

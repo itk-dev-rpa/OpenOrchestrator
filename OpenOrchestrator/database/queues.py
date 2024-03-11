@@ -20,6 +20,7 @@ class QueueStatus(enum.Enum):
     IN_PROGRESS = 'In Progress'
     DONE = 'Done'
     FAILED = 'Failed'
+    ABANDONED = 'Abandoned'
 
 
 class Base(DeclarativeBase):

@@ -169,7 +169,7 @@ class OrchestratorConnection:
     def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str = None) -> None:
         """Set the status of a queue element.
         If the new status is 'in progress' the start date is noted.
-        If the new status is 'Done' or 'Failed' the end date is noted.
+        If the new status is 'Done', 'Failed' or 'Abandoned' the end date is noted.
 
         Args:
             element_id: The id of the queue element to change status on.
