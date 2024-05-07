@@ -21,6 +21,7 @@ class TriggerStatus(enum.Enum):
     FAILED = "Failed"
     DONE = "Done"
     PAUSED = "Paused"
+    PAUSING = "Pausing"
 
 
 class TriggerType(enum.Enum):
