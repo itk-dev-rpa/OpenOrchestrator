@@ -4,7 +4,7 @@ from cryptography.fernet import Fernet
 from cryptography.exceptions import InvalidSignature
 
 
-_encryption_key: str = None
+_encryption_key: str | None = None
 
 
 def generate_key() -> bytes:
@@ -16,7 +16,7 @@ def generate_key() -> bytes:
     return Fernet.generate_key()
 
 
-def set_key(key: str) -> None:
+def set_key(key: str | None) -> None:
     """Set the crypto key for the module.
     The key will be used in all subsequent calls to this module.
     """
@@ -24,7 +24,7 @@ def set_key(key: str) -> None:
     _encryption_key = key
 
 
-def get_key() -> str:
+def get_key() -> str | None:
     """Get the encryption key last set using
     crypto_util.set_key.
 
@@ -43,10 +43,16 @@ def encrypt_string(data: str) -> str:
 
     Returns:
         str: The encrypted string.
+
+    Raises:
+        RuntimeError: If the encryption key has not been set.
     """
-    data = data.encode()
-    data = Fernet(_encryption_key).encrypt(data)
-    return data.decode()
+    if not _encryption_key:
+        raise RuntimeError("Can't encrypt without an encryption key.")
+
+    byte_data = data.encode()
+    byte_data = Fernet(_encryption_key).encrypt(byte_data)
+    return byte_data.decode()
 
 
 def decrypt_string(data: str) -> str:
@@ -61,14 +67,20 @@ def decrypt_string(data: str) -> str:
 
     Returns:
         str: The decrypted string.
+
+    Raises:
+        RuntimeError: If the encryption key has not been set.
     """
+    if not _encryption_key:
+        raise RuntimeError("Can't decrypt without an encryption key.")
+
     try:
-        data = data.encode()
-        data = Fernet(_encryption_key).decrypt(data)
+        byte_data = data.encode()
+        byte_data = Fernet(_encryption_key).decrypt(byte_data)
     except InvalidSignature as exc:
         raise ValueError("Couldn't verify signature. The decryption key is not the same as the encryption key.") from exc
 
-    return data.decode()
+    return byte_data.decode()
 
 
 def validate_key(key: str) -> bool:
