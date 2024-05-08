@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 'Abandoned' status to queue elements.
 
+### Changed
+
+- Sort triggers & queues by name by default.
+
 ## [1.2.0] - 2024-02-27
 
 ### Changed
