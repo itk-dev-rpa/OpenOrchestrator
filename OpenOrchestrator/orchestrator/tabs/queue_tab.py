@@ -34,7 +34,7 @@ class QueueTab():
     """The 'Queues' tab object. It contains tables and buttons for dealing with queues."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
-            self.queue_table = ui.table(title="Queues", columns=QUEUE_COLUMNS, rows=[], row_key='Queue Name', pagination=50).classes("w-full")
+            self.queue_table = ui.table(title="Queues", columns=QUEUE_COLUMNS, rows=[], row_key='Queue Name', pagination={'rowsPerPage': 50, 'sortBy': 'Queue Name'}).classes("w-full")
             self.queue_table.on("rowClick", self._row_click)
 
     def update(self):
