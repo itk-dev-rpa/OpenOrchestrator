@@ -206,7 +206,10 @@ class TriggerPopup():
             self.trigger_tab.update()
 
     def _disable_trigger(self):
-        db_util.set_trigger_status(self.trigger.id, TriggerStatus.PAUSED)
+        if self.trigger.process_status == TriggerStatus.RUNNING:
+            db_util.set_trigger_status(self.trigger.id, TriggerStatus.PAUSING)
+        else:
+            db_util.set_trigger_status(self.trigger.id, TriggerStatus.PAUSED)
         ui.notify("Trigger status set to 'Paused'.", type='positive')
         self.trigger_tab.update()
 

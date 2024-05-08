@@ -180,7 +180,7 @@ def end_job(job: Job) -> None:
     """Mark a job as ended in the triggers table
     in the database.
     If it's a single trigger it's marked as 'Done'
-    else it's marked as 'Idle'.
+    else it's marked as 'Idle' or 'Paused'.
 
     Args:
         job: The job whose trigger to mark as ended.
@@ -188,11 +188,12 @@ def end_job(job: Job) -> None:
     if isinstance(job.trigger, SingleTrigger):
         db_util.set_trigger_status(job.trigger.id, TriggerStatus.DONE)
 
-    elif isinstance(job.trigger, ScheduledTrigger):
-        db_util.set_trigger_status(job.trigger.id, TriggerStatus.IDLE)
-
-    elif isinstance(job.trigger, QueueTrigger):
-        db_util.set_trigger_status(job.trigger.id, TriggerStatus.IDLE)
+    elif isinstance(job.trigger, (ScheduledTrigger, QueueTrigger)):
+        current_status = db_util.get_trigger(job.trigger.id).process_status
+        if current_status == TriggerStatus.PAUSING:
+            db_util.set_trigger_status(job.trigger.id, TriggerStatus.PAUSED)
+        elif current_status == TriggerStatus.RUNNING:
+            db_util.set_trigger_status(job.trigger.id, TriggerStatus.IDLE)
 
     if job.process_folder:
         clear_folder(job.process_folder)
