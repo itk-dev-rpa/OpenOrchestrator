@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 'Pausing' status added to triggers.
 - Disabling a 'Running' trigger in Orchestrator will set its status to 'Pausing'.
 - Scheduler will change a 'Pausing' trigger to 'Paused' when the process is done.
+- LimitedLengthString type for use in database logs
 
 ### Changed
 
