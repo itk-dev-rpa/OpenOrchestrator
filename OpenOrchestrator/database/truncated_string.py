@@ -11,7 +11,7 @@ def truncate_message(message: str, max_length: int = 8000) -> str:
         max_length: Maximum allowed length, defaults to 8000
 
     Returns:
-        A string with length set to max_length        
+        A string with length set to max_length
     """
     if len(message) <= max_length:
         return message
