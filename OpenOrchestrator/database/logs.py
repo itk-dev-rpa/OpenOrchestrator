@@ -8,6 +8,7 @@ from sqlalchemy import String, Engine
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 
 from OpenOrchestrator.common import datetime_util
+from OpenOrchestrator.database.truncated_string import LimitedLengthString
 
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
@@ -32,7 +33,7 @@ class Log(Base):
     log_time: Mapped[datetime] = mapped_column(default=datetime.now)
     log_level: Mapped[LogLevel]
     process_name: Mapped[str] = mapped_column(String(100))
-    log_message: Mapped[str] = mapped_column(String(8000))
+    log_message: Mapped[str] = mapped_column(LimitedLengthString(8000))
 
     def to_row_dict(self) -> dict[str, str]:
         """Convert log to a row dictionary for display in a table."""
