@@ -161,7 +161,7 @@ class TestDBUtil(unittest.TestCase):
 
         elements = db_util.get_queue_elements("Queue", reference="Foo")
         self.assertEqual(len(elements), 0)
-        
+
         # Filter by date
         logs = db_util.get_queue_elements("Queue", from_date=creation_time)
         self.assertEqual(len(logs), 2)
