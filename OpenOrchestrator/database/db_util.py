@@ -777,6 +777,7 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
 
 @catch_db_error
 def get_queue_elements(queue_name: str, reference: str = None, status: QueueStatus = None,
+                       from_date: datetime = None, to_date: datetime = None,
                        offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
@@ -798,6 +799,13 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
             .offset(offset)
             .limit(limit)
         )
+
+        if from_date:
+            query = query.where(QueueElement.created_date >= from_date)
+
+        if to_date:
+            query = query.where(QueueElement.created_date <= to_date)
+
         if reference is not None:
             query = query.where(QueueElement.reference == reference)
 

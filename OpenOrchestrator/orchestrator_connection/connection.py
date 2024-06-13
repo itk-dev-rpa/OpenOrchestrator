@@ -3,6 +3,8 @@ The easiest way to create an OrchestratorConnection object is to call the
 class method create_connection_from_args."""
 
 import sys
+from datetime import datetime
+
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
@@ -151,7 +153,7 @@ class OrchestratorConnection:
         return db_util.get_next_queue_element(queue_name, reference, set_status)
 
     def get_queue_elements(self, queue_name: str, reference: str = None, status: QueueStatus = None,
-                           offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
+                           offset: int = 0, limit: int = 100, from_date: datetime = None, to_date: datetime = None) -> tuple[QueueElement]:
         """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
         Args:
@@ -164,7 +166,7 @@ class OrchestratorConnection:
         Returns:
             tuple[QueueElement]: A tuple of queue elements.
         """
-        return db_util.get_queue_elements(queue_name, reference, status, offset, limit)
+        return db_util.get_queue_elements(queue_name, reference, status, from_date, to_date, offset, limit)
 
     def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str = None) -> None:
         """Set the status of a queue element.
