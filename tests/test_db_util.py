@@ -14,8 +14,7 @@ from tests import db_test_util
 
 class TestDBUtil(unittest.TestCase):
     """Test functionality of db_util."""
-    @classmethod
-    def setUpClass(cls) -> None:
+    def setUp(self) -> None:
         db_test_util.establish_clean_database()
 
     def test_logs(self):
@@ -296,3 +295,26 @@ class TestDBUtil(unittest.TestCase):
         # No new trigger when other is running
         trigger = db_util.get_next_queue_trigger()
         self.assertIsNone(trigger)
+
+    def test_log_truncation(self):
+        """Create logs with various lengths and test if their length is as expected"""
+        # Create some logs
+        long_message = "HelloWorld"*1000
+        medium_message = "a"*8000
+        short_message = "HelloWorld"
+
+        db_util.create_log("TruncateTest", LogLevel.TRACE, long_message)
+        db_util.create_log("TruncateTest", LogLevel.INFO, medium_message)
+        db_util.create_log("TruncateTest", LogLevel.ERROR, short_message)
+
+        # Test long message
+        logs = db_util.get_logs(0, 100, log_level=LogLevel.TRACE)
+        self.assertEqual(len(logs[0].log_message), 8000)
+
+        # Test medium message
+        logs = db_util.get_logs(0, 100, log_level=LogLevel.INFO)
+        self.assertEqual(len(logs[0].log_message), len(medium_message))
+
+        # Test short message
+        logs = db_util.get_logs(0, 100, log_level=LogLevel.ERROR)
+        self.assertEqual(len(logs[0].log_message), len(short_message))
