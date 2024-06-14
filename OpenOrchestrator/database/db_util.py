@@ -67,7 +67,7 @@ def _get_session() -> Session:
     if not _connection_engine:
         raise RuntimeError("Not connected to database.")
 
-    return _get_session()
+    return Session(_connection_engine)
 
 
 def get_conn_string() -> str:
@@ -101,6 +101,9 @@ def get_trigger(trigger_id: UUID | str) -> Trigger:
 
     Returns:
         Trigger: The trigger with the given id.
+
+    Raises:
+        ValueError: If the trigger doesn't exist.
     """
     if isinstance(trigger_id, str):
         trigger_id = UUID(trigger_id)
@@ -686,7 +689,7 @@ def set_trigger_status(trigger_id: UUID | str, status: TriggerStatus) -> None:
         trigger_id = UUID(trigger_id)
 
     with _get_session() as session:
-        trigger = get_trigger(trigger_id)
+        trigger = session.get(Trigger, trigger_id)
 
         if not trigger:
             raise ValueError("No trigger with the given id was found.")
