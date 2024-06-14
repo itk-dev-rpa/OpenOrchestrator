@@ -11,7 +11,7 @@ CONNECTION_STRING = r"mssql+pyodbc://localhost\SQLEXPRESS/OO_Unittest?driver=ODB
 def establish_clean_database():
     """Connect to the database, drop all tables and recreate them."""
     db_util.connect(CONNECTION_STRING)
-    crypto_util.set_key(crypto_util.generate_key())
+    crypto_util.set_key(crypto_util.generate_key().decode())
 
     drop_all_tables()
     db_util.initialize_database()
@@ -20,6 +20,8 @@ def establish_clean_database():
 def drop_all_tables():
     """Drop all ORM tables from the database."""
     engine = db_util._connection_engine  # pylint: disable=protected-access
+    if not engine:
+        raise RuntimeError("Not connected to a database.")
     logs.Base.metadata.drop_all(engine)
     triggers.Base.metadata.drop_all(engine)
     constants.Base.metadata.drop_all(engine)
