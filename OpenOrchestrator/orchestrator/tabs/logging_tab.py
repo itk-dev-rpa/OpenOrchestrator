@@ -4,6 +4,7 @@ in Orchestrator."""
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 
 
@@ -41,7 +42,7 @@ class LoggingTab():
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
         process_name = self.process_input.value if self.process_input.value != 'All' else None
-        level = self.level_input.value if self.level_input.value != "All" else None
+        level = LogLevel(self.level_input.value) if self.level_input.value != "All" else None
         limit = self.limit_input.value
 
         logs = db_util.get_logs(0, limit=limit, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name)
