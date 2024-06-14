@@ -4,7 +4,7 @@
 from datetime import datetime
 
 
-def format_datetime(datetime_: datetime, default: str = 'N/A') -> str:
+def format_datetime(datetime_: datetime | None, default: str = 'N/A') -> str:
     """Format a datetime to a string.
 
     Args:
