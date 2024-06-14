@@ -85,8 +85,8 @@ class TestOrchestratorConnection(unittest.TestCase):
 
         self.connection.bulk_create_queue_elements(
             "Bulk Queue",
-            references=[None]*10,
-            data=["data"]*10,
+            references=(None,)*10,
+            data=("data",)*10,
             created_by="Me"
         )
 

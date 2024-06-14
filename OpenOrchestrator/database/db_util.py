@@ -721,7 +721,7 @@ def create_queue_element(queue_name: str, reference: str | None = None, data: st
     return q_element
 
 
-def bulk_create_queue_elements(queue_name: str, references: tuple[str], data: tuple[str], created_by: str | None = None) -> None:
+def bulk_create_queue_elements(queue_name: str, references: tuple[str | None, ...], data: tuple[str | None, ...], created_by: str | None = None) -> None:
     """Insert multiple queue elements into a queue in an optimized manner.
     The lengths of both 'references' and 'data' must be equal to the number of elements to insert.
 

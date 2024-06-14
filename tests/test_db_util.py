@@ -123,12 +123,12 @@ class TestDBUtil(unittest.TestCase):
         db_util.create_queue_element("Queue", reference="Ref", data="Data", created_by="Me")
 
         # Bulk create queue elements
-        refs = [f"Ref{i}" for i in range(10)]
-        data = [None] * 10
+        refs = tuple(f"Ref{i}" for i in range(10))
+        data = (None,) * 10
         db_util.bulk_create_queue_elements("Bulk", references=refs, data=data)
 
         with self.assertRaises(ValueError):
-            db_util.bulk_create_queue_elements("Bulk", ["Ref"], [])
+            db_util.bulk_create_queue_elements("Bulk", ("Ref",), ())
 
         # Get elements
         elements = db_util.get_queue_elements("Queue")
@@ -136,12 +136,15 @@ class TestDBUtil(unittest.TestCase):
 
         # Get next element
         element = db_util.get_next_queue_element("Queue", set_status=False)
+        self.assertIsNotNone(element)
         self.assertEqual(element.status, QueueStatus.NEW)
 
         element = db_util.get_next_queue_element("Queue")
+        self.assertIsNotNone(element)
         self.assertEqual(element.status, QueueStatus.IN_PROGRESS)
 
         element2 = db_util.get_next_queue_element("Queue")
+        self.assertIsNotNone(element2)
         self.assertNotEqual(element, element2)
 
         # Update element

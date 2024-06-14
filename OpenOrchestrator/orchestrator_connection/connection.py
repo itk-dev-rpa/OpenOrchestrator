@@ -119,7 +119,7 @@ class OrchestratorConnection:
         """
         return db_util.create_queue_element(queue_name, reference, data, created_by)
 
-    def bulk_create_queue_elements(self, queue_name: str, references: tuple[str], data: tuple[str],
+    def bulk_create_queue_elements(self, queue_name: str, references: tuple[str | None, ...], data: tuple[str | None, ...],
                                    created_by: str | None = None) -> None:
         """Insert multiple queue elements into a queue in an optimized manner.
         The lengths of both 'references' and 'data' must be equal to the number of elements to insert.
