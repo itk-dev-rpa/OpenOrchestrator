@@ -91,6 +91,6 @@ class ConnectionFrame(ttk.Frame):
         """Creates a new encryption key and inserts it
         into the key entry.
         """
-        key = crypto_util.generate_key()
+        key = crypto_util.generate_key().decode()
         self.key_entry.delete(0, 'end')
         self.key_entry.insert(0, key)
