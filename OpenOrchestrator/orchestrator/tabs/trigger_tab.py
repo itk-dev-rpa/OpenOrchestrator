@@ -7,9 +7,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerType
 from OpenOrchestrator.orchestrator.popups.trigger_popup import TriggerPopup
 
-COLUMNS = ("Trigger Name", "Type", "Status", "Process Name", "Last Run", "Next Run", "ID")
-
-COLUMNS = (
+COLUMNS = [
     {'name': "Trigger Name", 'label': "Trigger Name", 'field': "Trigger Name", 'align': 'left', 'sortable': True},
     {'name': "Type", 'label': "Type", 'field': "Type", 'align': 'left', 'sortable': True},
     {'name': "Status", 'label': "Status", 'field': "Status", 'align': 'left', 'sortable': True},
@@ -17,7 +15,7 @@ COLUMNS = (
     {'name': "Last Run", 'label': "Last Run", 'field': "Last Run", 'align': 'left', 'sortable': True},
     {'name': "Next_Run", 'label': "Next Run", 'field': "Next Run", 'align': 'left', 'sortable': True},
     {'name': "ID", 'label': "ID", 'field': "ID", 'align': 'left', 'sortable': True}
-)
+]
 
 
 # pylint disable-next=too-few-public-methods
