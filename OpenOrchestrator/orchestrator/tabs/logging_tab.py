@@ -7,13 +7,13 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 
 
-COLUMNS = (
+COLUMNS = [
     {'name': "Log Time", 'label': "Log Time", 'field': "Log Time", 'align': 'left', 'sortable': True},
     {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left'},
     {'name': "Level", 'label': "Level", 'field': "Level", 'align': 'left'},
     {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left', ':format': 'value => value.length < 100 ? value : value.substring(0, 100)+"..."'},
     {'name': "ID", 'label': "ID", 'field': "ID", 'headerClasses': 'hidden', 'classes': 'hidden'}
-)
+]
 
 
 # pylint: disable-next=too-few-public-methods
