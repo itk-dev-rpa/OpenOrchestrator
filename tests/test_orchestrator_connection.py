@@ -99,9 +99,11 @@ class TestOrchestratorConnection(unittest.TestCase):
 
         # Get next
         element = self.connection.get_next_queue_element("Bulk Queue", set_status=False)
+        self.assertIsNotNone(element)
         self.assertEqual(element.status, QueueStatus.NEW)
 
         element = self.connection.get_next_queue_element("Bulk Queue")
+        self.assertIsNotNone(element)
         self.assertEqual(element.status, QueueStatus.IN_PROGRESS)
 
         element2 = self.connection.get_next_queue_element("Bulk Queue")
