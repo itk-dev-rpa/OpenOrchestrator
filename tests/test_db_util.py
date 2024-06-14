@@ -205,8 +205,8 @@ class TestDBUtil(unittest.TestCase):
 
         # Delete trigger
         db_util.delete_trigger(trigger.id)
-        trigger = db_util.get_trigger(trigger.id)
-        self.assertIsNone(trigger)
+        with self.assertRaises(ValueError):
+            db_util.get_trigger(trigger.id)
 
     def test_single_triggers(self):
         """Test running and updating single triggers."""
@@ -299,3 +299,7 @@ class TestDBUtil(unittest.TestCase):
         # No new trigger when other is running
         trigger = db_util.get_next_queue_trigger()
         self.assertIsNone(trigger)
+
+
+if __name__ == '__main__':
+    unittest.main()
