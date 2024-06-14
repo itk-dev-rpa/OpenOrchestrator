@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import TypeVar, ParamSpec
+from uuid import UUID
 
 from croniter import croniter  # type: ignore
 from sqlalchemy import Engine, create_engine, select, insert, desc
@@ -92,7 +93,7 @@ def initialize_database() -> None:
     queues.create_tables(_connection_engine)
 
 
-def get_trigger(trigger_id: str) -> Trigger:
+def get_trigger(trigger_id: UUID | str) -> Trigger:
     """Get the trigger with the given id.
 
     Args:
@@ -101,6 +102,9 @@ def get_trigger(trigger_id: str) -> Trigger:
     Returns:
         Trigger: The trigger with the given id.
     """
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
     with _get_session() as session:
         query = (
             select(Trigger)
@@ -177,12 +181,15 @@ def get_queue_triggers() -> tuple[QueueTrigger, ...]:
         return tuple(result)
 
 
-def delete_trigger(trigger_id: str) -> None:
+def delete_trigger(trigger_id: UUID | str) -> None:
     """Delete the given trigger from the database.
 
     Args:
         trigger_id: The id of the trigger to delete.
     """
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
     with _get_session() as session:
         trigger = get_trigger(trigger_id)
         session.delete(trigger)
@@ -516,7 +523,7 @@ def delete_credential(name: str) -> None:
         session.commit()
 
 
-def begin_single_trigger(trigger_id: str) -> bool:
+def begin_single_trigger(trigger_id: UUID | str) -> bool:
     """Set the status of a single trigger to 'running' and
     set the last run time to the current time.
 
@@ -526,6 +533,9 @@ def begin_single_trigger(trigger_id: str) -> bool:
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
     with _get_session() as session:
         trigger = session.get(SingleTrigger, trigger_id)
 
@@ -576,7 +586,7 @@ def get_next_scheduled_trigger() -> ScheduledTrigger | None:
         return session.scalar(query)
 
 
-def begin_scheduled_trigger(trigger_id: str) -> bool:
+def begin_scheduled_trigger(trigger_id: UUID | str) -> bool:
     """Set the status of a scheduled trigger to 'running',
     set the last run time to the current time,
     and set the next run time to the given datetime.
@@ -588,6 +598,9 @@ def begin_scheduled_trigger(trigger_id: str) -> bool:
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
     with _get_session() as session:
         trigger = session.get(ScheduledTrigger, trigger_id)
 
@@ -633,7 +646,7 @@ def get_next_queue_trigger() -> QueueTrigger | None:
         return session.scalar(query)
 
 
-def begin_queue_trigger(trigger_id: str) -> bool:
+def begin_queue_trigger(trigger_id: UUID | str) -> bool:
     """Set the status of a queue trigger to 'running' and
     set the last run time to the current time.
 
@@ -643,6 +656,9 @@ def begin_queue_trigger(trigger_id: str) -> bool:
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
     with _get_session() as session:
         trigger = session.get(QueueTrigger, trigger_id)
 
@@ -659,13 +675,16 @@ def begin_queue_trigger(trigger_id: str) -> bool:
         return True
 
 
-def set_trigger_status(trigger_id: str, status: TriggerStatus) -> None:
+def set_trigger_status(trigger_id: UUID | str, status: TriggerStatus) -> None:
     """Set the status of a trigger.
 
     Args:
         trigger_id: The id of the trigger.
         status: The new status of the trigger.
     """
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
     with _get_session() as session:
         trigger = get_trigger(trigger_id)
 
@@ -831,7 +850,7 @@ def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
     return result
 
 
-def set_queue_element_status(element_id: str, status: QueueStatus, message: str | None = None) -> None:
+def set_queue_element_status(element_id: UUID | str, status: QueueStatus, message: str | None = None) -> None:
     """Set the status of a queue element.
     If the new status is 'in progress' the start date is noted.
     If the new status is 'Done', 'Failed' or 'Abandoned' the end date is noted.
@@ -841,6 +860,9 @@ def set_queue_element_status(element_id: str, status: QueueStatus, message: str 
         status: The new status of the queue element.
         message (Optional): The message to attach to the queue element. This overrides any existing messages.
     """
+    if isinstance(element_id, str):
+        element_id = UUID(element_id)
+
     with _get_session() as session:
         q_element = session.get(QueueElement, element_id)
 
@@ -857,11 +879,13 @@ def set_queue_element_status(element_id: str, status: QueueStatus, message: str 
                 q_element.start_date = datetime.now()
             case QueueStatus.DONE | QueueStatus.FAILED | QueueStatus.ABANDONED:
                 q_element.end_date = datetime.now()
+            case _:
+                pass
 
         session.commit()
 
 
-def delete_queue_element(element_id: str) -> None:
+def delete_queue_element(element_id: UUID | str) -> None:
     """Delete a queue element from the database.
 
     Args:
