@@ -166,11 +166,11 @@ class TriggerPopup():
 
         if self.trigger is None:
             # Create new trigger in database
-            if isinstance(self.trigger, SingleTrigger):
+            if self.trigger_type == TriggerType.SINGLE:
                 db_util.create_single_trigger(trigger_name, process_name, next_run, path, args, is_git, is_blocking)
-            elif isinstance(self.trigger, ScheduledTrigger):
+            elif self.trigger_type == TriggerType.SCHEDULED:
                 db_util.create_scheduled_trigger(trigger_name, process_name, cron_expr, next_run, path, args, is_git, is_blocking)
-            elif isinstance(self.trigger, QueueTrigger):
+            elif self.trigger_type == TriggerType.QUEUE:
                 db_util.create_queue_trigger(trigger_name, process_name, queue_name, path, args, is_git, is_blocking, min_batch_size)
 
             ui.notify("Trigger created", type='positive')
