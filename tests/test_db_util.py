@@ -169,6 +169,10 @@ class TestDBUtil(unittest.TestCase):
         logs = db_util.get_queue_elements("Queue", to_date=creation_time)
         self.assertEqual(len(logs), 0)
 
+        tomorrow = datetime.now() + timedelta(days=1)
+        logs = db_util.get_queue_elements("Queue", from_date=creation_time, to_date=tomorrow)
+        self.assertEqual(len(logs), 2)
+
         # Delete element
         db_util.delete_queue_element(element.id)
         elements = db_util.get_queue_elements("Queue")
