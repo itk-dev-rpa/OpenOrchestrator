@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactoring for more correct typing.
 - Get-functions in db_util now works in SQLITE.
 
+### Changed
+
+- Sort triggers & queues by name by default.
+
 ## [1.2.0] - 2024-02-27
 
 ### Changed
