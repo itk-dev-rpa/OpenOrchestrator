@@ -118,6 +118,8 @@ class TestDBUtil(unittest.TestCase):
     def test_queue_elements(self):
         """Test all things queue elements."""
         # Create some queue elements
+        creation_time = datetime.now() - timedelta(seconds=2)
+
         db_util.create_queue_element("Queue")
         db_util.create_queue_element("Queue", reference="Ref", data="Data", created_by="Me")
 
@@ -161,6 +163,17 @@ class TestDBUtil(unittest.TestCase):
 
         elements = db_util.get_queue_elements("Queue", reference="Foo")
         self.assertEqual(len(elements), 0)
+
+        # Filter by date
+        logs = db_util.get_queue_elements("Queue", from_date=creation_time)
+        self.assertEqual(len(logs), 2)
+
+        logs = db_util.get_queue_elements("Queue", to_date=creation_time)
+        self.assertEqual(len(logs), 0)
+
+        tomorrow = datetime.now() + timedelta(days=1)
+        logs = db_util.get_queue_elements("Queue", from_date=creation_time, to_date=tomorrow)
+        self.assertEqual(len(logs), 2)
 
         # Delete element
         db_util.delete_queue_element(element.id)
@@ -321,6 +334,7 @@ class TestDBUtil(unittest.TestCase):
         # Test short message
         logs = db_util.get_logs(0, 100, log_level=LogLevel.ERROR)
         self.assertEqual(len(logs[0].log_message), len(short_message))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,6 +5,7 @@ from nicegui import ui
 
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueStatus
+from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 
 
 QUEUE_COLUMNS = [
@@ -70,7 +71,8 @@ class QueuePopup():
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
-                self._create_column_filter()
+                self.from_input = DatetimeInput("From Date", on_change=self._update, allow_empty=True).style('margin-left: 1rem')
+                self.to_input = DatetimeInput("To Date", on_change=self._update, allow_empty=True)
 
                 self.limit_select = ui.select(
                     options=[100, 200, 500, 1000, "All"],
@@ -78,9 +80,10 @@ class QueuePopup():
                     value=100,
                     on_change=self._update).classes("w-24")
 
-                ui.switch("Dense", on_change=lambda e: self._dense_table(e.value))
-
                 ui.space()
+
+                ui.switch("Dense", on_change=lambda e: self._dense_table(e.value))
+                self._create_column_filter()
                 ui.button(icon='refresh', on_click=self._update)
                 ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
@@ -113,6 +116,9 @@ class QueuePopup():
         if limit == 'All':
             limit = 1_000_000_000
 
-        queue_elements = db_util.get_queue_elements(self.queue_name, limit=limit)
+        from_date = self.from_input.get_datetime()
+        to_date = self.to_input.get_datetime()
+
+        queue_elements = db_util.get_queue_elements(self.queue_name, limit=limit, from_date=from_date, to_date=to_date)
         rows = [element.to_row_dict() for element in queue_elements]
         self.table.update_rows(rows)

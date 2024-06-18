@@ -34,7 +34,14 @@ Orchestrator:
         Update full
         Delete constant
         Delete credential
-
+    
+    Queue tab:
+        Open a queue
+            Filter date from
+            Filter date to
+            Filter date from/to
+            Set columns
+            Set dense
 
 Scheduler:
     Settings tab:
