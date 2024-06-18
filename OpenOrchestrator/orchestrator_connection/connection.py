@@ -152,7 +152,6 @@ class OrchestratorConnection:
         """
         return db_util.get_next_queue_element(queue_name, reference, set_status)
 
-
     def get_queue_elements(self, queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
                            offset: int = 0, limit: int = 100, from_date: datetime | None = None, to_date: datetime | None = None) -> tuple[QueueElement, ...]:
         """Get multiple queue elements from a queue. The elements are ordered by created_date.
