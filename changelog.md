@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disabling a 'Running' trigger in Orchestrator will set its status to 'Pausing'.
 - Scheduler will change a 'Pausing' trigger to 'Paused' when the process is done.
 
+### Fixed
+
+- Refactoring for more correct typing.
+- Get-functions in db_util now works in SQLITE.
+
 ### Changed
 
 - Sort triggers & queues by name by default.

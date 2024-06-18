@@ -16,7 +16,7 @@ class Job():
     """An object that holds information about a running job."""
     process: subprocess.Popen
     trigger: Trigger
-    process_folder: str
+    process_folder: str | None
 
 
 def poll_triggers(app) -> Job | None:

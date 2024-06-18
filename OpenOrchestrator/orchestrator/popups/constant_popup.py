@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 # pylint: disable-next=too-few-public-methods
 class ConstantPopup():
     """A popup for creating/updating queue triggers."""
-    def __init__(self, constant_tab: ConstantTab, constant: Constant = None):
+    def __init__(self, constant_tab: ConstantTab, constant: Constant | None = None):
         """Create a new popup.
         If a constant is given it will be updated instead of creating a new constant.
 
@@ -41,9 +41,7 @@ class ConstantPopup():
                     ui.button("Delete", color='red', on_click=self._delete_constant)
 
         self._define_validation()
-
-        if constant:
-            self._pre_populate()
+        self._pre_populate()
 
     def _define_validation(self):
         """Define validation rules for input elements."""
@@ -52,9 +50,10 @@ class ConstantPopup():
 
     def _pre_populate(self):
         """Pre populate the inputs with an existing constant."""
-        self.name_input.value = self.constant.name
-        self.name_input.disable()
-        self.value_input.value = self.constant.value
+        if self.constant:
+            self.name_input.value = self.constant.name
+            self.name_input.disable()
+            self.value_input.value = self.constant.value
 
     def _create_constant(self):
         """Creates a new constant in the database using the data from the
@@ -89,6 +88,8 @@ class ConstantPopup():
         self.constant_tab.update()
 
     async def _delete_constant(self):
+        if not self.constant:
+            return
         if await question_popup(f"Delete constant '{self.constant.name}?", "Delete", "Cancel", color1='red'):
             db_util.delete_constant(self.constant.name)
             self.dialog.close()
