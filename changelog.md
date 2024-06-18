@@ -15,9 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scheduler will change a 'Pausing' trigger to 'Paused' when the process is done.
 - Queue elements can now be filtered by 'Created Date'.
 
+### Fixed
+
+- Refactoring for more correct typing.
+- Get-functions in db_util now works in SQLITE.
+
 ### Changed
 
 - Sort triggers & queues by name by default.
+- Log messages over 8000 characters are now truncated preserving the beginning and end.
 
 ## [1.2.0] - 2024-02-27
 

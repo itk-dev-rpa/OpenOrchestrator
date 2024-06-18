@@ -107,7 +107,7 @@ class OrchestratorConnection:
         """
         db_util.update_credential(credential_name, new_username, new_password)
 
-    def create_queue_element(self, queue_name: str, reference: str = None, data: str = None, created_by: str = None) -> QueueElement:
+    def create_queue_element(self, queue_name: str, reference: str | None = None, data: str | None = None, created_by: str | None = None) -> QueueElement:
         """Adds a queue element to the given queue.
 
         Args:
@@ -121,8 +121,8 @@ class OrchestratorConnection:
         """
         return db_util.create_queue_element(queue_name, reference, data, created_by)
 
-    def bulk_create_queue_elements(self, queue_name: str, references: tuple[str], data: tuple[str],
-                                   created_by: str = None) -> None:
+    def bulk_create_queue_elements(self, queue_name: str, references: tuple[str | None, ...], data: tuple[str | None, ...],
+                                   created_by: str | None = None) -> None:
         """Insert multiple queue elements into a queue in an optimized manner.
         The lengths of both 'references' and 'data' must be equal to the number of elements to insert.
 
@@ -137,7 +137,7 @@ class OrchestratorConnection:
         """
         db_util.bulk_create_queue_elements(queue_name, references, data, created_by)
 
-    def get_next_queue_element(self, queue_name: str, reference: str = None,
+    def get_next_queue_element(self, queue_name: str, reference: str | None = None,
                                set_status: bool = True) -> QueueElement | None:
         """Gets the next queue element from the given queue that has the status 'new'.
 
@@ -152,8 +152,9 @@ class OrchestratorConnection:
         """
         return db_util.get_next_queue_element(queue_name, reference, set_status)
 
-    def get_queue_elements(self, queue_name: str, reference: str = None, status: QueueStatus = None,
-                           offset: int = 0, limit: int = 100, from_date: datetime = None, to_date: datetime = None) -> tuple[QueueElement]:
+
+    def get_queue_elements(self, queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
+                           offset: int = 0, limit: int = 100, from_date: datetime | None = None, to_date: datetime | None = None) -> tuple[QueueElement, ...]:
         """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
         Args:
@@ -168,7 +169,7 @@ class OrchestratorConnection:
         """
         return db_util.get_queue_elements(queue_name, reference, status, from_date, to_date, offset, limit)
 
-    def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str = None) -> None:
+    def set_queue_element_status(self, element_id: str, status: QueueStatus, message: str | None = None) -> None:
         """Set the status of a queue element.
         If the new status is 'in progress' the start date is noted.
         If the new status is 'Done', 'Failed' or 'Abandoned' the end date is noted.

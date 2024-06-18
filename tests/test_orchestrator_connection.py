@@ -3,6 +3,7 @@
 import unittest
 from datetime import datetime
 from uuid import UUID
+import os
 
 from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConnection
 from OpenOrchestrator.common import crypto_util
@@ -18,7 +19,7 @@ class TestOrchestratorConnection(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         db_test_util.establish_clean_database()
-        cls.connection = OrchestratorConnection("Process", db_test_util.CONNECTION_STRING, crypto_util.get_key(), "Args")
+        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args")
 
     def test_logging(self):
         """Test all three logging functions."""
@@ -85,8 +86,8 @@ class TestOrchestratorConnection(unittest.TestCase):
 
         self.connection.bulk_create_queue_elements(
             "Bulk Queue",
-            references=[None]*10,
-            data=["data"]*10,
+            references=(None,)*10,
+            data=("data",)*10,
             created_by="Me"
         )
 
@@ -99,9 +100,11 @@ class TestOrchestratorConnection(unittest.TestCase):
 
         # Get next
         element = self.connection.get_next_queue_element("Bulk Queue", set_status=False)
+        self.assertIsNotNone(element)
         self.assertEqual(element.status, QueueStatus.NEW)
 
         element = self.connection.get_next_queue_element("Bulk Queue")
+        self.assertIsNotNone(element)
         self.assertEqual(element.status, QueueStatus.IN_PROGRESS)
 
         element2 = self.connection.get_next_queue_element("Bulk Queue")

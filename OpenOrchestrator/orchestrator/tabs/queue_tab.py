@@ -8,16 +8,16 @@ from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 
 
-QUEUE_COLUMNS = (
+QUEUE_COLUMNS = [
     {'name': "Queue Name", 'label': "Queue Name", 'field': "Queue Name", 'align': 'left', 'sortable': True},
     {'name': "New", 'label': "New", 'field': "New", 'align': 'left', 'sortable': True},
     {'name': "In Progress", 'label': "In Progress", 'field': "In Progress", 'align': 'left', 'sortable': True},
     {'name': "Done", 'label': "Done", 'field': "Done", 'align': 'left', 'sortable': True},
     {'name': "Failed", 'label': "Failed", 'field': "Failed", 'align': 'left', 'sortable': True},
     {'name': "Abandoned", 'label': "Abandoned", 'field': "Abandoned", 'align': 'left', 'sortable': True}
-)
+]
 
-ELEMENT_COLUMNS = (
+ELEMENT_COLUMNS = [
     {'name': "Reference", 'label': "Reference", 'field': "Reference", 'align': 'left', 'sortable': True},
     {'name': "Status", 'label': "Status", 'field': "Status", 'align': 'left', 'sortable': True},
     {'name': "Data", 'label': "Data", 'field': "Data", 'align': 'left', 'sortable': True},
@@ -27,7 +27,7 @@ ELEMENT_COLUMNS = (
     {'name': "End Date", 'label': "End Date", 'field': "End Date", 'align': 'left', 'sortable': True},
     {'name': "Created By", 'label': "Created By", 'field': "Created By", 'align': 'left', 'sortable': True},
     {'name': "ID", 'label': "ID", 'field': "ID", 'align': 'left', 'sortable': True}
-)
+]
 
 
 # pylint: disable-next=too-few-public-methods
