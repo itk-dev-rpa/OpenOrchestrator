@@ -335,5 +335,6 @@ class TestDBUtil(unittest.TestCase):
         logs = db_util.get_logs(0, 100, log_level=LogLevel.ERROR)
         self.assertEqual(len(logs[0].log_message), len(short_message))
 
+
 if __name__ == '__main__':
     unittest.main()
