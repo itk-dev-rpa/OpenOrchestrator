@@ -16,6 +16,7 @@ from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
+from OpenOrchestrator.database.truncated_string import truncate_message
 
 # Type hint helpers for decorators
 T = TypeVar("T")
@@ -251,7 +252,7 @@ def create_log(process_name: str, level: LogLevel, message: str) -> None:
         log = Log(
             log_level = level,
             process_name = process_name,
-            log_message = message
+            log_message = truncate_message(message)
         )
         session.add(log)
         session.commit()

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Sort triggers & queues by name by default.
+- Log messages over 8000 characters are now truncated preserving the beginning and end.
 
 ## [1.2.0] - 2024-02-27
 
