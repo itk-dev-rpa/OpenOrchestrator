@@ -4,16 +4,17 @@ in Orchestrator."""
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 
 
-COLUMNS = (
+COLUMNS = [
     {'name': "Log Time", 'label': "Log Time", 'field': "Log Time", 'align': 'left', 'sortable': True},
     {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left'},
     {'name': "Level", 'label': "Level", 'field': "Level", 'align': 'left'},
     {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left', ':format': 'value => value.length < 100 ? value : value.substring(0, 100)+"..."'},
     {'name': "ID", 'label': "ID", 'field': "ID", 'headerClasses': 'hidden', 'classes': 'hidden'}
-)
+]
 
 
 # pylint: disable-next=too-few-public-methods
@@ -41,7 +42,7 @@ class LoggingTab():
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
         process_name = self.process_input.value if self.process_input.value != 'All' else None
-        level = self.level_input.value if self.level_input.value != "All" else None
+        level = LogLevel(self.level_input.value) if self.level_input.value != "All" else None
         limit = self.limit_input.value
 
         logs = db_util.get_logs(0, limit=limit, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name)

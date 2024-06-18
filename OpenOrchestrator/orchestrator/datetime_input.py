@@ -19,7 +19,7 @@ class DatetimeInput(ui.input):
             on_change: A callable to execute on change. Defaults to None.
             allow_empty: Whether to allow an empty input on validation. Defaults to False.
         """
-        super().__init__(label, value=None, on_change=on_change)
+        super().__init__(label, value='', on_change=on_change)
         self.props("clearable")
 
         # Define dialog
@@ -47,7 +47,7 @@ class DatetimeInput(ui.input):
 
         else:
             def validate(value: str):
-                if value is None:
+                if not value:
                     return True
 
                 return self.get_datetime() is not None

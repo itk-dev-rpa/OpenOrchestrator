@@ -10,8 +10,8 @@ from OpenOrchestrator.common.connection_frame import ConnectionFrame
 # pylint: disable-next=too-few-public-methods
 class SettingsTab():
     """The settings tab object for Orchestrator."""
-    def __init__(self, tab: ui.tab) -> None:
-        with ui.tab_panel(tab):
+    def __init__(self, tab_name: str) -> None:
+        with ui.tab_panel(tab_name):
             conn_frame = ConnectionFrame()
             with ui.row().classes("w-full"):
                 self.key_button = ui.button("Generate Key", on_click=conn_frame.new_key)
