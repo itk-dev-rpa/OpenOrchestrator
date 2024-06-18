@@ -71,7 +71,7 @@ class QueuePopup():
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
-                self.from_input = DatetimeInput("From Date", on_change=self._update, allow_empty=True).style('margin-left: 20px')
+                self.from_input = DatetimeInput("From Date", on_change=self._update, allow_empty=True).style('margin-left: 1rem')
                 self.to_input = DatetimeInput("To Date", on_change=self._update, allow_empty=True)
 
                 self.limit_select = ui.select(
