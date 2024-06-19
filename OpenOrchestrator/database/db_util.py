@@ -436,12 +436,13 @@ def delete_constant(name: str) -> None:
         session.commit()
 
 
-def get_credential(name: str) -> Credential:
+def get_credential(name: str, decrypt_password: bool = True) -> Credential:
     """Get a credential from the database.
     The password of the credential is decrypted.
 
     Args:
         name: The name of the credential.
+        decrypt_password: Whether to decrypt the credential password or not.
 
     Returns:
         Credential: The credential with the given name.
@@ -455,7 +456,9 @@ def get_credential(name: str) -> Credential:
     if credential is None:
         raise ValueError(f"No credential with name '{name}' was found.")
 
-    credential.password = crypto_util.decrypt_string(credential.password)
+    if decrypt_password:
+        credential.password = crypto_util.decrypt_string(credential.password)
+
     return credential
 
 

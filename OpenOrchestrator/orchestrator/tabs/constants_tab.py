@@ -38,7 +38,7 @@ class ConstantTab():
         """Callback for when a row is clicked in the table."""
         row = event.args[1]
         name = row['Credential Name']
-        credential = db_util.get_credential(name)
+        credential = db_util.get_credential(name, False)
         CredentialPopup(self, credential)
 
     def update(self):
