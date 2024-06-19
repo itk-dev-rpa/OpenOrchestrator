@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactoring for more correct typing.
 - Get-functions in db_util now works in SQLITE.
+- DatetimeInput tried to update before the UI was ready.
+- Credentials made with an old encryption key couldn't be edited.
 
 ### Changed
 
