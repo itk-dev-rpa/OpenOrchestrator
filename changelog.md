@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2024-06-19
+
 ### Added
 
 - 'Abandoned' status to queue elements.
@@ -19,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactoring for more correct typing.
 - Get-functions in db_util now works in SQLITE.
+- DatetimeInput tried to update before the UI was ready.
+- Credentials made with an old encryption key couldn't be edited.
 
 ### Changed
 
@@ -91,7 +95,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.3.0
 [1.2.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.2.0
 [1.1.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.1.0
 [1.0.2]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.0.2
