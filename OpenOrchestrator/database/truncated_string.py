@@ -1,4 +1,4 @@
-"""Custom sqlalchemy Type for generating limited String objects"""
+"""Module for truncating a string by removing the middle part."""
 
 import math
 
