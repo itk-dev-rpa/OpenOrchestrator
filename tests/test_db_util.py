@@ -14,8 +14,7 @@ from tests import db_test_util
 
 class TestDBUtil(unittest.TestCase):
     """Test functionality of db_util."""
-    @classmethod
-    def setUpClass(cls) -> None:
+    def setUp(self) -> None:
         db_test_util.establish_clean_database()
 
     def test_logs(self):
@@ -119,16 +118,18 @@ class TestDBUtil(unittest.TestCase):
     def test_queue_elements(self):
         """Test all things queue elements."""
         # Create some queue elements
+        creation_time = datetime.now() - timedelta(seconds=2)
+
         db_util.create_queue_element("Queue")
         db_util.create_queue_element("Queue", reference="Ref", data="Data", created_by="Me")
 
         # Bulk create queue elements
-        refs = [f"Ref{i}" for i in range(10)]
-        data = [None] * 10
+        refs = tuple(f"Ref{i}" for i in range(10))
+        data = (None,) * 10
         db_util.bulk_create_queue_elements("Bulk", references=refs, data=data)
 
         with self.assertRaises(ValueError):
-            db_util.bulk_create_queue_elements("Bulk", ["Ref"], [])
+            db_util.bulk_create_queue_elements("Bulk", ("Ref",), ())
 
         # Get elements
         elements = db_util.get_queue_elements("Queue")
@@ -136,12 +137,15 @@ class TestDBUtil(unittest.TestCase):
 
         # Get next element
         element = db_util.get_next_queue_element("Queue", set_status=False)
+        self.assertIsNotNone(element)
         self.assertEqual(element.status, QueueStatus.NEW)
 
         element = db_util.get_next_queue_element("Queue")
+        self.assertIsNotNone(element)
         self.assertEqual(element.status, QueueStatus.IN_PROGRESS)
 
         element2 = db_util.get_next_queue_element("Queue")
+        self.assertIsNotNone(element2)
         self.assertNotEqual(element, element2)
 
         # Update element
@@ -159,6 +163,17 @@ class TestDBUtil(unittest.TestCase):
 
         elements = db_util.get_queue_elements("Queue", reference="Foo")
         self.assertEqual(len(elements), 0)
+
+        # Filter by date
+        logs = db_util.get_queue_elements("Queue", from_date=creation_time)
+        self.assertEqual(len(logs), 2)
+
+        logs = db_util.get_queue_elements("Queue", to_date=creation_time)
+        self.assertEqual(len(logs), 0)
+
+        tomorrow = datetime.now() + timedelta(days=1)
+        logs = db_util.get_queue_elements("Queue", from_date=creation_time, to_date=tomorrow)
+        self.assertEqual(len(logs), 2)
 
         # Delete element
         db_util.delete_queue_element(element.id)
@@ -202,8 +217,8 @@ class TestDBUtil(unittest.TestCase):
 
         # Delete trigger
         db_util.delete_trigger(trigger.id)
-        trigger = db_util.get_trigger(trigger.id)
-        self.assertIsNone(trigger)
+        with self.assertRaises(ValueError):
+            db_util.get_trigger(trigger.id)
 
     def test_single_triggers(self):
         """Test running and updating single triggers."""
@@ -296,3 +311,30 @@ class TestDBUtil(unittest.TestCase):
         # No new trigger when other is running
         trigger = db_util.get_next_queue_trigger()
         self.assertIsNone(trigger)
+
+    def test_log_truncation(self):
+        """Create logs with various lengths and test if their length is as expected"""
+        # Create some logs
+        long_message = "HelloWorld"*1000
+        medium_message = "a"*8000
+        short_message = "HelloWorld"
+
+        db_util.create_log("TruncateTest", LogLevel.TRACE, long_message)
+        db_util.create_log("TruncateTest", LogLevel.INFO, medium_message)
+        db_util.create_log("TruncateTest", LogLevel.ERROR, short_message)
+
+        # Test long message
+        logs = db_util.get_logs(0, 100, log_level=LogLevel.TRACE)
+        self.assertEqual(len(logs[0].log_message), 8000)
+
+        # Test medium message
+        logs = db_util.get_logs(0, 100, log_level=LogLevel.INFO)
+        self.assertEqual(len(logs[0].log_message), len(medium_message))
+
+        # Test short message
+        logs = db_util.get_logs(0, 100, log_level=LogLevel.ERROR)
+        self.assertEqual(len(logs[0].log_message), len(short_message))
+
+
+if __name__ == '__main__':
+    unittest.main()

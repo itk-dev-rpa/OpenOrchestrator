@@ -1,9 +1,10 @@
 """This module handles the connection to the database in OpenOrchestrator."""
 
 from datetime import datetime
-from typing import Callable, TypeVar, ParamSpec
+from typing import TypeVar, ParamSpec
+from uuid import UUID
 
-from croniter import croniter
+from croniter import croniter  # type: ignore
 from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
@@ -15,12 +16,13 @@ from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
+from OpenOrchestrator.database.truncated_string import truncate_message
 
 # Type hint helpers for decorators
 T = TypeVar("T")
 P = ParamSpec("P")
 
-_connection_engine: Engine = None
+_connection_engine: Engine | None = None
 
 
 def connect(conn_string: str) -> bool:
@@ -48,19 +50,25 @@ def connect(conn_string: str) -> bool:
 def disconnect() -> None:
     """Disconnect from the database."""
     global _connection_engine  # pylint: disable=global-statement
-    _connection_engine.dispose()
+    if _connection_engine:
+        _connection_engine.dispose()
     _connection_engine = None
 
 
-def catch_db_error(func: Callable[P, T]) -> Callable[P, T]:
-    """A decorator that catches errors in SQL calls."""
-    def inner(*args, **kwargs) -> T:
-        if _connection_engine is None:
-            raise RuntimeError("Not connected to Database")
+def _get_session() -> Session:
+    """Check if theres a database connection and return a
+    session to it.
 
-        return func(*args, **kwargs)
+    Raises:
+        RuntimeError: If there's no connected database.
 
-    return inner
+    Returns:
+        A database session.
+    """
+    if not _connection_engine:
+        raise RuntimeError("Not connected to database.")
+
+    return Session(_connection_engine)
 
 
 def get_conn_string() -> str:
@@ -69,25 +77,24 @@ def get_conn_string() -> str:
     Returns:
         str: The connection string if any.
     """
-    try:
-        return str(_connection_engine.url)
-    except AttributeError:
-        pass
+    if not _connection_engine:
+        raise RuntimeError("Not connected to database.")
 
-    return None
+    return str(_connection_engine.url)
 
 
-@catch_db_error
 def initialize_database() -> None:
     """Initializes the database with all the needed tables."""
+    if not _connection_engine:
+        raise RuntimeError("Not connected to database.")
+
     logs.create_tables(_connection_engine)
     triggers.create_tables(_connection_engine)
     constants.create_tables(_connection_engine)
     queues.create_tables(_connection_engine)
 
 
-@catch_db_error
-def get_trigger(trigger_id: str) -> Trigger:
+def get_trigger(trigger_id: UUID | str) -> Trigger:
     """Get the trigger with the given id.
 
     Args:
@@ -95,24 +102,34 @@ def get_trigger(trigger_id: str) -> Trigger:
 
     Returns:
         Trigger: The trigger with the given id.
+
+    Raises:
+        ValueError: If the trigger doesn't exist.
     """
-    with Session(_connection_engine) as session:
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
+    with _get_session() as session:
         query = (
             select(Trigger)
             .where(Trigger.id == trigger_id)
             .options(selectin_polymorphic(Trigger, (ScheduledTrigger, QueueTrigger, SingleTrigger)))
         )
-        return session.scalar(query)
+        trigger = session.scalar(query)
+
+    if not trigger:
+        raise ValueError(f"No trigger with the given id: {trigger_id}")
+
+    return trigger
 
 
-@catch_db_error
-def get_all_triggers() -> tuple[Trigger]:
+def get_all_triggers() -> tuple[Trigger, ...]:
     """Get all triggers in the database.
 
     Returns:
         A tuple of Trigger objects.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = (
             select(Trigger)
             .options(selectin_polymorphic(Trigger, (ScheduledTrigger, QueueTrigger, SingleTrigger)))
@@ -120,75 +137,72 @@ def get_all_triggers() -> tuple[Trigger]:
         return tuple(session.scalars(query))
 
 
-@catch_db_error
 def update_trigger(trigger: Trigger):
     """Updates an existing trigger in the database.
 
     Args:
         trigger: The trigger object with updated values.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         session.add(trigger)
         session.commit()
         session.refresh(trigger)
 
 
-@catch_db_error
-def get_scheduled_triggers() -> tuple[ScheduledTrigger]:
+def get_scheduled_triggers() -> tuple[ScheduledTrigger, ...]:
     """Get all scheduled triggers from the database.
 
     Returns:
-        tuple[ScheduledTrigger]: A list of all scheduled triggers in the database.
+        A list of all scheduled triggers in the database.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = select(ScheduledTrigger)
         result = session.scalars(query).all()
         return tuple(result)
 
 
-@catch_db_error
-def get_single_triggers() -> tuple[SingleTrigger]:
+def get_single_triggers() -> tuple[SingleTrigger, ...]:
     """Get all single triggers from the database.
 
     Returns:
-        tuple[SingleTrigger]: A list of all single triggers in the database.
+        A list of all single triggers in the database.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = select(SingleTrigger)
         result = session.scalars(query).all()
         return tuple(result)
 
 
-@catch_db_error
-def get_queue_triggers() -> tuple[QueueTrigger]:
+def get_queue_triggers() -> tuple[QueueTrigger, ...]:
     """Get all queue triggers from the database.
 
     Returns:
-        tuple[QueueTrigger]: A list of all queue triggers in the database.
+        A list of all queue triggers in the database.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = select(QueueTrigger)
         result = session.scalars(query).all()
         return tuple(result)
 
 
-@catch_db_error
-def delete_trigger(trigger_id: str) -> None:
+def delete_trigger(trigger_id: UUID | str) -> None:
     """Delete the given trigger from the database.
 
     Args:
         trigger_id: The id of the trigger to delete.
     """
-    with Session(_connection_engine) as session:
-        trigger = session.get(Trigger, trigger_id)
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
+    with _get_session() as session:
+        trigger = get_trigger(trigger_id)
         session.delete(trigger)
         session.commit()
 
 
-@catch_db_error
 def get_logs(offset: int, limit: int,
-             from_date: datetime = None, to_date: datetime = None,
-             process_name: str = None, log_level: LogLevel = None) -> tuple[Log]:
+             from_date: datetime | None = None, to_date: datetime | None = None,
+             process_name: str | None = None, log_level: LogLevel | None = None) -> tuple[Log, ...]:
     """Get the logs from the database using filters and pagination.
 
     Args:
@@ -200,7 +214,7 @@ def get_logs(offset: int, limit: int,
         log_level: The log level to filter on. If none the filter is disabled.
 
     Returns:
-        tuple[Log]: A list of logs matching the given filters.
+        A list of logs matching the given filters.
     """
     query = (
             select(Log)
@@ -221,12 +235,11 @@ def get_logs(offset: int, limit: int,
     if log_level:
         query = query.where(Log.log_level == log_level)
 
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         result = session.scalars(query).all()
         return tuple(result)
 
 
-@catch_db_error
 def create_log(process_name: str, level: LogLevel, message: str) -> None:
     """Create a log in the logs table in the database.
 
@@ -235,22 +248,21 @@ def create_log(process_name: str, level: LogLevel, message: str) -> None:
         level: The level of the log.
         message: The message of the log.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         log = Log(
             log_level = level,
             process_name = process_name,
-            log_message = message
+            log_message = truncate_message(message)
         )
         session.add(log)
         session.commit()
 
 
-@catch_db_error
-def get_unique_log_process_names() -> tuple[str]:
+def get_unique_log_process_names() -> tuple[str, ...]:
     """Get a list of unique process names in the logs database.
 
     Returns:
-        tuple[str]: A list of unique process names.
+        A list of unique process names.
     """
 
     query = (
@@ -259,12 +271,11 @@ def get_unique_log_process_names() -> tuple[str]:
         .order_by(Log.process_name)
     )
 
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         result = session.scalars(query).all()
         return tuple(result)
 
 
-@catch_db_error
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
                           process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool) -> None:
     """Create a new single trigger in the database.
@@ -278,7 +289,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         trigger = SingleTrigger(
             trigger_name= trigger_name,
             process_name = process_name,
@@ -292,7 +303,6 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         session.commit()
 
 
-@catch_db_error
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
                              is_blocking: bool) -> None:
@@ -308,7 +318,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         trigger = ScheduledTrigger(
             trigger_name= trigger_name,
             process_name = process_name,
@@ -323,7 +333,6 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         session.commit()
 
 
-@catch_db_error
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
                          min_batch_size: int) -> None:
@@ -339,7 +348,7 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         is_blocking: The is_blocking value of the process.
         min_batch_size: The minimum number of queue elements before triggering.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         trigger = QueueTrigger(
             trigger_name= trigger_name,
             process_name = process_name,
@@ -354,7 +363,6 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         session.commit()
 
 
-@catch_db_error
 def get_constant(name: str) -> Constant:
     """Get a constant from the database.
 
@@ -367,27 +375,25 @@ def get_constant(name: str) -> Constant:
     Raises:
         ValueError: If no constant with the given name exists.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         constant = session.get(Constant, name)
         if constant is None:
             raise ValueError(f"No constant with name '{name}' was found.")
         return constant
 
 
-@catch_db_error
-def get_constants() -> tuple[Constant]:
+def get_constants() -> tuple[Constant, ...]:
     """Get all constants in the database.
 
     Returns:
         tuple[Constants]: A list of constants.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = select(Constant).order_by(Constant.name)
         result = session.scalars(query).all()
         return tuple(result)
 
 
-@catch_db_error
 def create_constant(name: str, value: str) -> None:
     """Create a new constant in the database.
 
@@ -395,13 +401,12 @@ def create_constant(name: str, value: str) -> None:
         name: The name of the constant.
         value: The value of the constant.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         constant = Constant(name = name, value = value)
         session.add(constant)
         session.commit()
 
 
-@catch_db_error
 def update_constant(name: str, new_value: str) -> None:
     """Updates an existing constant with a new value.
 
@@ -409,32 +414,35 @@ def update_constant(name: str, new_value: str) -> None:
         name: The name of the constant to update.
         new_value: The new value of the constant.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         constant = session.get(Constant, name)
+
+        if not constant:
+            raise ValueError(f"No constant with name '{name}' was found.")
+
         constant.value = new_value
         session.commit()
 
 
-@catch_db_error
 def delete_constant(name: str) -> None:
     """Delete the constant with the given name from the database.
 
     Args:
         name: The name of the constant to delete.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         constant = session.get(Constant, name)
         session.delete(constant)
         session.commit()
 
 
-@catch_db_error
-def get_credential(name: str) -> Credential:
+def get_credential(name: str, decrypt_password: bool = True) -> Credential:
     """Get a credential from the database.
     The password of the credential is decrypted.
 
     Args:
         name: The name of the credential.
+        decrypt_password: Whether to decrypt the credential password or not.
 
     Returns:
         Credential: The credential with the given name.
@@ -442,31 +450,31 @@ def get_credential(name: str) -> Credential:
     Raises:
         ValueError: If no credential with the given name exists.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         credential = session.get(Credential, name)
 
     if credential is None:
         raise ValueError(f"No credential with name '{name}' was found.")
 
-    credential.password = crypto_util.decrypt_string(credential.password)
+    if decrypt_password:
+        credential.password = crypto_util.decrypt_string(credential.password)
+
     return credential
 
 
-@catch_db_error
-def get_credentials() -> tuple[Credential]:
+def get_credentials() -> tuple[Credential, ...]:
     """Get all credentials in the database.
     The passwords of the credentials are encrypted.
 
     Returns:
         tuple[Credential]: A list of credentials.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = select(Credential).order_by(Credential.name)
         result = session.scalars(query).all()
         return tuple(result)
 
 
-@catch_db_error
 def create_credential(name: str, username: str, password: str) -> None:
     """Create a new credential in the database.
     The password is encrypted before sending it to the database.
@@ -479,7 +487,7 @@ def create_credential(name: str, username: str, password: str) -> None:
 
     password = crypto_util.encrypt_string(password)
 
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         credential = Credential(
             name = name,
             username= username,
@@ -489,7 +497,6 @@ def create_credential(name: str, username: str, password: str) -> None:
         session.commit()
 
 
-@catch_db_error
 def update_credential(name: str, new_username: str, new_password: str) -> None:
     """Updates an existing credential with a new value.
 
@@ -500,28 +507,30 @@ def update_credential(name: str, new_username: str, new_password: str) -> None:
     """
     new_password = crypto_util.encrypt_string(new_password)
 
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         credential = session.get(Credential, name)
+
+        if not credential:
+            raise ValueError(f"No credential with name '{name}' was found.")
+
         credential.username = new_username
         credential.password = new_password
         session.commit()
 
 
-@catch_db_error
 def delete_credential(name: str) -> None:
     """Delete the credential with the given name from the database.
 
     Args:
         name: The name of the credential to delete.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         constant = session.get(Credential, name)
         session.delete(constant)
         session.commit()
 
 
-@catch_db_error
-def begin_single_trigger(trigger_id: str) -> bool:
+def begin_single_trigger(trigger_id: UUID | str) -> bool:
     """Set the status of a single trigger to 'running' and
     set the last run time to the current time.
 
@@ -531,8 +540,14 @@ def begin_single_trigger(trigger_id: str) -> bool:
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
-    with Session(_connection_engine) as session:
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
+    with _get_session() as session:
         trigger = session.get(SingleTrigger, trigger_id)
+
+        if not trigger:
+            raise ValueError("No trigger with the given id was found.")
 
         if trigger.process_status != TriggerStatus.IDLE:
             return False
@@ -544,14 +559,13 @@ def begin_single_trigger(trigger_id: str) -> bool:
         return True
 
 
-@catch_db_error
 def get_next_single_trigger() -> SingleTrigger | None:
     """Get the single trigger that should trigger next.
 
     Returns:
-        SingleTrigger | None: The next single trigger to run if any.
+        The next single trigger to run if any.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = (
             select(SingleTrigger)
             .where(SingleTrigger.process_status == TriggerStatus.IDLE)
@@ -562,14 +576,13 @@ def get_next_single_trigger() -> SingleTrigger | None:
         return session.scalar(query)
 
 
-@catch_db_error
 def get_next_scheduled_trigger() -> ScheduledTrigger | None:
     """Get the scheduled trigger that should trigger next.
 
     Returns:
-        ScheduledTrigger | None: The next scheduled trigger to run if any.
+        The next scheduled trigger to run if any.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = (
             select(ScheduledTrigger)
             .where(ScheduledTrigger.process_status == TriggerStatus.IDLE)
@@ -580,8 +593,7 @@ def get_next_scheduled_trigger() -> ScheduledTrigger | None:
         return session.scalar(query)
 
 
-@catch_db_error
-def begin_scheduled_trigger(trigger_id: str) -> bool:
+def begin_scheduled_trigger(trigger_id: UUID | str) -> bool:
     """Set the status of a scheduled trigger to 'running',
     set the last run time to the current time,
     and set the next run time to the given datetime.
@@ -593,8 +605,14 @@ def begin_scheduled_trigger(trigger_id: str) -> bool:
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
-    with Session(_connection_engine) as session:
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
+    with _get_session() as session:
         trigger = session.get(ScheduledTrigger, trigger_id)
+
+        if not trigger:
+            raise ValueError("No trigger with the given id was found.")
 
         if trigger.process_status != TriggerStatus.IDLE:
             return False
@@ -607,7 +625,6 @@ def begin_scheduled_trigger(trigger_id: str) -> bool:
         return True
 
 
-@catch_db_error
 def get_next_queue_trigger() -> QueueTrigger | None:
     """Get the next queue trigger to run.
     This functions loops through the queue triggers and checks
@@ -618,7 +635,7 @@ def get_next_queue_trigger() -> QueueTrigger | None:
         QueueTrigger | None: The next queue trigger to run if any.
     """
 
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
 
         sub_query = (
             select(alc_func.count())  # pylint: disable=not-callable
@@ -636,8 +653,7 @@ def get_next_queue_trigger() -> QueueTrigger | None:
         return session.scalar(query)
 
 
-@catch_db_error
-def begin_queue_trigger(trigger_id: str) -> None:
+def begin_queue_trigger(trigger_id: UUID | str) -> bool:
     """Set the status of a queue trigger to 'running' and
     set the last run time to the current time.
 
@@ -647,8 +663,14 @@ def begin_queue_trigger(trigger_id: str) -> None:
     Returns:
         bool: True if the trigger was 'idle' and now 'running'.
     """
-    with Session(_connection_engine) as session:
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
+    with _get_session() as session:
         trigger = session.get(QueueTrigger, trigger_id)
+
+        if not trigger:
+            raise ValueError("No trigger with the given id was found.")
 
         if trigger.process_status != TriggerStatus.IDLE:
             return False
@@ -660,22 +682,27 @@ def begin_queue_trigger(trigger_id: str) -> None:
         return True
 
 
-@catch_db_error
-def set_trigger_status(trigger_id: str, status: TriggerStatus) -> None:
+def set_trigger_status(trigger_id: UUID | str, status: TriggerStatus) -> None:
     """Set the status of a trigger.
 
     Args:
         trigger_id: The id of the trigger.
         status: The new status of the trigger.
     """
-    with Session(_connection_engine) as session:
+    if isinstance(trigger_id, str):
+        trigger_id = UUID(trigger_id)
+
+    with _get_session() as session:
         trigger = session.get(Trigger, trigger_id)
+
+        if not trigger:
+            raise ValueError("No trigger with the given id was found.")
+
         trigger.process_status = status
         session.commit()
 
 
-@catch_db_error
-def create_queue_element(queue_name: str, reference: str = None, data: str = None, created_by: str = None) -> QueueElement:
+def create_queue_element(queue_name: str, reference: str | None = None, data: str | None = None, created_by: str | None = None) -> QueueElement:
     """Adds a queue element to the given queue.
 
     Args:
@@ -687,7 +714,7 @@ def create_queue_element(queue_name: str, reference: str = None, data: str = Non
     Returns:
         QueueElement: The created queue element.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         q_element = QueueElement(
             queue_name = queue_name,
             data = data,
@@ -701,8 +728,7 @@ def create_queue_element(queue_name: str, reference: str = None, data: str = Non
     return q_element
 
 
-@catch_db_error
-def bulk_create_queue_elements(queue_name: str, references: tuple[str], data: tuple[str], created_by: str = None) -> None:
+def bulk_create_queue_elements(queue_name: str, references: tuple[str | None, ...], data: tuple[str | None, ...], created_by: str | None = None) -> None:
     """Insert multiple queue elements into a queue in an optimized manner.
     The lengths of both 'references' and 'data' must be equal to the number of elements to insert.
 
@@ -734,13 +760,12 @@ def bulk_create_queue_elements(queue_name: str, references: tuple[str], data: tu
         for ref, dat in zip(references, data)
     )
 
-    with Session(_connection_engine) as session:
-        session.execute(insert(QueueElement), q_elements)
+    with _get_session() as session:
+        session.execute(insert(QueueElement), q_elements)  # type: ignore
         session.commit()
 
 
-@catch_db_error
-def get_next_queue_element(queue_name: str, reference: str = None, set_status: bool = True) -> QueueElement | None:
+def get_next_queue_element(queue_name: str, reference: str | None = None, set_status: bool = True) -> QueueElement | None:
     """Gets the next queue element from the given queue that has the status 'new'.
 
     Args:
@@ -752,7 +777,7 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
         QueueElement | None: The next queue element in the queue if any.
     """
 
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = (
             select(QueueElement)
             .where(QueueElement.queue_name == queue_name)
@@ -775,9 +800,9 @@ def get_next_queue_element(queue_name: str, reference: str = None, set_status: b
         return q_element
 
 
-@catch_db_error
-def get_queue_elements(queue_name: str, reference: str = None, status: QueueStatus = None,
-                       offset: int = 0, limit: int = 100) -> tuple[QueueElement]:
+def get_queue_elements(queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
+                       from_date: datetime | None = None, to_date: datetime | None = None,
+                       offset: int = 0, limit: int = 100) -> tuple[QueueElement, ...]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
     Args:
@@ -790,7 +815,7 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
     Returns:
         tuple[QueueElement]: A tuple of queue elements.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = (
             select(QueueElement)
             .where(QueueElement.queue_name == queue_name)
@@ -798,6 +823,13 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
             .offset(offset)
             .limit(limit)
         )
+
+        if from_date:
+            query = query.where(QueueElement.created_date >= from_date)
+
+        if to_date:
+            query = query.where(QueueElement.created_date <= to_date)
+
         if reference is not None:
             query = query.where(QueueElement.reference == reference)
 
@@ -808,14 +840,13 @@ def get_queue_elements(queue_name: str, reference: str = None, status: QueueStat
         return tuple(result)
 
 
-@catch_db_error
 def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
     """Count the number of queue elements of each status for every queue.
 
     Returns:
         A dict for each queue with the count for each status. E.g. result[queue_name][status] => count.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         query = (
             select(QueueElement.queue_name, QueueElement.status, alc_func.count())  # pylint: disable=not-callable
             .group_by(QueueElement.queue_name)
@@ -834,19 +865,25 @@ def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
     return result
 
 
-@catch_db_error
-def set_queue_element_status(element_id: str, status: QueueStatus, message: str = None) -> None:
+def set_queue_element_status(element_id: UUID | str, status: QueueStatus, message: str | None = None) -> None:
     """Set the status of a queue element.
     If the new status is 'in progress' the start date is noted.
-    If the new status is 'Done' or 'Failed' the end date is noted.
+    If the new status is 'Done', 'Failed' or 'Abandoned' the end date is noted.
 
     Args:
         element_id: The id of the queue element to change status on.
         status: The new status of the queue element.
         message (Optional): The message to attach to the queue element. This overrides any existing messages.
     """
-    with Session(_connection_engine) as session:
+    if isinstance(element_id, str):
+        element_id = UUID(element_id)
+
+    with _get_session() as session:
         q_element = session.get(QueueElement, element_id)
+
+        if not q_element:
+            raise ValueError("No queue element with the given id was found.")
+
         q_element.status = status
 
         if message is not None:
@@ -855,20 +892,21 @@ def set_queue_element_status(element_id: str, status: QueueStatus, message: str 
         match status:
             case QueueStatus.IN_PROGRESS:
                 q_element.start_date = datetime.now()
-            case QueueStatus.DONE | QueueStatus.FAILED:
+            case QueueStatus.DONE | QueueStatus.FAILED | QueueStatus.ABANDONED:
                 q_element.end_date = datetime.now()
+            case _:
+                pass
 
         session.commit()
 
 
-@catch_db_error
-def delete_queue_element(element_id: str) -> None:
+def delete_queue_element(element_id: UUID | str) -> None:
     """Delete a queue element from the database.
 
     Args:
         element_id: The id of the queue element.
     """
-    with Session(_connection_engine) as session:
+    with _get_session() as session:
         q_element = session.get(QueueElement, element_id)
         session.delete(q_element)
         session.commit()

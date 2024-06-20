@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 # pylint: disable-next=too-few-public-methods
 class CredentialPopup():
     """A popup for creating/updating queue triggers."""
-    def __init__(self, constant_tab: ConstantTab, credential: Credential = None):
+    def __init__(self, constant_tab: ConstantTab, credential: Credential | None = None):
         """Create a new popup.
         If a credential is given it will be updated instead of creating a new credential.
 
@@ -43,9 +43,7 @@ class CredentialPopup():
                     ui.button("Delete", color='red', on_click=self._delete_credential)
 
         self._define_validation()
-
-        if credential:
-            self._pre_populate()
+        self._pre_populate()
 
     def _define_validation(self):
         """Define validation functions for ui elements."""
@@ -55,9 +53,10 @@ class CredentialPopup():
 
     def _pre_populate(self):
         """Pre populate the inputs with an existing credential."""
-        self.name_input.value = self.credential.name
-        self.name_input.disable()
-        self.username_input.value = self.credential.username
+        if self.credential:
+            self.name_input.value = self.credential.name
+            self.name_input.disable()
+            self.username_input.value = self.credential.username
 
     def _save_credential(self):
         """Create or update a credential in the database using the data from the UI."""
@@ -93,6 +92,8 @@ class CredentialPopup():
 
     async def _delete_credential(self):
         """Delete the selected credential."""
+        if not self.credential:
+            return
         if await question_popup(f"Delete credential '{self.credential.name}'?", "Delete", "Cancel", color1='red'):
             db_util.delete_credential(self.credential.name)
             self.dialog.close()

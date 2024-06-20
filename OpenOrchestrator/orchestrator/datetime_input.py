@@ -19,8 +19,9 @@ class DatetimeInput(ui.input):
             on_change: A callable to execute on change. Defaults to None.
             allow_empty: Whether to allow an empty input on validation. Defaults to False.
         """
-        super().__init__(label, value=None, on_change=on_change)
+        super().__init__(label, on_change=lambda: self._on_change(on_change))
         self.props("clearable")
+        self.complete = False
 
         # Define dialog
         with ui.dialog() as self._dialog, ui.card():
@@ -38,6 +39,8 @@ class DatetimeInput(ui.input):
 
         self._define_validation(allow_empty)
 
+        self.complete = True
+
     def _define_validation(self, allow_empty: bool):
         if not allow_empty:
             self.validation = {
@@ -47,7 +50,7 @@ class DatetimeInput(ui.input):
 
         else:
             def validate(value: str):
-                if value is None:
+                if not value:
                     return True
 
                 return self.get_datetime() is not None
@@ -73,3 +76,14 @@ class DatetimeInput(ui.input):
             value: The new datetime value.
         """
         self.value = value.strftime(self.PY_FORMAT)
+
+    def _on_change(self, func: Optional[Callable[..., Any]]) -> None:
+        """Wrapper for the input's on_change function.
+        This avoids that the on_change function is called
+        before the element is fully initialized.
+
+        Args:
+            func: The on_change function of the element.
+        """
+        if self.complete and func:
+            func()

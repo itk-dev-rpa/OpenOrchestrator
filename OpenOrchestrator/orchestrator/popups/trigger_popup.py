@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 
 from nicegui import ui
-from croniter import croniter, CroniterBadCronError
+from croniter import croniter, CroniterBadCronError  # type: ignore
 
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.database import db_util
-from OpenOrchestrator.database.triggers import Trigger, TriggerStatus, TriggerType
+from OpenOrchestrator.database.triggers import Trigger, TriggerStatus, TriggerType, ScheduledTrigger, SingleTrigger, QueueTrigger
 from OpenOrchestrator.orchestrator.popups import generic_popups
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 # pylint: disable-next=(too-many-instance-attributes, too-few-public-methods)
 class TriggerPopup():
     """A popup for creating/updating triggers."""
-    def __init__(self, trigger_tab: TriggerTab, trigger_type: TriggerType, trigger: Trigger = None):
+    def __init__(self, trigger_tab: TriggerTab, trigger_type: TriggerType, trigger: Trigger | None = None):
         """Create a new popup.
         If a trigger is given it will be updated instead of creating a new trigger.
 
@@ -65,9 +65,7 @@ class TriggerPopup():
 
         self._disable_unused()
         self._define_validation()
-
-        if trigger:
-            self._pre_populate()
+        self._pre_populate()
 
     def _define_validation(self):
         self.trigger_input.validation = {"Please enter a trigger name": bool}
@@ -86,6 +84,9 @@ class TriggerPopup():
 
     def _pre_populate(self):
         """Populate the form with values from an existing trigger"""
+        if not self.trigger:
+            return
+
         self.trigger_input.value = self.trigger.trigger_name
         self.name_input.value = self.trigger.process_name
         self.path_input.value = self.trigger.process_path
@@ -93,13 +94,13 @@ class TriggerPopup():
         self.git_check.value = self.trigger.is_git_repo
         self.blocking_check.value = self.trigger.is_blocking
 
-        if self.trigger_type == TriggerType.SCHEDULED:
+        if isinstance(self.trigger, ScheduledTrigger):
             self.cron_input.value = self.trigger.cron_expr
 
-        if self.trigger_type in (TriggerType.SINGLE, TriggerType.SCHEDULED):
+        if isinstance(self.trigger, (SingleTrigger, ScheduledTrigger)):
             self.time_input.set_datetime(self.trigger.next_run)
 
-        if self.trigger_type == TriggerType.QUEUE:
+        if isinstance(self.trigger, QueueTrigger):
             self.queue_input.value = self.trigger.queue_name
             self.batch_input.value = self.trigger.min_batch_size
 
@@ -154,7 +155,7 @@ class TriggerPopup():
 
         trigger_name = self.trigger_input.value
         process_name = self.name_input.value
-        next_run = self.time_input.get_datetime()
+        next_run: datetime = self.time_input.get_datetime()  # type: ignore
         cron_expr = self.cron_input.value
         queue_name = self.queue_input.value
         min_batch_size = self.batch_input.value
@@ -177,18 +178,17 @@ class TriggerPopup():
             # Update existing trigger
             self.trigger.trigger_name = trigger_name
             self.trigger.process_name = process_name
-            self.trigger.next_run = next_run
             self.trigger.process_path = path
             self.trigger.process_args = args
             self.trigger.is_git_repo = is_git
             self.trigger.is_blocking = is_blocking
 
-            if self.trigger_type == TriggerType.SINGLE:
+            if isinstance(self.trigger, SingleTrigger):
                 self.trigger.next_run = next_run
-            elif self.trigger_type == TriggerType.SCHEDULED:
+            elif isinstance(self.trigger, ScheduledTrigger):
                 self.trigger.cron_expr = cron_expr
                 self.trigger.next_run = next_run
-            elif self.trigger_type == TriggerType.QUEUE:
+            elif isinstance(self.trigger, QueueTrigger):
                 self.trigger.queue_name = queue_name
                 self.trigger.min_batch_size = min_batch_size
 
@@ -199,6 +199,9 @@ class TriggerPopup():
         self.trigger_tab.update()
 
     async def _delete_trigger(self):
+        if not self.trigger:
+            return
+
         if await generic_popups.question_popup(f"Delete trigger '{self.trigger.trigger_name}'?", "Delete", "Cancel", color1='red'):
             db_util.delete_trigger(self.trigger.id)
             ui.notify("Trigger deleted", type='positive')
@@ -206,11 +209,20 @@ class TriggerPopup():
             self.trigger_tab.update()
 
     def _disable_trigger(self):
-        db_util.set_trigger_status(self.trigger.id, TriggerStatus.PAUSED)
+        if not self.trigger:
+            return
+
+        if self.trigger.process_status == TriggerStatus.RUNNING:
+            db_util.set_trigger_status(self.trigger.id, TriggerStatus.PAUSING)
+        else:
+            db_util.set_trigger_status(self.trigger.id, TriggerStatus.PAUSED)
         ui.notify("Trigger status set to 'Paused'.", type='positive')
         self.trigger_tab.update()
 
     def _enable_trigger(self):
+        if not self.trigger:
+            return
+
         db_util.set_trigger_status(self.trigger.id, TriggerStatus.IDLE)
         ui.notify("Trigger status set to 'Idle'.", type='positive')
         self.trigger_tab.update()
