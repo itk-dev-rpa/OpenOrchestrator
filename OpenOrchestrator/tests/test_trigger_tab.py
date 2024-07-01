@@ -13,8 +13,10 @@ class TestTriggerTab(unittest.TestCase):
     """Test functionality of the trigger tab ui."""
     @classmethod
     def setUpClass(cls) -> None:
-        db_test_util.establish_clean_database()
         cls.browser = ui_util.open_orchestrator()
+
+    def setUp(self) -> None:
+        db_test_util.establish_clean_database()
 
     def test_single_trigger_creation(self):
         """Test creation of a single trigger."""
