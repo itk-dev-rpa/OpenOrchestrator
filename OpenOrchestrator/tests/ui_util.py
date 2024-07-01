@@ -6,6 +6,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import WebDriverException
 
 from OpenOrchestrator.orchestrator.application import get_free_port
 
@@ -23,12 +24,13 @@ def open_orchestrator() -> webdriver.Chrome:
     subprocess.Popen(["python", "-m", "OpenOrchestrator", "-o", "--port", str(port), "--dont_show"])
 
     browser = webdriver.Chrome()
+    browser.implicitly_wait(2)
     browser.maximize_window()
     for _ in range(5):
         try:
             browser.get(f"http://localhost:{port}")
             break
-        except Exception as e:
+        except WebDriverException:
             pass
     else:
         raise RuntimeError("Couldn't connect to app after 5 tries.")
