@@ -21,7 +21,7 @@ async def question_popup(question: str, option1: str, option2: str, color1: str 
     with ui.dialog(value=True).props('persistent') as dialog, ui.card():
         ui.label(question).classes("text-lg")
         with ui.row():
-            ui.button(option1, on_click=lambda e: dialog.submit(True), color=color1)
-            ui.button(option2, on_click=lambda e: dialog.submit(False), color=color2)
+            ui.button(option1, on_click=lambda e: dialog.submit(True), color=color1).props("auto-id=popup_option1_button")
+            ui.button(option2, on_click=lambda e: dialog.submit(False), color=color2).props("auto-id=popup_option2_button")
 
         return await dialog
