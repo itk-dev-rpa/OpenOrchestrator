@@ -152,6 +152,11 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(table_data[2][5], "N/A")
 
     def _get_table_data(self) -> list[list[str]]:
+        """Helper function to get the data in the trigger table.
+
+        Returns:
+            All table data as a 2D list of strings.
+        """
         table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_trigger_table]")
         rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
 
@@ -163,6 +168,7 @@ class TestTriggerTab(unittest.TestCase):
         return data
 
     def test_delete_trigger(self):
+        """Test deleting a trigger."""
         # Create a trigger
         db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25)
         ui_util.refresh_ui(self.browser)
@@ -182,6 +188,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(len(triggers), 0)
 
     def test_enable_disable(self):
+        """Test disabling and enabling a trigger."""
         # Create a trigger
         db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25)
         ui_util.refresh_ui(self.browser)
@@ -209,6 +216,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_cancel_button]").click()
 
     def test_edit_trigger(self):
+        """Test editing a trigger."""
         # Create a trigger
         db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25)
         ui_util.refresh_ui(self.browser)
