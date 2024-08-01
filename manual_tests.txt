@@ -2,12 +2,6 @@ This document is a checklist for manual tests of OpenOrchestrator.
 It's not pretty but it's what we got for now.
 
 Orchestrator:
-    Settings tab:
-        New key
-        Connect
-        Disconnect
-        Initialize
-
     Constants tab:
         Update empty
         New constant
