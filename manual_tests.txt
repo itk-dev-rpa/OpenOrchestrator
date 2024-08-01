@@ -8,13 +8,6 @@ Orchestrator:
         Disconnect
         Initialize
 
-    Trigger tab:
-        Update empty 
-        New trigger x3
-        Update full
-        Reset
-        Delete x3
-
     Logs tab:
         Update empty
         cli: Create log
