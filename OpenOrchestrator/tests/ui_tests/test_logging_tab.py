@@ -32,7 +32,7 @@ class TestLogsTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # Check result
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertRegex(table_data[0][0], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")
         self.assertEqual(table_data[0][1], "Test Error")
         self.assertEqual(table_data[0][2], LogLevel.ERROR.value)
@@ -57,32 +57,32 @@ class TestLogsTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # No filter
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 3)
 
         # From yesterday
         self._set_date_filter(from_date=yesterday, to_date=None)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 3)
 
         # From tomorrow
         self._set_date_filter(from_date=tomorrow, to_date=None)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 0)
 
         # To yesterday
         self._set_date_filter(from_date=None, to_date=yesterday)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 0)
 
         # To tomorrow
         self._set_date_filter(from_date=None, to_date=tomorrow)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 3)
 
         # From yesterday To tomorrow
         self._set_date_filter(from_date=yesterday, to_date=tomorrow)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 3)
 
         # Clear filter
@@ -93,19 +93,19 @@ class TestLogsTab(unittest.TestCase):
         self._create_logs()
 
         self._set_process_filter(2)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(table_data[0][1], "Test Error")
 
         self._set_process_filter(3)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(table_data[0][1], "Test Info")
 
         self._set_process_filter(4)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(table_data[0][1], "Test Trace")
 
         self._set_process_filter(1)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 3)
 
     def test_level_filter(self):
@@ -113,19 +113,19 @@ class TestLogsTab(unittest.TestCase):
         self._create_logs()
 
         self._set_level_filter(2)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(table_data[0][1], "Test Trace")
 
         self._set_level_filter(3)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(table_data[0][1], "Test Info")
 
         self._set_level_filter(4)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(table_data[0][1], "Test Error")
 
         self._set_level_filter(1)
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 3)
 
     def _set_date_filter(self, from_date: datetime | None, to_date: datetime | None):
@@ -160,17 +160,6 @@ class TestLogsTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=logs_tab_level_input]").click()
         self.browser.find_element(By.XPATH, f"//div[@role='listbox']//div[contains(@class, 'q-item')][{index}]").click()
         time.sleep(0.5)
-
-    def _get_table_data(self) -> list[list[str]]:
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=logs_tab_logs_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-
-        data = []
-        for row in rows:
-            fields = row.find_elements(By.TAG_NAME, "td")
-            data.append([f.text for f in fields])
-
-        return data
 
     def _create_logs(self):
         """Create some logs for testing."""

@@ -64,6 +64,27 @@ def send_slow_keys(element, string: str):
         element.send_keys(c)
 
 
+def get_table_data(browser: webdriver.Chrome, auto_id: str) -> list[list[str]]:
+    """Get the data from a table.
+
+    Args:
+        browser: The browser object to perform the action.
+        auto_id: The automation id of the table.
+
+    Returns:
+        A 2D list of strings of all the data in the table.
+    """
+    table = browser.find_element(By.CSS_SELECTOR, f"[auto-id={auto_id}]")
+    rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
+
+    data = []
+    for row in rows:
+        fields = row.find_elements(By.TAG_NAME, "td")
+        data.append([f.text for f in fields])
+
+    return data
+
+
 if __name__ == '__main__':
     b = open_orchestrator()
     input("Continue...")

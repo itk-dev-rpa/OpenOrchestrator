@@ -125,7 +125,7 @@ class TestTriggerTab(unittest.TestCase):
 
         ui_util.refresh_ui(self.browser)
 
-        table_data = self._get_table_data()
+        table_data = ui_util.get_table_data(self.browser, "trigger_tab_trigger_table")
 
         # Check single trigger
         self.assertEqual(table_data[0][0], "A Single trigger")
@@ -150,22 +150,6 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(table_data[2][3], "Queue Process")
         self.assertEqual(table_data[2][4], "Never")
         self.assertEqual(table_data[2][5], "N/A")
-
-    def _get_table_data(self) -> list[list[str]]:
-        """Helper function to get the data in the trigger table.
-
-        Returns:
-            All table data as a 2D list of strings.
-        """
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_trigger_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-
-        data = []
-        for row in rows:
-            fields = row.find_elements(By.TAG_NAME, "td")
-            data.append([f.text for f in fields])
-
-        return data
 
     def test_delete_trigger(self):
         """Test deleting a trigger."""
