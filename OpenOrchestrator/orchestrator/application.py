@@ -27,7 +27,7 @@ class Application():
 
             ui.space()
             ui.button(icon="contrast", on_click=ui.dark_mode().toggle)
-            ui.button(icon='refresh', on_click=self.update_tab)
+            ui.button(icon='refresh', on_click=self.update_tab).props("auto-id=refresh_button")
 
         with ui.tab_panels(self.tabs, value='Settings', on_change=self.update_tab).classes('w-full') as self.tab_panels:
             self.t_tab = TriggerTab('Triggers')
