@@ -8,16 +8,6 @@ Orchestrator:
         Disconnect
         Initialize
 
-    Logs tab:
-        Update empty
-        cli: Create log
-        Update full
-        Filter log level
-        Filter process name
-        Filter date from
-        Filter date to
-        Filter date from/to
-
     Constants tab:
         Update empty
         New constant
