@@ -20,10 +20,14 @@ def open_orchestrator() -> webdriver.Chrome:
     Returns:
         The Chrome browser logged in to Orchestrator.
     """
+    conn_string = os.environ['CONN_STRING']
+
     port = get_free_port()
     subprocess.Popen(["python", "-m", "OpenOrchestrator", "-o", "--port", str(port), "--dont_show"])
 
-    browser = webdriver.Chrome()
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--disable-search-engine-choice-screen")
+    browser = webdriver.Chrome(options=chrome_options)
     browser.implicitly_wait(2)
     browser.maximize_window()
     for _ in range(5):
@@ -38,7 +42,6 @@ def open_orchestrator() -> webdriver.Chrome:
     # Wait for the ui to load
     time.sleep(1)
 
-    conn_string = os.environ['CONN_STRING']
     conn_input = browser.find_element(By.CSS_SELECTOR, "input[auto-id=connection_frame_conn_input]")
     conn_input.send_keys(Keys.CONTROL, "a", Keys.DELETE)
     conn_input.send_keys(conn_string[0])
@@ -48,6 +51,12 @@ def open_orchestrator() -> webdriver.Chrome:
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=connection_frame_conn_button]").click()
 
     return browser
+
+
+def refresh_ui(browser: webdriver.Chrome):
+    """Press the refresh button."""
+    browser.find_element(By.CSS_SELECTOR, "[auto-id=refresh_button").click()
+    time.sleep(0.5)
 
 
 if __name__ == '__main__':
