@@ -1,3 +1,5 @@
+"""Tests relating to the trigger tab in Orchestrator."""
+
 import unittest
 from datetime import datetime, timedelta
 import time
@@ -5,9 +7,10 @@ import time
 from selenium.webdriver.common.by import By
 
 from OpenOrchestrator.common import datetime_util
-from OpenOrchestrator.tests import db_test_util, ui_util
+from OpenOrchestrator.tests import db_test_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
+from OpenOrchestrator.tests.ui_tests import ui_util
 
 
 class TestTriggerTab(unittest.TestCase):
