@@ -44,8 +44,7 @@ def open_orchestrator() -> webdriver.Chrome:
 
     conn_input = browser.find_element(By.CSS_SELECTOR, "input[auto-id=connection_frame_conn_input]")
     conn_input.send_keys(Keys.CONTROL, "a", Keys.DELETE)
-    conn_input.send_keys(conn_string[0])
-    conn_input.send_keys(conn_string[1:])
+    send_slow_keys(conn_input, conn_string)
 
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=settings_tab_key_button]").click()
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=connection_frame_conn_button]").click()
@@ -57,6 +56,12 @@ def refresh_ui(browser: webdriver.Chrome):
     """Press the refresh button."""
     browser.find_element(By.CSS_SELECTOR, "[auto-id=refresh_button").click()
     time.sleep(0.5)
+
+
+def send_slow_keys(element, string: str):
+    """Send keys to an element one at a time."""
+    for c in string:
+        element.send_keys(c)
 
 
 if __name__ == '__main__':
