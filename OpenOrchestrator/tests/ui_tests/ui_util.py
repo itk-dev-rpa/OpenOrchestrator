@@ -11,6 +11,9 @@ from selenium.common.exceptions import WebDriverException
 from OpenOrchestrator.orchestrator.application import get_free_port
 
 
+encryption_key = None
+
+
 def open_orchestrator() -> webdriver.Chrome:
     """Open Orchestrator in a Selenium Chrome browser.
 
@@ -48,6 +51,11 @@ def open_orchestrator() -> webdriver.Chrome:
 
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=settings_tab_key_button]").click()
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=connection_frame_conn_button]").click()
+
+    global encryption_key
+    encryption_key = browser.find_element(By.CSS_SELECTOR, "input[auto-id=connection_frame_key_input]").get_attribute("value")
+
+    time.sleep(1)
 
     return browser
 

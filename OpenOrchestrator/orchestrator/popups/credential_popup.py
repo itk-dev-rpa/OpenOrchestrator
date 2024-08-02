@@ -8,6 +8,7 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.constants import Credential
 from OpenOrchestrator.orchestrator.popups.generic_popups import question_popup
+from OpenOrchestrator.orchestrator import test_helper
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
@@ -36,14 +37,15 @@ class CredentialPopup():
             self.password_input = ui.input("Password").classes("w-full")
 
             with ui.row():
-                ui.button(button_text, on_click=self._save_credential)
-                ui.button("Cancel", on_click=self.dialog.close)
+                self.save_button = ui.button(button_text, on_click=self._save_credential)
+                self.cancel_button = ui.button("Cancel", on_click=self.dialog.close)
 
                 if credential:
-                    ui.button("Delete", color='red', on_click=self._delete_credential)
+                    self.delete_button = ui.button("Delete", color='red', on_click=self._delete_credential)
 
         self._define_validation()
         self._pre_populate()
+        test_helper.set_automation_ids(self, "credential_popup")
 
     def _define_validation(self):
         """Define validation functions for ui elements."""
@@ -76,7 +78,7 @@ class CredentialPopup():
         else:
             # Check if credential already exists
             try:
-                db_util.get_credential(name)
+                db_util.get_credential(name, decrypt_password=False)
                 exists = True
             except ValueError:
                 exists = False
