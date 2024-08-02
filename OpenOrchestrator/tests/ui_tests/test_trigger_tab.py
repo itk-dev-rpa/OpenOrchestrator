@@ -158,9 +158,7 @@ class TestTriggerTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_trigger_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-        rows[0].click()
+        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Delete trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
@@ -178,9 +176,7 @@ class TestTriggerTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_trigger_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-        rows[0].click()
+        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Disable trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_disable_button]").click()
@@ -206,9 +202,7 @@ class TestTriggerTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_trigger_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-        rows[0].click()
+        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Edit trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_trigger_input]").send_keys(" Edit")

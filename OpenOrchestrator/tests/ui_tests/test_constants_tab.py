@@ -1,11 +1,9 @@
 """Tests relating to the constants tab in Orchestrator."""
 
 import unittest
-from datetime import datetime, timedelta
 import time
 
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 
 from OpenOrchestrator.tests import db_test_util
 from OpenOrchestrator.database import db_util
@@ -94,9 +92,7 @@ class TestConstantsTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # Click constant in table
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constants_tab_constants_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-        rows[0].click()
+        ui_util.click_table_row(self.browser, "constants_tab_constants_table", 0)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constant_popup_value_input]").send_keys(" New")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constant_popup_save_button]").click()
@@ -112,9 +108,7 @@ class TestConstantsTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # Click credential in table
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constants_tab_credentials_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-        rows[0].click()
+        ui_util.click_table_row(self.browser, "constants_tab_credentials_table", 0)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=credential_popup_username_input]").send_keys(" New")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=credential_popup_password_input]").send_keys("Password New")
@@ -135,9 +129,7 @@ class TestConstantsTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # Click constant in table
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constants_tab_constants_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-        rows[0].click()
+        ui_util.click_table_row(self.browser, "constants_tab_constants_table", 0)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constant_popup_delete_button]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
@@ -153,9 +145,7 @@ class TestConstantsTab(unittest.TestCase):
         ui_util.refresh_ui(self.browser)
 
         # Click credential in table
-        table = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constants_tab_credentials_table]")
-        rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
-        rows[0].click()
+        ui_util.click_table_row(self.browser, "constants_tab_credentials_table", 0)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=credential_popup_delete_button]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()

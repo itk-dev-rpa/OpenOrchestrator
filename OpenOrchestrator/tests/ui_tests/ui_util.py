@@ -93,6 +93,19 @@ def get_table_data(browser: webdriver.Chrome, auto_id: str) -> list[list[str]]:
     return data
 
 
+def click_table_row(browser: webdriver.Chrome, auto_id: str, index: int):
+    """Click a row in a table.
+
+    Args:
+        browser: The browser to perform the action.
+        auto_id: The automation id of the table.
+        index: The 0-based index of the row to click.
+    """
+    table = browser.find_element(By.CSS_SELECTOR, f"[auto-id={auto_id}]")
+    rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
+    rows[index].click()
+
+
 if __name__ == '__main__':
     b = open_orchestrator()
     input("Continue...")
