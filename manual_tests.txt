@@ -2,16 +2,6 @@ This document is a checklist for manual tests of OpenOrchestrator.
 It's not pretty but it's what we got for now.
 
 Orchestrator:
-    Constants tab:
-        Update empty
-        New constant
-        Change constant
-        New credential
-        Change credential
-        Update full
-        Delete constant
-        Delete credential
-    
     Queue tab:
         Open a queue
             Filter date from
