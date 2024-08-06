@@ -61,6 +61,7 @@ class TestQueuesTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
     def test_queue_popup_filters(self):
+        """Test setting filters in the queue popup."""
         self._create_queue_elements()
         ui_util.refresh_ui(self.browser)
 
@@ -104,7 +105,9 @@ class TestQueuesTab(unittest.TestCase):
                     qe = db_util.create_queue_element(f"Queue Name {j+1}", reference=f"Reference {k},{i}", data=f"Data {k},{i}", created_by=f"Creator {k},{i}")
                     db_util.set_queue_element_status(qe.id, status, message=f"Message {k},{i}")
 
+    # pylint: disable-next=duplicate-code
     def _set_date_filter(self, from_date: datetime | None, to_date: datetime | None):
+        """Set the date filters."""
         # Clear filters
         from_input = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_from_input]")
         from_input.send_keys(Keys.CONTROL, "a", Keys.DELETE)

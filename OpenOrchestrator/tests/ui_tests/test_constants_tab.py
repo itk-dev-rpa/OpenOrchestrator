@@ -82,7 +82,7 @@ class TestConstantsTab(unittest.TestCase):
         time.sleep(1)
 
         # Make sure the encryption key matches the one in the ui
-        crypto_util.set_key(ui_util.encryption_key)
+        crypto_util.set_key(ui_util.ENCRYPTION_KEY)
 
         credential = db_util.get_credential("Credential Name")
         self.assertEqual(credential.name, "Credential Name")
@@ -120,7 +120,7 @@ class TestConstantsTab(unittest.TestCase):
         time.sleep(1)
 
         # Make sure the encryption key matches the one in the ui
-        crypto_util.set_key(ui_util.encryption_key)
+        crypto_util.set_key(ui_util.ENCRYPTION_KEY)
 
         credential = db_util.get_credential("Credential Name")
         self.assertEqual(credential.username, "Username New")

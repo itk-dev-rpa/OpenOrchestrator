@@ -12,6 +12,6 @@ def set_automation_ids(container, prefix: str):
         container: The object that contains a number of ui-elements.
         prefix: The prefix to add to the automation ids for all elements.
     """
-    for name, object in container.__dict__.items():
-        if isinstance(object, (ui.button, ui.input, ui.checkbox, ui.number, ui.table, ui.tab, ui.select)):
-            object.props(f"auto-id={prefix}_{name}")
+    for name, obj in container.__dict__.items():
+        if isinstance(obj, (ui.button, ui.input, ui.checkbox, ui.number, ui.table, ui.tab, ui.select)):
+            obj.props(f"auto-id={prefix}_{name}")

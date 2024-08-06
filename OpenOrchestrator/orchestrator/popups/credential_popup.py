@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
 
 
-# pylint: disable-next=too-few-public-methods
+# pylint: disable-next=too-few-public-methods, too-many-instance-attributes
 class CredentialPopup():
     """A popup for creating/updating queue triggers."""
     def __init__(self, constant_tab: ConstantTab, credential: Credential | None = None):

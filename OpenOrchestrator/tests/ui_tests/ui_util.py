@@ -1,3 +1,4 @@
+"""This module contains functions to help with ui tests."""
 
 import subprocess
 import os
@@ -11,7 +12,7 @@ from selenium.common.exceptions import WebDriverException
 from OpenOrchestrator.orchestrator.application import get_free_port
 
 
-encryption_key = None
+ENCRYPTION_KEY = None
 
 
 def open_orchestrator() -> webdriver.Chrome:
@@ -26,7 +27,7 @@ def open_orchestrator() -> webdriver.Chrome:
     conn_string = os.environ['CONN_STRING']
 
     port = get_free_port()
-    subprocess.Popen(["python", "-m", "OpenOrchestrator", "-o", "--port", str(port), "--dont_show"])
+    subprocess.Popen(["python", "-m", "OpenOrchestrator", "-o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
 
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--disable-search-engine-choice-screen")
@@ -52,8 +53,8 @@ def open_orchestrator() -> webdriver.Chrome:
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=settings_tab_key_button]").click()
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=connection_frame_conn_button]").click()
 
-    global encryption_key
-    encryption_key = browser.find_element(By.CSS_SELECTOR, "input[auto-id=connection_frame_key_input]").get_attribute("value")
+    global ENCRYPTION_KEY  # pylint: disable=global-statement
+    ENCRYPTION_KEY = browser.find_element(By.CSS_SELECTOR, "input[auto-id=connection_frame_key_input]").get_attribute("value")
 
     time.sleep(1)
 
