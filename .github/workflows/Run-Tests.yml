@@ -1,0 +1,28 @@
+name: Run-Tests
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    steps:
+    - uses: actions/checkout
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+        pip install .[dev]
+
+    - name: Run tests
+      run: |
+        python -m unittest discover
+      env:
+        CONN_STRING: sqlite+pysqlite:///test_db.db
