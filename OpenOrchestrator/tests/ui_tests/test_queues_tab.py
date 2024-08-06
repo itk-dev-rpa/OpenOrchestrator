@@ -105,6 +105,8 @@ class TestQueuesTab(unittest.TestCase):
                     qe = db_util.create_queue_element(f"Queue Name {j+1}", reference=f"Reference {k},{i}", data=f"Data {k},{i}", created_by=f"Creator {k},{i}")
                     db_util.set_queue_element_status(qe.id, status, message=f"Message {k},{i}")
 
+    # This code is similar to some in test_logging_tab.
+    # Since the ui might change it doesn't make sense to make a common function for this.
     # pylint: disable=duplicate-code
     def _set_date_filter(self, from_date: datetime | None, to_date: datetime | None):
         """Set the date filters."""
