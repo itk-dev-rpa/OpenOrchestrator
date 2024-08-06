@@ -104,6 +104,7 @@ def click_table_row(browser: webdriver.Chrome, auto_id: str, index: int):
     table = browser.find_element(By.CSS_SELECTOR, f"[auto-id={auto_id}]")
     rows = table.find_element(By.TAG_NAME, "tbody").find_elements(By.TAG_NAME, "tr")
     rows[index].click()
+    time.sleep(0.5)
 
 
 if __name__ == '__main__':

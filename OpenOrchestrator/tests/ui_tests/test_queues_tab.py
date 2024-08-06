@@ -18,6 +18,10 @@ class TestQueuesTab(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.browser = ui_util.open_orchestrator()
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.browser.quit()
+
     def setUp(self) -> None:
         db_test_util.establish_clean_database()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queues_tab]").click()
