@@ -22,10 +22,8 @@ class Scheduler(Base):
     def to_row_dict(self) -> dict[str, str]:
         """Convert scheduler to a row dictionary for display in a table."""
         return {
-            "Credential Name": self.name,
-            "Username": self.username,
-            "Password": self.format_password(),
-            "Last Changed": datetime_util.format_datetime(self.changed_at)
+            "Credential Name": self.computer_name,
+            "Last Update": datetime_util.format_datetime(self.last_update)
         }
 
 

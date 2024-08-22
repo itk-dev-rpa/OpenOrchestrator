@@ -4,16 +4,37 @@ from OpenOrchestrator.database import db_util
 
 CONSTANT_COLUMNS = ("Computer name", "Last Connection")
 
+COLUMNS = [
+    {'name': "computer_name", 'label': "Computer name", 'field': "Computer name", 'align': 'left', 'sortable': True},
+    {'name': "last_connection", 'label': "Last Connection", 'field': "Last Connection", 'align': 'left', 'sortable': True},
+]
+
 
 class SchedulerTab():
-
+    """A class for the scheduler tab."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
-            columns = [{'name': label, 'label': label, 'field': label, 'align': 'left', 'sortable': True} for label in CONSTANT_COLUMNS]
-            self.schedulers_table = ui.table(title="Schedulers", columns=columns, rows=[], row_key='Computer Name', pagination=10).classes("w-full")
+            self.schedulers_table = ui.table(title="Schedulers", columns=COLUMNS, rows=[], row_key='Computer Name', pagination=10).classes("w-full")
 
     def update(self):
         """Updates the tables on the tab."""
         schedulers = db_util.get_schedulers()
-        self.schedulers_table
-        for scheduler in schedulers:
+        self.schedulers_table.rows = [s.to_row_dict() for s in schedulers]
+        self.schedulers_table.update()
+
+    def add_column_colors(self):
+        """Add custom coloring to the trigger table."""
+        # Add coloring to the status column
+        self.schedulers_table.add_slot(
+            "body-cell-last_connection",
+            '''
+            <q-td key="last_connection" :props="props">
+                <q-badge v-if="(new Date() - new Date(+props.value.substr(6,4), +props.value.substr(3,2)-1, +props.value.substr(0,2), +props.value.substr(11,2), +props.value.substr(14,2))) > 5 * 60 * 1000" color='red'>
+                    {{props.value}}
+                </q-badge>
+                <p v-else>
+                    {{props.value}}
+                </p>
+            </q-td>
+            '''
+        )

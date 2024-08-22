@@ -4,6 +4,7 @@ import os
 import subprocess
 from dataclasses import dataclass
 import uuid
+import platform
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
@@ -31,6 +32,9 @@ def poll_triggers(app) -> Job | None:
     """
 
     other_processes_running = len(app.running_jobs) != 0
+
+    machine_name = platform.node()
+    db_util.ping_from_scheduler(machine_name)
 
     # Single triggers
     next_single_trigger = db_util.get_next_single_trigger()

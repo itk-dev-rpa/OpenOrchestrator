@@ -926,3 +926,13 @@ def get_schedulers() -> list[Scheduler]:
 
 def ping_from_scheduler(machine_name: str) -> None:
     """Send a ping from a running scheduler, updating the machine in the database."""
+    with _get_session() as session:
+        scheduler = session.query(Scheduler).filter_by(computer_name=machine_name).first()
+
+        if scheduler:
+            scheduler.last_update = datetime.now()
+        else:
+            scheduler = Scheduler(computer_name=machine_name, last_update=datetime.now())
+            session.add(scheduler)
+
+        session.commit()
