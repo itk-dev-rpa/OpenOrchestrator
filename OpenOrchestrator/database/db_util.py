@@ -11,11 +11,12 @@ from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import logs, triggers, constants, queues
+from OpenOrchestrator.database import logs, triggers, constants, queues, schedulers
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
+from OpenOrchestrator.database.schedulers import Scheduler
 from OpenOrchestrator.database.truncated_string import truncate_message
 
 # Type hint helpers for decorators
@@ -910,3 +911,18 @@ def delete_queue_element(element_id: UUID | str) -> None:
         q_element = session.get(QueueElement, element_id)
         session.delete(q_element)
         session.commit()
+
+
+def get_schedulers() -> list[Scheduler]:
+    """Get Schedulers from the database"""
+    with _get_session() as session:
+        query = (
+            select(Scheduler)
+            .group_by(Scheduler.computer_name)
+        )
+        rows = session.execute(query)
+        return list(rows)
+
+
+def ping_from_scheduler(machine_name: str) -> None:
+    """Send a ping from a running scheduler, updating the machine in the database."""
