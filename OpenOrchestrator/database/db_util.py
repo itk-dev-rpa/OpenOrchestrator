@@ -93,6 +93,7 @@ def initialize_database() -> None:
     triggers.create_tables(_connection_engine)
     constants.create_tables(_connection_engine)
     queues.create_tables(_connection_engine)
+    schedulers.create_tables(_connection_engine)
 
 
 def get_trigger(trigger_id: UUID | str) -> Trigger:

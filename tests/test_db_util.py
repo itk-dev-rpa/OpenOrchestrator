@@ -335,6 +335,31 @@ class TestDBUtil(unittest.TestCase):
         logs = db_util.get_logs(0, 100, log_level=LogLevel.ERROR)
         self.assertEqual(len(logs[0].log_message), len(short_message))
 
+    def test_schedulers(self):
+        """Make pings from imitated machines and verify that they are registered."""
+
+        db_util.ping_from_scheduler("Machine1")
+
+        # Test one ping
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 1)
+
+        # Test multiple pings
+        db_util.ping_from_scheduler("Machine2")
+        db_util.ping_from_scheduler("Machine3")
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 3)
+
+        # Test ping from machine that pinged earlier
+        db_util.ping_from_scheduler("Machine1")
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 3)
+
+        # Test types in Scheduler
+        test_scheduler = schedulers[0]
+        self.assertIsInstance(test_scheduler.computer_name, str)
+        self.assertAlmostEqual(test_scheduler.last_update, Mapped[datetime])
+
 
 if __name__ == '__main__':
     unittest.main()
