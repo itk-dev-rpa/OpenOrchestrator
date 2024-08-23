@@ -358,7 +358,7 @@ class TestDBUtil(unittest.TestCase):
         # Test types in Scheduler
         test_scheduler = schedulers[0]
         self.assertIsInstance(test_scheduler.computer_name, str)
-        self.assertAlmostEqual(test_scheduler.last_update, Mapped[datetime])
+        self.assertIsInstance(test_scheduler.last_update, datetime)
 
 
 if __name__ == '__main__':
