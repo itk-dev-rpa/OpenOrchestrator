@@ -13,7 +13,7 @@ COLUMNS = [
 ]
 
 
-class SchedulersTab():
+class SchedulerTab():
     """A class for the scheduler tab."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):

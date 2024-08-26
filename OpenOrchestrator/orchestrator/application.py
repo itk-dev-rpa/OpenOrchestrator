@@ -10,7 +10,7 @@ from OpenOrchestrator.orchestrator.tabs.settings_tab import SettingsTab
 from OpenOrchestrator.orchestrator.tabs.logging_tab import LoggingTab
 from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
 from OpenOrchestrator.orchestrator.tabs.queue_tab import QueueTab
-from OpenOrchestrator.orchestrator.tabs.schedulers_tab import SchedulersTab
+from OpenOrchestrator.orchestrator.tabs.schedulers_tab import SchedulerTab
 
 
 class Application():
@@ -35,7 +35,7 @@ class Application():
             self.t_tab = TriggerTab('Triggers')
             self.l_tab = LoggingTab("Logs")
             self.c_tab = ConstantTab("Constants")
-            self.s_tab = SchedulersTab("Schedulers")
+            self.s_tab = SchedulerTab("Schedulers")
             self.q_tab = QueueTab("Queues")
             SettingsTab('Settings')
 
