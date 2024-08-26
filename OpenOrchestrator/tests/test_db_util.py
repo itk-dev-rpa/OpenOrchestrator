@@ -9,7 +9,7 @@ from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.database.triggers import TriggerStatus
 
-from tests import db_test_util
+from OpenOrchestrator.tests import db_test_util
 
 
 class TestDBUtil(unittest.TestCase):
