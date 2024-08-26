@@ -23,8 +23,8 @@ class Application():
                 ui.tab('Triggers').props("auto-id=trigger_tab")
                 ui.tab('Logs').props("auto-id=logs_tab")
                 ui.tab('Constants').props("auto-id=constants_tab")
-                ui.tab('Queues').props("auto-id=queues_tab")
                 ui.tab('Schedulers').props("auto-id=schedulers_tab")
+                ui.tab('Queues').props("auto-id=queues_tab")
                 ui.tab('Settings').props("auto-id=settings_tab")
 
             ui.space()
