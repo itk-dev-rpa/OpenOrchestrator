@@ -350,7 +350,7 @@ class TestDBUtil(unittest.TestCase):
         schedulers = db_util.get_schedulers()
         self.assertEqual(len(schedulers), 3)
 
-        # Test ping from machine that pinged earlier
+        # Test that a ping from a machine that pinged earlier doesn't change the amount of schedulers
         db_util.ping_from_scheduler("Machine1")
         schedulers = db_util.get_schedulers()
         self.assertEqual(len(schedulers), 3)

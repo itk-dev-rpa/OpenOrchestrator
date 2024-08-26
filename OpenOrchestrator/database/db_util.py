@@ -918,8 +918,8 @@ def get_schedulers() -> list[Scheduler]:
     """Get Schedulers from the database"""
     with _get_session() as session:
         query = (
-            select(Scheduler)
-            .group_by(Scheduler.computer_name)
+            select(Scheduler.computer_name, Scheduler.last_update)
+            .group_by(Scheduler.computer_name, Scheduler.last_update)
         )
         rows = session.execute(query)
         return list(rows)

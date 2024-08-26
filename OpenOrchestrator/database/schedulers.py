@@ -18,12 +18,16 @@ class Scheduler(Base):
 
     computer_name: Mapped[str] = mapped_column(String(100), primary_key=True)
     last_update: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
+    latest_trigger: Mapped[str] = mapped_column(String(100), nullable=True, default=None)
+    last_trigger_start: Mapped[datetime] = mapped_column(nullable=True, default=None)
 
     def to_row_dict(self) -> dict[str, str]:
         """Convert scheduler to a row dictionary for display in a table."""
         return {
             "Credential Name": self.computer_name,
-            "Last Update": datetime_util.format_datetime(self.last_update)
+            "Last Update": datetime_util.format_datetime(self.last_update),
+            "Latest Trigger": self.latest_trigger if self.latest_trigger else "None",
+            "Last Trigger Start": datetime_util.format_datetime(self.last_trigger_start) if self.last_trigger_start else "None"
         }
 
 
