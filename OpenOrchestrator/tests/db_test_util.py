@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import os
 
-from OpenOrchestrator.database import db_util, logs, triggers, constants, queues
+from OpenOrchestrator.database import db_util, logs, triggers, constants, queues, schedulers
 from OpenOrchestrator.common import crypto_util
 
 
@@ -25,6 +25,7 @@ def drop_all_tables():
     triggers.Base.metadata.drop_all(engine)
     constants.Base.metadata.drop_all(engine)
     queues.Base.metadata.drop_all(engine)
+    schedulers.Base.metadata.drop_all(engine)
 
 
 def reset_triggers():

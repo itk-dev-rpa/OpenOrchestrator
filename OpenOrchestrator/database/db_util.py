@@ -914,26 +914,23 @@ def delete_queue_element(element_id: UUID | str) -> None:
         session.commit()
 
 
-def get_schedulers() -> list[Scheduler]:
+def get_schedulers() -> tuple[Scheduler, ...]:
     """Get Schedulers from the database"""
     with _get_session() as session:
-        query = (
-            select(Scheduler.computer_name, Scheduler.last_update)
-            .group_by(Scheduler.computer_name, Scheduler.last_update)
-        )
-        rows = session.execute(query)
-        return list(rows)
+        query = select(Scheduler).order_by(Scheduler.machine_name)
+        result = session.scalars(query).all()
+        return tuple(result)
 
 
 def ping_from_scheduler(machine_name: str) -> None:
     """Send a ping from a running scheduler, updating the machine in the database."""
     with _get_session() as session:
-        scheduler = session.query(Scheduler).filter_by(computer_name=machine_name).first()
+        scheduler = session.get(Scheduler, machine_name)
 
         if scheduler:
             scheduler.last_update = datetime.now()
         else:
-            scheduler = Scheduler(computer_name=machine_name, last_update=datetime.now())
+            scheduler = Scheduler(machine_name=machine_name, last_update=datetime.now())
             session.add(scheduler)
 
         session.commit()
