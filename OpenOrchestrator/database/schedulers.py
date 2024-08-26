@@ -25,7 +25,7 @@ class Scheduler(Base):
     def to_row_dict(self) -> dict[str, str]:
         """Convert scheduler to a row dictionary for display in a table."""
         return {
-            "Computer Name": self.machine_name,
+            "Machine Name": self.machine_name,
             "Last Connection": datetime_util.format_datetime(self.last_update),
             "Latest Trigger": self.latest_trigger if self.latest_trigger else "None yet",
             "Latest Trigger Time": datetime_util.format_datetime(self.latest_trigger_time) if self.latest_trigger_time else ""

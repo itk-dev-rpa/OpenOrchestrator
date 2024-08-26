@@ -3,10 +3,10 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator import test_helper
 
-HEADING_COLUMNS = ("Computer name", "Last Connection")
+HEADING_COLUMNS = ("Machine Name", "Last Connection")
 
 COLUMNS = [
-    {'name': "computer_name", 'label': "Computer Name", 'field': "Computer Name", 'align': 'left', 'sortable': True},
+    {'name': "machine_name", 'label': "Machine Name", 'field': "Machine Name", 'align': 'left', 'sortable': True},
     {'name': "last_connection", 'label': "Last Connection", 'field': "Last Connection", 'align': 'left', 'sortable': True},
     {'name': "latest_trigger", 'label': "Latest Trigger", 'field': "Latest Trigger", 'align': 'left', 'sortable': True},
     {'name': "latest_trigger_time", 'label': "Latest Trigger Time", 'field': "Latest Trigger Time", 'align': 'left', 'sortable': True},
@@ -17,7 +17,7 @@ class SchedulerTab():
     """A class for the scheduler tab."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
-            self.schedulers_table = ui.table(title="Schedulers", columns=COLUMNS, rows=[], row_key='Computer Name', pagination=10).classes("w-full")
+            self.schedulers_table = ui.table(title="Schedulers", columns=COLUMNS, rows=[], row_key='Machine Name', pagination=10).classes("w-full")
             self.add_column_colors()
         test_helper.set_automation_ids(self, "schedulers_tab")
 

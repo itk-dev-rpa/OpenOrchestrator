@@ -956,7 +956,7 @@ def start_trigger_from_machine(machine_name: str, trigger_name: str) -> None:
             scheduler.latest_trigger = trigger_name
             scheduler.latest_trigger_time = now
         else:
-            scheduler = Scheduler(machine_name=machine_name, last_update=now, latest_trigger=trigger_name, latest_trigger_timer=now)
+            scheduler = Scheduler(machine_name=machine_name, last_update=now, latest_trigger=trigger_name, latest_trigger_time=now)
             session.add(scheduler)
 
         session.commit()

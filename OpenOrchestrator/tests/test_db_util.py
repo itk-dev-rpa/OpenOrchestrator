@@ -357,8 +357,15 @@ class TestDBUtil(unittest.TestCase):
 
         # Test types in Scheduler
         test_scheduler = schedulers[0]
-        self.assertIsInstance(test_scheduler.computer_name, str)
+        self.assertIsInstance(test_scheduler.machine_name, str)
         self.assertIsInstance(test_scheduler.last_update, datetime)
+
+        # Test trigger
+        db_util.start_trigger_from_machine("Machine1", "Test Trigger")
+        schedulers = db_util.get_schedulers()
+        test_scheduler = schedulers[0]
+        self.assertIsInstance(test_scheduler.latest_trigger, str)
+        self.assertIsInstance(test_scheduler.latest_trigger_time, datetime)
 
 
 if __name__ == '__main__':
