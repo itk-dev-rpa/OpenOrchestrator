@@ -923,7 +923,11 @@ def get_schedulers() -> tuple[Scheduler, ...]:
 
 
 def ping_from_scheduler(machine_name: str) -> None:
-    """Send a ping from a running scheduler, updating the machine in the database."""
+    """Send a ping from a running scheduler, updating the machine in the database.
+    
+    Args:
+        machine_name: The machine pinging the Orchestrator
+    """
     with _get_session() as session:
         scheduler = session.get(Scheduler, machine_name)
 
@@ -931,6 +935,28 @@ def ping_from_scheduler(machine_name: str) -> None:
             scheduler.last_update = datetime.now()
         else:
             scheduler = Scheduler(machine_name=machine_name, last_update=datetime.now())
+            session.add(scheduler)
+
+        session.commit()
+
+
+def start_trigger_from_machine(machine_name: str, trigger_name: str) -> None:
+    """Start a trigger from a machine running a scheduler, updating the name and time for triggers in the database.
+
+    Args:
+        machine_name: The machine starting the trigger
+        trigger_name: The trigger being started på the machine
+    """
+    with _get_session() as session:
+        scheduler = session.get(Scheduler, machine_name)
+        now = datetime.now()
+
+        if scheduler:
+            scheduler.last_update = now
+            scheduler.latest_trigger = trigger_name
+            scheduler.latest_trigger_time = now
+        else:
+            scheduler = Scheduler(machine_name=machine_name, last_update=now, latest_trigger=trigger_name, latest_trigger_timer=now)
             session.add(scheduler)
 
         session.commit()

@@ -259,6 +259,9 @@ def run_process(trigger: Trigger) -> Job | None:
 
         process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
 
+        machine_name = platform.node()
+        db_util.start_trigger_from_machine(machine_name, str(trigger.trigger_name))
+
         return Job(process, trigger, folder_path)
 
     # We actually want to catch any exception here

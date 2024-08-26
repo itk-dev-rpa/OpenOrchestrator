@@ -18,7 +18,7 @@ class SchedulersTab():
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
             self.schedulers_table = ui.table(title="Schedulers", columns=COLUMNS, rows=[], row_key='Computer Name', pagination=10).classes("w-full")
-
+            self.add_column_colors()
         test_helper.set_automation_ids(self, "schedulers_tab")
 
     def update(self):
@@ -28,13 +28,12 @@ class SchedulersTab():
         self.schedulers_table.update()
 
     def add_column_colors(self):
-        """Add custom coloring to the trigger table."""
-        # Add coloring to the status column
+        """Add red coloring to the scheduler if more than a minute has passed since last ping."""
         self.schedulers_table.add_slot(
             "body-cell-last_connection",
             '''
             <q-td key="last_connection" :props="props">
-                <q-badge v-if="(new Date() - new Date(+props.value.substr(6,4), +props.value.substr(3,2)-1, +props.value.substr(0,2), +props.value.substr(11,2), +props.value.substr(14,2))) > 5 * 60 * 1000" color='red'>
+                <q-badge v-if="(new Date() - new Date(+props.value.substr(6,4), +props.value.substr(3,2)-1, +props.value.substr(0,2), +props.value.substr(11,2), +props.value.substr(14,2))) > 60 * 1000" color='red'>
                     {{props.value}}
                 </q-badge>
                 <p v-else>
