@@ -28,6 +28,13 @@ class TestTriggerTab(unittest.TestCase):
     def tearDown(self) -> None:
         self.browser.quit()
 
+    def cleanup(self):
+        # Save a screenshot on an error
+        if hasattr(self, '_outcome') and self._outcome.errors:
+            for test, exc_info in self._outcome.errors:
+                if exc_info is not None:
+                    self.browser.save_screenshot(f"{self.id().split('.')[-1]}_error.png")
+
     @unittest.skip
     def test_single_trigger_creation(self):
         """Test creation of a single trigger."""
@@ -169,11 +176,7 @@ class TestTriggerTab(unittest.TestCase):
         ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Delete trigger
-        try:
-            self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
-        except ElementClickInterceptedException:
-            self.browser.save_screenshot("error_screenshot.png")
-
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result

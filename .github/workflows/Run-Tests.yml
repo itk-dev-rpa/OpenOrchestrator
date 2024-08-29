@@ -15,9 +15,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Set screen resolution
-      run: |
-        Set-DisplayResolution -Width 1920 -Height 1080 -Force
+
 
     - name: Install dependencies
       run: |
@@ -36,4 +34,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: selenium-error-screenshot
-        path: error_screenshot.png
+        path: *.png
