@@ -7,6 +7,7 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import ElementClickInterceptedException
 
 
 from OpenOrchestrator.common import datetime_util
@@ -168,8 +169,11 @@ class TestTriggerTab(unittest.TestCase):
         ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Delete trigger
-        WebDriverWait(self.browser, 2).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]")))
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
+        try:
+            self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
+        except ElementClickInterceptedException:
+            print("AAAAHHHHH!")
+            raise RuntimeError("IIIIIHHHHH")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result
