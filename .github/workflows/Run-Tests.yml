@@ -26,3 +26,10 @@ jobs:
         python -m unittest discover
       env:
         CONN_STRING: sqlite+pysqlite:///test_db.db
+
+    - name: Upload screenshot on error
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: selenium-error-screenshot
+        path: error_screenshot.png

@@ -172,8 +172,8 @@ class TestTriggerTab(unittest.TestCase):
         try:
             self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
         except ElementClickInterceptedException:
-            print("AAAAHHHHH!")
-            raise RuntimeError("IIIIIHHHHH")
+            self.browser.save_screenshot("error_screenshot.png")
+
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result
