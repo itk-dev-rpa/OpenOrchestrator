@@ -5,10 +5,6 @@ from datetime import datetime, timedelta
 import time
 
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import ElementClickInterceptedException
-
 
 from OpenOrchestrator.common import datetime_util
 from OpenOrchestrator.tests import db_test_util
