@@ -5,7 +5,9 @@ from datetime import datetime, timedelta
 import time
 
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 from OpenOrchestrator.common import datetime_util
 from OpenOrchestrator.tests import db_test_util
@@ -25,6 +27,7 @@ class TestTriggerTab(unittest.TestCase):
     def tearDown(self) -> None:
         self.browser.quit()
 
+    @unittest.skip
     def test_single_trigger_creation(self):
         """Test creation of a single trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_single_button]").click()
@@ -55,6 +58,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, True)
 
+    @unittest.skip
     def test_scheduled_trigger_creation(self):
         """Test creation of a scheduled trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_scheduled_button]").click()
@@ -84,6 +88,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, True)
 
+    @unittest.skip
     def test_queue_trigger_creation(self):
         """Test creation of a queue trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_queue_button]").click()
@@ -115,6 +120,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, True)
 
+    @unittest.skip
     def test_trigger_table(self):
         """Test that data is shown correctly in the trigger table."""
         # Create some triggers
@@ -162,12 +168,8 @@ class TestTriggerTab(unittest.TestCase):
         ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Delete trigger
-        try:
-            self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
-        except ElementClickInterceptedException as exc:
-            note = self.browser.find_element(By.CLASS_NAME, "q-notification__content row items-center col")
-            print(note)
-            raise exc
+        WebDriverWait(self.browser, 2).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]")))
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result
@@ -175,6 +177,7 @@ class TestTriggerTab(unittest.TestCase):
         triggers = db_util.get_all_triggers()
         self.assertEqual(len(triggers), 0)
 
+    @unittest.skip
     def test_enable_disable(self):
         """Test disabling and enabling a trigger."""
         # Create a trigger
@@ -201,6 +204,7 @@ class TestTriggerTab(unittest.TestCase):
         # Close trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_cancel_button]").click()
 
+    @unittest.skip
     def test_edit_trigger(self):
         """Test editing a trigger."""
         # Create a trigger

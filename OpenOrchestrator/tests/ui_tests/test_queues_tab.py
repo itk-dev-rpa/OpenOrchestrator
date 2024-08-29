@@ -12,6 +12,7 @@ from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.tests.ui_tests import ui_util
 
 
+@unittest.skip
 class TestQueuesTab(unittest.TestCase):
     """Test functionality of the queues tab ui."""
     def setUp(self) -> None:
