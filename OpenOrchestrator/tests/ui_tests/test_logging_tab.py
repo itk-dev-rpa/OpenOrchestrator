@@ -13,7 +13,6 @@ from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.tests.ui_tests import ui_util
 
 
-@unittest.skip
 class TestLogsTab(unittest.TestCase):
     """Test functionality of the logs tab ui."""
     def setUp(self) -> None:

@@ -15,7 +15,9 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-
+    - name: Set screen resolution
+      run: |
+        Set-DisplayResolution -Width 1920 -Height 1080 -Force
 
     - name: Install dependencies
       run: |
@@ -28,10 +30,3 @@ jobs:
         python -m unittest discover
       env:
         CONN_STRING: sqlite+pysqlite:///test_db.db
-
-    - name: Upload screenshot on error
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: selenium-error-screenshot
-        path: *.png

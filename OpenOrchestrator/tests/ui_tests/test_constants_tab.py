@@ -11,7 +11,6 @@ from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.tests.ui_tests import ui_util
 
 
-@unittest.skip
 class TestConstantsTab(unittest.TestCase):
     """Test functionality of the constants tab ui."""
     def setUp(self) -> None:
