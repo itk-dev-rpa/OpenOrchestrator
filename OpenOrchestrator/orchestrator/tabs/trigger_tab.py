@@ -58,7 +58,7 @@ class TriggerTab():
             "body-cell-Status",
             '''
             <q-td key="Status" :props="props">
-                <q-badge v-if="{Running: 'green', Pausing: 'orange', Failed: 'red'}[props.value]" :color="{Running: 'green', Pausing: 'orange', Failed: 'red'}[props.value]">
+                <q-badge v-if="{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red'}[props.value]" :color="{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red'}[props.value]">
                     {{props.value}}
                 </q-badge>
                 <p v-else>
