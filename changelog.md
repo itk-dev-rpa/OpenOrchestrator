@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+### Added
+
+- Automated tests of the Orchestrator ui
+- Added argument to manually set Orchestrator port.
+- Added argument to prevent Orchestrator from opening in the browser automatically.
+
 ### Changed
 
+- Changed cli to use argparser.
 - Trigger status 'Paused' is now colored orange in the trigger tab.
 
 ## [1.3.0] - 2024-06-19

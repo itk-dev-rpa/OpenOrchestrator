@@ -8,12 +8,13 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.constants import Constant
 from OpenOrchestrator.orchestrator.popups.generic_popups import question_popup
+from OpenOrchestrator.orchestrator import test_helper
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
 
 
-# pylint: disable-next=too-few-public-methods
+# pylint: disable-next=too-few-public-methods, too-many-instance-attributes
 class ConstantPopup():
     """A popup for creating/updating queue triggers."""
     def __init__(self, constant_tab: ConstantTab, constant: Constant | None = None):
@@ -34,14 +35,15 @@ class ConstantPopup():
             self.value_input = ui.input("Constant Value").classes("w-full")
 
             with ui.row():
-                ui.button(button_text, on_click=self._create_constant)
-                ui.button("Cancel", on_click=self.dialog.close)
+                self.save_button = ui.button(button_text, on_click=self._create_constant)
+                self.cancel_button = ui.button("Cancel", on_click=self.dialog.close)
 
                 if constant:
-                    ui.button("Delete", color='red', on_click=self._delete_constant)
+                    self.delete_button = ui.button("Delete", color='red', on_click=self._delete_constant)
 
         self._define_validation()
         self._pre_populate()
+        test_helper.set_automation_ids(self, "constant_popup")
 
     def _define_validation(self):
         """Define validation rules for input elements."""

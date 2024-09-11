@@ -16,18 +16,18 @@ class Application():
     """The main application of Orchestrator.
     It contains a header and the four tabs of the application.
     """
-    def __init__(self) -> None:
+    def __init__(self, port: int | None = None, show: bool = True) -> None:
         with ui.header():
             with ui.tabs() as self.tabs:
-                ui.tab('Triggers')
-                ui.tab('Logs')
-                ui.tab('Constants')
-                ui.tab('Queues')
-                ui.tab('Settings')
+                ui.tab('Triggers').props("auto-id=trigger_tab")
+                ui.tab('Logs').props("auto-id=logs_tab")
+                ui.tab('Constants').props("auto-id=constants_tab")
+                ui.tab('Queues').props("auto-id=queues_tab")
+                ui.tab('Settings').props("auto-id=settings_tab")
 
             ui.space()
             ui.button(icon="contrast", on_click=ui.dark_mode().toggle)
-            ui.button(icon='refresh', on_click=self.update_tab)
+            ui.button(icon='refresh', on_click=self.update_tab).props("auto-id=refresh_button")
 
         with ui.tab_panels(self.tabs, value='Settings', on_change=self.update_tab).classes('w-full') as self.tab_panels:
             self.t_tab = TriggerTab('Triggers')
@@ -41,7 +41,7 @@ class Application():
         app.on_connect(self.update_loop)
         app.on_disconnect(app.shutdown)
         app.on_exception(lambda exc: ui.notify(exc, type='negative'))
-        ui.run(title="Orchestrator", favicon='🤖', native=False, port=get_free_port(), reload=False)
+        ui.run(title="Orchestrator", favicon='🤖', native=False, port=port or get_free_port(), reload=False, show=show)
 
     def update_tab(self):
         """Update the date in the currently selected tab."""
