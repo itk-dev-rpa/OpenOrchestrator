@@ -8,6 +8,9 @@ from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
 
 from OpenOrchestrator.common import datetime_util
 
+# All classes in this module are effectively dataclasses without methods.
+# pylint: disable=too-few-public-methods
+
 
 class Base(DeclarativeBase):
     """Base class for other classes in this module"""
