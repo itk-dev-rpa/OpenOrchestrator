@@ -1,3 +1,6 @@
+"""This module is responsible for the layout and functionality of the Schedulers tab
+in Orchestrator."""
+
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util

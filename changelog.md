@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated tests of the Orchestrator ui
 - Added argument to manually set Orchestrator port.
 - Added argument to prevent Orchestrator from opening in the browser automatically.
+- Added 'Scheduler' tab with overview of running schedulers
 
 ### Changed
 
