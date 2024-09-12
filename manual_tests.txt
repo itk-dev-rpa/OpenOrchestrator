@@ -1,5 +1,5 @@
 This document is a checklist for manual tests of OpenOrchestrator.
-It's not pretty but it's what we got for now.
+It's not pretty but manual tests are being phased out.
 
 Scheduler:
     Settings tab:

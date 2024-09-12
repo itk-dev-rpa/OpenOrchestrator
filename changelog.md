@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 ### Added
 
 - Automated tests of the Orchestrator ui
@@ -17,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Changed cli to use argparser.
+- Trigger status 'Paused' is now colored orange in the trigger tab.
 
 ## [1.3.0] - 2024-06-19
 

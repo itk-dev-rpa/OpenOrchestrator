@@ -19,7 +19,6 @@ parser.add_argument("-p", "--port", type=int, help="Set the desired port for Orc
 parser.add_argument("-d", "--dont_show", action="store_false", help="Set if you don't want Orchestrator to open in the browser automatically. Only works with -o.")
 
 args = parser.parse_args()
-print(args)
 
 if args.orchestrator:
     o_app(port=args.port, show=args.dont_show)

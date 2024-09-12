@@ -15,18 +15,14 @@ from OpenOrchestrator.tests.ui_tests import ui_util
 
 class TestLogsTab(unittest.TestCase):
     """Test functionality of the logs tab ui."""
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.browser = ui_util.open_orchestrator()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls.browser.quit()
-
     def setUp(self) -> None:
+        self.browser = ui_util.open_orchestrator()
         db_test_util.establish_clean_database()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=logs_tab]").click()
         ui_util.refresh_ui(self.browser)
+
+    def tearDown(self) -> None:
+        self.browser.quit()
 
     def test_logs_table(self):
         """Test that logs are shown correctly in the logs table."""
