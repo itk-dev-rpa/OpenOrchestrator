@@ -924,7 +924,7 @@ def get_schedulers() -> tuple[Scheduler, ...]:
 
 def ping_from_scheduler(machine_name: str) -> None:
     """Send a ping from a running scheduler, updating the machine in the database.
-    
+
     Args:
         machine_name: The machine pinging the Orchestrator
     """
