@@ -338,20 +338,20 @@ class TestDBUtil(unittest.TestCase):
     def test_schedulers(self):
         """Make pings from imitated machines and verify that they are registered."""
 
-        db_util.ping_from_scheduler("Machine1")
+        db_util.send_ping_from_scheduler("Machine1")
 
         # Test one ping
         schedulers = db_util.get_schedulers()
         self.assertEqual(len(schedulers), 1)
 
         # Test multiple pings
-        db_util.ping_from_scheduler("Machine2")
-        db_util.ping_from_scheduler("Machine3")
+        db_util.send_ping_from_scheduler("Machine2")
+        db_util.send_ping_from_scheduler("Machine3")
         schedulers = db_util.get_schedulers()
         self.assertEqual(len(schedulers), 3)
 
         # Test that a ping from a machine that pinged earlier doesn't change the amount of schedulers
-        db_util.ping_from_scheduler("Machine1")
+        db_util.send_ping_from_scheduler("Machine1")
         schedulers = db_util.get_schedulers()
         self.assertEqual(len(schedulers), 3)
 

@@ -34,7 +34,7 @@ def poll_triggers(app) -> Job | None:
     other_processes_running = len(app.running_jobs) != 0
 
     machine_name = platform.node()
-    db_util.ping_from_scheduler(machine_name)
+    db_util.send_ping_from_scheduler(machine_name)
 
     # Single triggers
     next_single_trigger = db_util.get_next_single_trigger()

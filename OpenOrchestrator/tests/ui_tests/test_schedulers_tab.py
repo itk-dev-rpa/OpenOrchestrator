@@ -9,7 +9,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.tests.ui_tests import ui_util
 
 
-class TestConstantsTab(unittest.TestCase):
+class TestSchedulersTab(unittest.TestCase):
     """Test functionality of the constants tab ui."""
     @classmethod
     def setUpClass(cls) -> None:
@@ -26,7 +26,7 @@ class TestConstantsTab(unittest.TestCase):
 
     def test_schedulers_table(self):
         """Test that constants are shown correctly in the constants table."""
-        db_util.ping_from_scheduler("Testmachine")
+        db_util.send_ping_from_scheduler("Testmachine")
         db_util.start_trigger_from_machine("Testmachine2", "RPA Process")
         ui_util.refresh_ui(self.browser)
 
