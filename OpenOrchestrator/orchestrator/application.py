@@ -10,6 +10,7 @@ from OpenOrchestrator.orchestrator.tabs.settings_tab import SettingsTab
 from OpenOrchestrator.orchestrator.tabs.logging_tab import LoggingTab
 from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
 from OpenOrchestrator.orchestrator.tabs.queue_tab import QueueTab
+from OpenOrchestrator.orchestrator.tabs.schedulers_tab import SchedulerTab
 
 
 class Application():
@@ -22,6 +23,7 @@ class Application():
                 ui.tab('Triggers').props("auto-id=trigger_tab")
                 ui.tab('Logs').props("auto-id=logs_tab")
                 ui.tab('Constants').props("auto-id=constants_tab")
+                ui.tab('Schedulers').props("auto-id=schedulers_tab")
                 ui.tab('Queues').props("auto-id=queues_tab")
                 ui.tab('Settings').props("auto-id=settings_tab")
 
@@ -33,6 +35,7 @@ class Application():
             self.t_tab = TriggerTab('Triggers')
             self.l_tab = LoggingTab("Logs")
             self.c_tab = ConstantTab("Constants")
+            self.s_tab = SchedulerTab("Schedulers")
             self.q_tab = QueueTab("Queues")
             SettingsTab('Settings')
 
@@ -52,6 +55,8 @@ class Application():
                 self.l_tab.update()
             case 'Constants':
                 self.c_tab.update()
+            case 'Schedulers':
+                self.s_tab.update()
             case 'Queues':
                 self.q_tab.update()
 
