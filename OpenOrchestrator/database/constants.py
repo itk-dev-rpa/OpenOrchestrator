@@ -19,8 +19,8 @@ class Constant(Base):
     """A class representing a constant object in the ORM."""
     __tablename__ = "Constants"
 
-    name: Mapped[str] = mapped_column(String(100), primary_key=True)
-    value: Mapped[str] = mapped_column(String(1000))
+    name: Mapped[str] = mapped_column(String, primary_key=True)
+    value: Mapped[str] = mapped_column(String)
     changed_at: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
     def to_row_dict(self) -> dict[str, str]:
@@ -36,9 +36,9 @@ class Credential(Base):
     """A class representing a credential object in the ORM."""
     __tablename__ = "Credentials"
 
-    name: Mapped[str] = mapped_column(String(100), primary_key=True)
-    username: Mapped[str] = mapped_column(String(250))
-    password: Mapped[str] = mapped_column(String(1000))
+    name: Mapped[str] = mapped_column(String, primary_key=True)
+    username: Mapped[str] = mapped_column(String)
+    password: Mapped[str] = mapped_column(String)
     changed_at: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
 
     def to_row_dict(self) -> dict[str, str]:
