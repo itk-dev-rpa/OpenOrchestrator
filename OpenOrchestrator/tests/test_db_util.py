@@ -9,7 +9,7 @@ from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.database.triggers import TriggerStatus
 
-from tests import db_test_util
+from OpenOrchestrator.tests import db_test_util
 
 
 class TestDBUtil(unittest.TestCase):
@@ -334,6 +334,38 @@ class TestDBUtil(unittest.TestCase):
         # Test short message
         logs = db_util.get_logs(0, 100, log_level=LogLevel.ERROR)
         self.assertEqual(len(logs[0].log_message), len(short_message))
+
+    def test_schedulers(self):
+        """Make pings from imitated machines and verify that they are registered."""
+
+        db_util.send_ping_from_scheduler("Machine1")
+
+        # Test one ping
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 1)
+
+        # Test multiple pings
+        db_util.send_ping_from_scheduler("Machine2")
+        db_util.send_ping_from_scheduler("Machine3")
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 3)
+
+        # Test that a ping from a machine that pinged earlier doesn't change the amount of schedulers
+        db_util.send_ping_from_scheduler("Machine1")
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 3)
+
+        # Test types in Scheduler
+        test_scheduler = schedulers[0]
+        self.assertIsInstance(test_scheduler.machine_name, str)
+        self.assertIsInstance(test_scheduler.last_update, datetime)
+
+        # Test trigger
+        db_util.start_trigger_from_machine("Machine1", "Test Trigger")
+        schedulers = db_util.get_schedulers()
+        test_scheduler = schedulers[0]
+        self.assertIsInstance(test_scheduler.latest_trigger, str)
+        self.assertIsInstance(test_scheduler.latest_trigger_time, datetime)
 
 
 if __name__ == '__main__':

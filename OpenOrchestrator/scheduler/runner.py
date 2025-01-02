@@ -4,6 +4,7 @@ import os
 import subprocess
 from dataclasses import dataclass
 import uuid
+import platform
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
@@ -31,6 +32,9 @@ def poll_triggers(app) -> Job | None:
     """
 
     other_processes_running = len(app.running_jobs) != 0
+
+    machine_name = platform.node()
+    db_util.send_ping_from_scheduler(machine_name)
 
     # Single triggers
     next_single_trigger = db_util.get_next_single_trigger()
@@ -232,7 +236,7 @@ def run_process(trigger: Trigger) -> Job | None:
         trigger: The trigger whose process to run.
 
     Returns:
-        Job: A Job object referencing the process if succesful.
+        Job: A Job object referencing the process if successful.
     """
     process_path = trigger.process_path
     folder_path = None
@@ -254,6 +258,9 @@ def run_process(trigger: Trigger) -> Job | None:
         command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
 
         process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
+
+        machine_name = platform.node()
+        db_util.start_trigger_from_machine(machine_name, str(trigger.trigger_name))
 
         return Job(process, trigger, folder_path)
 

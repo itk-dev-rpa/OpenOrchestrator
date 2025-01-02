@@ -19,6 +19,7 @@ from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
+from OpenOrchestrator.database.schedulers import Scheduler
 from OpenOrchestrator.database.truncated_string import truncate_message
 
 # Type hint helpers for decorators
@@ -914,4 +915,52 @@ def delete_queue_element(element_id: UUID | str) -> None:
     with _get_session() as session:
         q_element = session.get(QueueElement, element_id)
         session.delete(q_element)
+        session.commit()
+
+
+def get_schedulers() -> tuple[Scheduler, ...]:
+    """Get Schedulers from the database"""
+    with _get_session() as session:
+        query = select(Scheduler).order_by(Scheduler.machine_name)
+        result = session.scalars(query).all()
+        return tuple(result)
+
+
+def send_ping_from_scheduler(machine_name: str) -> None:
+    """Send a ping from a running scheduler, updating the machine in the database.
+
+    Args:
+        machine_name: The machine pinging the Orchestrator
+    """
+    with _get_session() as session:
+        scheduler = session.get(Scheduler, machine_name)
+
+        if scheduler:
+            scheduler.last_update = datetime.now()
+        else:
+            scheduler = Scheduler(machine_name=machine_name, last_update=datetime.now())
+            session.add(scheduler)
+
+        session.commit()
+
+
+def start_trigger_from_machine(machine_name: str, trigger_name: str) -> None:
+    """Start a trigger from a machine running a scheduler, updating the name and time for triggers in the database.
+
+    Args:
+        machine_name: The machine starting the trigger
+        trigger_name: The trigger being started på the machine
+    """
+    with _get_session() as session:
+        scheduler = session.get(Scheduler, machine_name)
+        now = datetime.now()
+
+        if scheduler:
+            scheduler.last_update = now
+            scheduler.latest_trigger = trigger_name
+            scheduler.latest_trigger_time = now
+        else:
+            scheduler = Scheduler(machine_name=machine_name, last_update=now, latest_trigger=trigger_name, latest_trigger_time=now)
+            session.add(scheduler)
+
         session.commit()

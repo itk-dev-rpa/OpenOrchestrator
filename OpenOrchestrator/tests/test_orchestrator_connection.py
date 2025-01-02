@@ -11,7 +11,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.database.queues import QueueStatus
 
-from tests import db_test_util
+from OpenOrchestrator.tests import db_test_util
 
 
 class TestOrchestratorConnection(unittest.TestCase):
@@ -119,3 +119,7 @@ class TestOrchestratorConnection(unittest.TestCase):
         self.connection.delete_queue_element(element.id)
         elements = self.connection.get_queue_elements("Bulk Queue")
         self.assertEqual(len(elements), 9)
+
+
+if __name__ == '__main__':
+    unittest.main()

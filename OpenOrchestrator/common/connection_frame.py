@@ -6,6 +6,7 @@ from nicegui import ui
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.orchestrator import test_helper
 
 
 # pylint: disable-next=too-few-public-methods
@@ -21,6 +22,7 @@ class ConnectionFrame():
             self.disconn_button.disable()
 
         self._initial_connect()
+        test_helper.set_automation_ids(self, "connection_frame")
 
     def _define_validation(self):
         self.conn_input.validation = {"Please enter a connection string": bool}
