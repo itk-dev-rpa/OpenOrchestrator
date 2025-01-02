@@ -11,7 +11,7 @@ from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import logs, triggers, constants, queues
+from OpenOrchestrator.database import logs, triggers, constants, queues, base
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
@@ -88,10 +88,7 @@ def initialize_database() -> None:
     if not _connection_engine:
         raise RuntimeError("Not connected to database.")
 
-    logs.create_tables(_connection_engine)
-    triggers.create_tables(_connection_engine)
-    constants.create_tables(_connection_engine)
-    queues.create_tables(_connection_engine)
+    base.Base.metadata.create_all(_connection_engine)
 
 
 def get_trigger(trigger_id: UUID | str) -> Trigger:

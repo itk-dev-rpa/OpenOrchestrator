@@ -5,9 +5,10 @@ import enum
 import uuid
 
 from sqlalchemy import String, Engine
-from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
 from OpenOrchestrator.common import datetime_util
+from OpenOrchestrator.database.base import Base
 
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
@@ -18,10 +19,6 @@ class LogLevel(enum.Enum):
     TRACE = "Trace"
     INFO = "Info"
     ERROR = "Error"
-
-
-class Base(DeclarativeBase):
-    """SqlAlchemy base class for all ORM classes in this module."""
 
 
 class Log(Base):
@@ -43,12 +40,3 @@ class Log(Base):
             "Message": self.log_message,
             "ID": str(self.id)
         }
-
-
-def create_tables(engine: Engine):
-    """Create all SQL tables related to ORM classes in this module.
-
-    Args:
-        engine: The SqlAlchemy connection engine used to create the tables.
-    """
-    Base.metadata.create_all(engine)
