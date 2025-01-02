@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import os
 
-from OpenOrchestrator.database import db_util, logs, triggers, constants, queues
+from OpenOrchestrator.database import db_util, base
 from OpenOrchestrator.common import crypto_util
 
 
@@ -21,10 +21,7 @@ def drop_all_tables():
     engine = db_util._connection_engine  # pylint: disable=protected-access
     if not engine:
         raise RuntimeError("Not connected to a database.")
-    logs.Base.metadata.drop_all(engine)
-    triggers.Base.metadata.drop_all(engine)
-    constants.Base.metadata.drop_all(engine)
-    queues.Base.metadata.drop_all(engine)
+    base.Base.metadata.drop_all(engine)
 
 
 def reset_triggers():
