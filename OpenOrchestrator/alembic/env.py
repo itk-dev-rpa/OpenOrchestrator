@@ -3,7 +3,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 
-from OpenOrchestrator.database import base, logs, triggers, queues, constants   # noqa: F401
+from OpenOrchestrator.database import base, logs, triggers, queues, constants, schedulers   # noqa: F401
 
 config = context.config
 

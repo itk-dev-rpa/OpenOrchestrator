@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, selectin_polymorphic
 import alembic
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import base, logs, triggers, queues, constants  # noqa: F401
+from OpenOrchestrator.database import base, logs, triggers, queues, constants, schedulers  # noqa: F401
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
