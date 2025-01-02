@@ -1,26 +1,67 @@
-"""This module is used to run Orchestrator or Scheduler from the command line.
-Usage: python -m OpenOrchestrator [-o|-s]"""
+"""This module is used to run Orchestrator or Scheduler from the command line."""
 
 import argparse
+import subprocess
+import os
 
 from OpenOrchestrator.scheduler.application import Application as s_app
 from OpenOrchestrator.orchestrator.application import Application as o_app
 
-parser = argparse.ArgumentParser(
-    prog="OpenOrchestrator",
-    description="OpenOrchestrator is used to orchestrate, monitor and run Python based automation scripts in Windows."
-)
 
-group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument("-o", "--orchestrator", action="store_true", help="Start the Orchestrator application.")
-group.add_argument("-s", "--scheduler", action="store_true", help="Start the Scheduler application.")
+def main():
+    """The main entry point of the CLI."""
+    parser = argparse.ArgumentParser(
+        prog="OpenOrchestrator",
+        description="OpenOrchestrator is used to orchestrate, monitor and run Python-based automation scripts in Windows."
+    )
 
-parser.add_argument("-p", "--port", type=int, help="Set the desired port for Orchestrator. Only works with -o.")
-parser.add_argument("-d", "--dont_show", action="store_false", help="Set if you don't want Orchestrator to open in the browser automatically. Only works with -o.")
+    subparsers = parser.add_subparsers(title="Subcommands", required=True)
 
-args = parser.parse_args()
+    o_parser = subparsers.add_parser("orchestrator", aliases=["o"], help="Start the Orchestrator application.")
+    o_parser.add_argument("-p", "--port", type=int, help="Set the desired port for Orchestrator.")
+    o_parser.add_argument("-d", "--dont_show", action="store_false", help="Set if you don't want Orchestrator to open in the browser automatically.")
+    o_parser.set_defaults(func=orchestrator_command)
 
-if args.orchestrator:
+    s_parser = subparsers.add_parser("scheduler", aliases=["s"], help="Start the Scheduler application.")
+    s_parser.set_defaults(func=scheduler_command)
+
+    u_parser = subparsers.add_parser("upgrade", aliases=["u"], help="Upgrade the database to the newest revision.")
+    u_parser.add_argument("connection_string", type=str, help="The connection string to the database")
+    u_parser.set_defaults(func=upgrade_command)
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+def orchestrator_command(args: argparse.Namespace):
+    """Start the Orchestrator app.
+
+    Args:
+        args: The arguments Namespace object.
+    """
     o_app(port=args.port, show=args.dont_show)
-elif args.scheduler:
+
+
+def scheduler_command():
+    """Start the Scheduler app."""
     s_app()
+
+
+def upgrade_command(args: argparse.Namespace):
+    """Upgrade the database to the newest revision using alembic.
+
+    Args:
+        args: The arguments Namespace object.
+    """
+    confirmation = input("Are you sure you want to upgrade the database to the newest revision? This cannot be undone. (y/n)").strip()
+    if confirmation == "y":
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        alembic_dir = os.path.join(script_dir, "alembic")
+        os.chdir(alembic_dir)
+        subprocess.run(["alembic", "-x", args.connection_string, "upgrade", "head"])
+    else:
+        print("Upgrade canceled")
+
+
+if __name__ == '__main__':
+    main()
