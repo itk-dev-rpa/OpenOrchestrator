@@ -116,8 +116,8 @@ def loop(app: Application) -> None:
         if app.running:
             check_triggers(app)
 
-    except alc_exc.OperationalError:
-        print("Couldn't connect to database.")
+    except (alc_exc.OperationalError, alc_exc.ProgrammingError) as e:
+        print(f"Couldn't connect to database. {e}")
 
     if len(app.running_jobs) == 0:
         print("Doing cleanup...")
