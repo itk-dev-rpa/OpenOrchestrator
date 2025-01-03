@@ -2,7 +2,6 @@
 
 import argparse
 import subprocess
-import os
 
 from OpenOrchestrator.scheduler.application import Application as s_app
 from OpenOrchestrator.orchestrator.application import Application as o_app
@@ -55,9 +54,6 @@ def upgrade_command(args: argparse.Namespace):
     """
     confirmation = input("Are you sure you want to upgrade the database to the newest revision? This cannot be undone. (y/n)").strip()
     if confirmation == "y":
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        alembic_dir = os.path.join(script_dir, "alembic")
-        os.chdir(alembic_dir)
         subprocess.run(["alembic", "-x", args.connection_string, "upgrade", "head"], check=False)
     else:
         print("Upgrade canceled")

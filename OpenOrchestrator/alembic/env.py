@@ -12,7 +12,11 @@ if config.config_file_name is not None:
 
 target_metadata = base.Base.metadata
 
-config.set_main_option("sqlalchemy.url", context.get_x_argument()[0])
+if not config.get_main_option("sqlalchemy.url"):
+    x_args = context.get_x_argument()
+    if len(x_args) < 1:
+        raise ValueError("Please provide a connection string in the -x argument.")
+    config.set_main_option("sqlalchemy.url", context.get_x_argument()[0])
 
 
 def run_migrations_offline() -> None:

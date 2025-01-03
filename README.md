@@ -104,7 +104,6 @@ This can mostly be done automatically by the following steps:
 3. Then run the following commands (replacing the connection string and message):
 
     ```bash
-    cd OpenOrchestrator\alembic
     alembic -x "connection_string" revision --autogenerate -m "Some useful message"
     ```
 

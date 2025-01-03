@@ -2,6 +2,7 @@
 
 import subprocess
 import os
+import sys
 import time
 
 from selenium import webdriver
@@ -27,7 +28,7 @@ def open_orchestrator() -> webdriver.Chrome:
     conn_string = os.environ['CONN_STRING']
 
     port = get_free_port()
-    subprocess.Popen(["python", "-m", "OpenOrchestrator", "o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
+    subprocess.Popen([sys.executable, "-m", "OpenOrchestrator", "o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
 
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--disable-search-engine-choice-screen")
