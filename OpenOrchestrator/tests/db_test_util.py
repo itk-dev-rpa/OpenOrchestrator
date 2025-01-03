@@ -3,11 +3,8 @@
 from datetime import datetime, timedelta
 import os
 
-<<<<<<< HEAD:tests/db_test_util.py
 from OpenOrchestrator.database import db_util, base
-=======
-from OpenOrchestrator.database import db_util, logs, triggers, constants, queues, schedulers
->>>>>>> develop:OpenOrchestrator/tests/db_test_util.py
+
 from OpenOrchestrator.common import crypto_util
 
 
@@ -25,15 +22,8 @@ def drop_all_tables():
     engine = db_util._connection_engine  # pylint: disable=protected-access
     if not engine:
         raise RuntimeError("Not connected to a database.")
-<<<<<<< HEAD:tests/db_test_util.py
+
     base.Base.metadata.drop_all(engine)
-=======
-    logs.Base.metadata.drop_all(engine)
-    triggers.Base.metadata.drop_all(engine)
-    constants.Base.metadata.drop_all(engine)
-    queues.Base.metadata.drop_all(engine)
-    schedulers.Base.metadata.drop_all(engine)
->>>>>>> develop:OpenOrchestrator/tests/db_test_util.py
 
 
 def reset_triggers():
