@@ -4,6 +4,9 @@ from datetime import datetime
 from typing import TypeVar, ParamSpec
 from uuid import UUID
 
+import alembic
+import alembic.command
+import alembic.config
 from croniter import croniter  # type: ignore
 from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
@@ -11,7 +14,7 @@ from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import logs, triggers, constants, queues, schedulers
+from OpenOrchestrator.database import base
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
@@ -89,11 +92,12 @@ def initialize_database() -> None:
     if not _connection_engine:
         raise RuntimeError("Not connected to database.")
 
-    logs.create_tables(_connection_engine)
-    triggers.create_tables(_connection_engine)
-    constants.create_tables(_connection_engine)
-    queues.create_tables(_connection_engine)
-    schedulers.create_tables(_connection_engine)
+    base.Base.metadata.create_all(_connection_engine)
+
+    # Stamp with the newest database version
+    alc_config = alembic.config.Config("alembic.ini")
+    alc_config.set_main_option("sqlalchemy.url", str(_connection_engine.url))
+    alembic.command.stamp(alc_config, "head")
 
 
 def get_trigger(trigger_id: UUID | str) -> Trigger:

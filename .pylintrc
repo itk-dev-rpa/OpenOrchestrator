@@ -7,3 +7,6 @@ disable =
   I1101, E1101, # C-modules members
   R0913, # Too many arguments
   R0914 # Too many local variables
+
+[DESIGN]
+max-positional-arguments = 8
