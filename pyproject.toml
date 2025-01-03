@@ -21,7 +21,8 @@ dependencies = [
     "croniter >= 1.4.1",
     "SQLAlchemy >= 2.0.22",
     "pyodbc >= 4.0.39",
-    "nicegui == 1.4.12"
+    "nicegui == 1.4.12",
+    "alembic == 1.14.0"
 ]
 
 [project.urls]

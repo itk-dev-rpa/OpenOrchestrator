@@ -5,7 +5,7 @@ import enum
 from typing import Optional
 import uuid
 
-from sqlalchemy import String, ForeignKey, Engine
+from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from OpenOrchestrator.common import datetime_util

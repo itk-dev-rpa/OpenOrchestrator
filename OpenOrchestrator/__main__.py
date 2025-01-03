@@ -58,7 +58,7 @@ def upgrade_command(args: argparse.Namespace):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         alembic_dir = os.path.join(script_dir, "alembic")
         os.chdir(alembic_dir)
-        subprocess.run(["alembic", "-x", args.connection_string, "upgrade", "head"])
+        subprocess.run(["alembic", "-x", args.connection_string, "upgrade", "head"], check=False)
     else:
         print("Upgrade canceled")
 

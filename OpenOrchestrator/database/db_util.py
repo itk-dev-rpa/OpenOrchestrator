@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TypeVar, ParamSpec
 from uuid import UUID
 
+import alembic
 import alembic.command
 import alembic.config
 from croniter import croniter  # type: ignore
@@ -11,10 +12,9 @@ from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
-import alembic
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import base, logs, triggers, queues, constants, schedulers  # noqa: F401
+from OpenOrchestrator.database import base
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
