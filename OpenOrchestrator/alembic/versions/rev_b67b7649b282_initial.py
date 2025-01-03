@@ -4,6 +4,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
+# pylint: disable=invalid-name
 # revision identifiers, used by Alembic.
 revision: str = 'b67b7649b282'
 down_revision = None
@@ -12,6 +13,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+    """Upgrade the database."""
     op.create_table(
         'Constants',
         sa.Column('name', sa.String(length=100), nullable=False),

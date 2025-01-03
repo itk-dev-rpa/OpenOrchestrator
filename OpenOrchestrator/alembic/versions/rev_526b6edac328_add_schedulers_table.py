@@ -4,6 +4,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
+# pylint: disable=invalid-name
 # revision identifiers, used by Alembic.
 revision: str = '526b6edac328'
 down_revision = 'b67b7649b282'
@@ -12,6 +13,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+    """Upgrade the database."""
     op.create_table(
         'Schedulers',
         sa.Column('machine_name', sa.String(length=100), nullable=False),
