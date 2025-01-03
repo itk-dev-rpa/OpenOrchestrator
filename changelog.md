@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Arguments to start Scheduler and Orchestrator are now subcommands (no '-' before 'o' and 's').
 - Trigger status 'Paused' is now colored orange in the trigger tab.
 
+### Fixed
+
+- A database shutdown shouldn't cause Scheduler to crash anymore.
+
 ## [1.3.0] - 2024-06-19
 
 ### Added
