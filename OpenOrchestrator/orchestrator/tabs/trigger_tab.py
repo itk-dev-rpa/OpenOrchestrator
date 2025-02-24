@@ -6,6 +6,7 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerType
 from OpenOrchestrator.orchestrator.popups.trigger_popup import TriggerPopup
+from OpenOrchestrator.orchestrator import test_helper
 
 COLUMNS = [
     {'name': "Trigger Name", 'label': "Trigger Name", 'field': "Trigger Name", 'align': 'left', 'sortable': True},
@@ -24,13 +25,15 @@ class TriggerTab():
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
             with ui.row():
-                ui.button("New Single Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.SINGLE))
-                ui.button("New Scheduled Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.SCHEDULED))
-                ui.button("New Queue Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.QUEUE))
+                self.single_button = ui.button("New Single Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.SINGLE))
+                self.scheduled_button = ui.button("New Scheduled Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.SCHEDULED))
+                self.queue_button = ui.button("New Queue Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.QUEUE))
 
             self.trigger_table = ui.table(COLUMNS, [], title="Triggers", pagination={'rowsPerPage': 50, 'sortBy': 'Trigger Name'}, row_key='ID').classes("w-full")
             self.trigger_table.on('rowClick', self._row_click)
             self.add_column_colors()
+
+        test_helper.set_automation_ids(self, "trigger_tab")
 
     def _row_click(self, event):
         """Callback for when a row is clicked in the table."""
@@ -58,7 +61,7 @@ class TriggerTab():
             "body-cell-Status",
             '''
             <q-td key="Status" :props="props">
-                <q-badge v-if="{Running: 'green', Pausing: 'orange', Failed: 'red'}[props.value]" :color="{Running: 'green', Pausing: 'orange', Failed: 'red'}[props.value]">
+                <q-badge v-if="{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red'}[props.value]" :color="{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red'}[props.value]">
                     {{props.value}}
                 </q-badge>
                 <p v-else>

@@ -11,6 +11,7 @@ from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, TriggerStatus, TriggerType, ScheduledTrigger, SingleTrigger, QueueTrigger
 from OpenOrchestrator.orchestrator.popups import generic_popups
+from OpenOrchestrator.orchestrator import test_helper
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
@@ -53,20 +54,21 @@ class TriggerPopup():
 
             if trigger:
                 with ui.row():
-                    ui.button("Enable", on_click=self._enable_trigger)
-                    ui.button("Disable", on_click=self._disable_trigger)
-                    ui.button("Delete", on_click=self._delete_trigger, color='red')
+                    self.enable_button = ui.button("Enable", on_click=self._enable_trigger)
+                    self.disable_button = ui.button("Disable", on_click=self._disable_trigger)
+                    self.delete_button = ui.button("Delete", on_click=self._delete_trigger, color='red')
             else:
                 # Dialog should only be persistent when a new trigger is being created
                 self.dialog.props('persistent')
 
             with ui.row():
-                ui.button("Save", on_click=self._create_trigger)
-                ui.button("Cancel", on_click=self.dialog.close)
+                self.save_button = ui.button("Save", on_click=self._create_trigger)
+                self.cancel_button = ui.button("Cancel", on_click=self.dialog.close)
 
         self._disable_unused()
         self._define_validation()
         self._pre_populate()
+        test_helper.set_automation_ids(self, "trigger_popup")
 
     def _define_validation(self):
         self.trigger_input.validation = {"Please enter a trigger name": bool}

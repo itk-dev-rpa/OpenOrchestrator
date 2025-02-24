@@ -5,6 +5,7 @@ from nicegui import ui
 
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.common.connection_frame import ConnectionFrame
+from OpenOrchestrator.orchestrator import test_helper
 
 
 # pylint: disable-next=too-few-public-methods
@@ -16,6 +17,8 @@ class SettingsTab():
             with ui.row().classes("w-full"):
                 self.key_button = ui.button("Generate Key", on_click=conn_frame.new_key)
                 self.init_button = ui.button("Initialize Database", on_click=self._init_database)
+
+        test_helper.set_automation_ids(self, "settings_tab")
 
     def _init_database(self):
         db_util.initialize_database()
