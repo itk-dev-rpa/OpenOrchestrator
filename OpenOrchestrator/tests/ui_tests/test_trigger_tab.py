@@ -35,7 +35,6 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_path_input]").send_keys("Process Path")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_git_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_args_input]").send_keys("Process args")
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_blocking_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
@@ -81,7 +80,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_path, "Process Path")
         self.assertEqual(trigger.is_git_repo, True)
         self.assertEqual(trigger.process_args, "Process args")
-        self.assertEqual(trigger.is_blocking, True)
+        self.assertEqual(trigger.is_blocking, False)
 
     def test_queue_trigger_creation(self):
         """Test creation of a queue trigger."""
@@ -112,7 +111,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_path, "Process Path")
         self.assertEqual(trigger.is_git_repo, True)
         self.assertEqual(trigger.process_args, "Process args")
-        self.assertEqual(trigger.is_blocking, True)
+        self.assertEqual(trigger.is_blocking, False)
 
     def test_trigger_table(self):
         """Test that data is shown correctly in the trigger table."""
