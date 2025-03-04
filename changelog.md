@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed cli to use argparser.
 - Trigger status 'Paused' is now colored orange in the trigger tab.
+- When creating a new trigger, blocking process is now default.
 
 ## [1.3.0] - 2024-06-19
 
