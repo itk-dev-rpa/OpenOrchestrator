@@ -49,7 +49,7 @@ class TriggerPopup():
             self.path_input = ui.input("Process Path").classes("w-full")
             self.git_check = ui.checkbox("Is path a Git Repo?")
             self.args_input = ui.input("Process Arguments").classes("w-full")
-            self.blocking_check = ui.checkbox("Is process blocking?")
+            self.blocking_check = ui.checkbox(text="Is process blocking?", value=True)
 
             if trigger:
                 with ui.row():
