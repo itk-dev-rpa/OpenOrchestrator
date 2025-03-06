@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added argument to manually set Orchestrator port.
 - Added argument to prevent Orchestrator from opening in the browser automatically.
 - Added 'Scheduler' tab with overview of running schedulers
+- Raise error if git is not installed when trying to clone a git repo
 
 ### Changed
 
