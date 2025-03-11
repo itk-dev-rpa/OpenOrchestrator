@@ -25,9 +25,14 @@ def open_orchestrator() -> webdriver.Chrome:
         The Chrome browser logged in to Orchestrator.
     """
     conn_string = os.environ['CONN_STRING']
+    python_path = os.environ.get('VIRTUAL_ENV')
+    if python_path:
+        python_path = os.path.join(python_path, 'Scripts', 'python.exe')
+    else:
+        python_path = "python"
 
     port = get_free_port()
-    subprocess.Popen(["python", "-m", "OpenOrchestrator", "-o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
+    subprocess.Popen([python_path, "-m", "OpenOrchestrator", "-o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
 
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--disable-search-engine-choice-screen")
