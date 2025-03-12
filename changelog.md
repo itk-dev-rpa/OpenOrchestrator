@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2025-03-12
+
+### Fixed
+
+- Switched croniter with cronsim
+
 ## [1.3.0] - 2024-06-19
 
 ### Added
