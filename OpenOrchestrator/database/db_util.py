@@ -4,9 +4,6 @@ from datetime import datetime
 from typing import TypeVar, ParamSpec
 from uuid import UUID
 
-import alembic
-import alembic.command
-import alembic.config
 from croniter import croniter  # type: ignore
 from sqlalchemy import Engine, create_engine, select, insert, desc
 from sqlalchemy import exc as alc_exc
@@ -85,19 +82,6 @@ def get_conn_string() -> str:
         raise RuntimeError("Not connected to database.")
 
     return str(_connection_engine.url)
-
-
-def initialize_database() -> None:
-    """Initializes the database with all the needed tables."""
-    if not _connection_engine:
-        raise RuntimeError("Not connected to database.")
-
-    base.Base.metadata.create_all(_connection_engine)
-
-    # Stamp with the newest database version
-    alc_config = alembic.config.Config("alembic.ini")
-    alc_config.set_main_option("sqlalchemy.url", str(_connection_engine.url))
-    alembic.command.stamp(alc_config, "head")
 
 
 def get_trigger(trigger_id: UUID | str) -> Trigger:
