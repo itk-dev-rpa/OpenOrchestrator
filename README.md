@@ -129,3 +129,5 @@ This can mostly be done automatically by the following steps:
 
 4. Open the file and make sure the contents make sense. Obvious changes are detected automatically
 but some changes might not be.
+
+5. Update the expected revision number in `db_util.py > check_database_revision`.
