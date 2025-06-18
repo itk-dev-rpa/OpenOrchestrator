@@ -16,9 +16,8 @@ def upgrade() -> None:
     """Upgrade the database."""
     op.create_table(
         'Schedulers',
-        sa.Column('machine_name', sa.String(length=100), nullable=False),
+        sa.Column('machine_name', sa.String(length=100), nullable=False, primary_key=True),
         sa.Column('last_update', sa.DateTime(), nullable=False),
         sa.Column('latest_trigger', sa.String(length=100), nullable=True),
         sa.Column('latest_trigger_time', sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint('machine_name')
     )
