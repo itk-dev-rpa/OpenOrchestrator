@@ -7,6 +7,7 @@ from nicegui import ui
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator.popups import generic_popups
 
 
 # pylint: disable-next=too-few-public-methods
@@ -28,7 +29,7 @@ class ConnectionFrame():
         self.conn_input.validation = {"Please enter a connection string": bool}
         self.key_input.validation = {"Invalid AES key": crypto_util.validate_key}
 
-    def _connect(self) -> None:
+    async def _connect(self) -> None:
         """Validate the connection string and encryption key
         and connect to the database.
         """
@@ -43,6 +44,9 @@ class ConnectionFrame():
             crypto_util.set_key(crypto_key)
             self._set_state(True)
             ui.notify("Connected!", type='positive')
+
+            if not db_util.check_database_revision():
+                await generic_popups.info_popup("This version of Orchestrator doesn't match the version of the connected database. Unexpected errors might occur.")
 
     def _disconnect(self) -> None:
         db_util.disconnect()

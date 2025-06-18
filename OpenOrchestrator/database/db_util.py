@@ -5,7 +5,7 @@ from typing import TypeVar, ParamSpec
 from uuid import UUID
 
 from croniter import croniter  # type: ignore
-from sqlalchemy import Engine, create_engine, select, insert, desc
+from sqlalchemy import Engine, create_engine, select, insert, desc, text
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
@@ -54,6 +54,19 @@ def disconnect() -> None:
     if _connection_engine:
         _connection_engine.dispose()
     _connection_engine = None
+
+
+def check_database_revision() -> bool:
+    """Check if the revision number of the connected database matches the expected revision."""
+    try:
+        with _get_session() as session:
+            version = session.execute(text(
+                """SELECT version_num FROM alembic_version"""
+            )).scalar()
+    except Exception:
+        return False
+
+    return version == "526b6edac328"
 
 
 def _get_session() -> Session:
