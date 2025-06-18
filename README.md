@@ -46,6 +46,24 @@ Requires Python 3.10 or later.
 
 Install using `pip install OpenOrchestrator`
 
+### Creating or upgrading a database
+
+If you need to create a new database or upgrade to a new revision follow these steps:
+
+1. Download this repository either via Github or Git.
+2. Open a command line in the project folder.
+3. Run the following commands:
+
+```bash
+python -m venv .venv
+.venv\scripts\activate
+pip install .[alembic]
+
+python -m OpenOrchestrator upgrade "<Your connection string here>"
+```
+
+This will automatically bring you to the newest revision of the database.
+
 ## Contributing
 
 ### Setup
@@ -91,17 +109,17 @@ Not all functionality is covered by automated tests. Especially the Scheduler ap
 
 Refer to the `manual_tests.txt` file for a list of things that should be tested.
 
-### Updating database schemas
+### Creating new database revisions
 
 If your update requires a change to the database schemas you need to create a new revision schema in the `alembic` folder.
 
 This can mostly be done automatically by the following steps:
 
-1. First make sure your database is on the previous version of the database schema.
+1. First make sure your database is on the __previous__ version of the database schema.
 
-2. Make sure any new ORM classes are imported in the `alembic/env.py` and `db_util.py` files.
+2. Make sure any new ORM classes are imported in `alembic/env.py`.
 
-3. Then run the following commands (replacing the connection string and message):
+3. Then run the following command (replacing the connection string and message):
 
     ```bash
     alembic -x "connection_string" revision --autogenerate -m "Some useful message"
