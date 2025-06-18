@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 
 from nicegui import ui
-from croniter import croniter, CroniterBadCronError  # type: ignore
+from cronsim import CronSim, CronSimError
 
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.database import db_util
@@ -49,7 +49,7 @@ class TriggerPopup():
             self.path_input = ui.input("Process Path").classes("w-full")
             self.git_check = ui.checkbox("Is path a Git Repo?")
             self.args_input = ui.input("Process Arguments").classes("w-full")
-            self.blocking_check = ui.checkbox("Is process blocking?")
+            self.blocking_check = ui.checkbox(text="Is process blocking?", value=True)
 
             if trigger:
                 with ui.row():
@@ -77,9 +77,9 @@ class TriggerPopup():
 
         def validate_cron(value: str):
             try:
-                croniter(value)
+                CronSim(value, datetime.now())
                 return True
-            except CroniterBadCronError:
+            except CronSimError:
                 return False
 
         self.cron_input.validation = {"Invalid cron expression": validate_cron}
@@ -120,8 +120,8 @@ class TriggerPopup():
 
     def _cron_change(self):
         if self.cron_input.validate():
-            cron_iter = croniter(self.cron_input.value, datetime.now())
-            self.time_input.set_datetime(cron_iter.next(datetime))
+            cron_iter = CronSim(self.cron_input.value, datetime.now())
+            self.time_input.set_datetime(next(cron_iter))
 
     async def _validate(self) -> bool:
         result = True

@@ -1,6 +1,7 @@
 """This module is responsible for checking triggers and running processes."""
 
 import os
+import shutil
 import subprocess
 from dataclasses import dataclass
 import uuid
@@ -127,6 +128,10 @@ def clone_git_repo(repo_url: str) -> str:
     repo_path = os.path.join(repo_folder, unique_id)
 
     os.makedirs(repo_path)
+
+    if shutil.which('git') is None:
+        raise RuntimeError('git is not installed or not found in the system PATH.')
+
     try:
         subprocess.run(['git', 'clone', repo_url, repo_path], check=True)
     except subprocess.CalledProcessError as exc:

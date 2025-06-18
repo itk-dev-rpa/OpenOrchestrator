@@ -4,8 +4,9 @@ from datetime import datetime
 from typing import TypeVar, ParamSpec
 from uuid import UUID
 
-from croniter import croniter  # type: ignore
+from cronsim import CronSim
 from sqlalchemy import Engine, create_engine, select, insert, desc, text
+
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
@@ -622,7 +623,7 @@ def begin_scheduled_trigger(trigger_id: UUID | str) -> bool:
 
         trigger.process_status = TriggerStatus.RUNNING
         trigger.last_run = datetime.now()
-        trigger.next_run = croniter(trigger.cron_expr, datetime.now()).get_next(datetime)
+        trigger.next_run = next(CronSim(trigger.cron_expr, datetime.now()))
 
         session.commit()
         return True

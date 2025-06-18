@@ -14,12 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added argument to prevent Orchestrator from opening in the browser automatically.
 - Commandline command to upgrade a database to the newest schema.
 - Added 'Scheduler' tab with overview of running schedulers.
+- Raise error if git is not installed when trying to clone a git repo
 
 ### Changed
 
 - Changed cli to use argparser.
 - Arguments to start Scheduler and Orchestrator are now subcommands (no '-' before 'o' and 's').
 - Trigger status 'Paused' is now colored orange in the trigger tab.
+- When creating a new trigger, blocking process is now default.
+
+### Fixed
+
+- Switched croniter module with cronsim module
 
 ### Fixed
 
