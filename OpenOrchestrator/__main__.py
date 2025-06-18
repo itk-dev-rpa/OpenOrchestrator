@@ -41,7 +41,7 @@ def orchestrator_command(args: argparse.Namespace):
     o_app(port=args.port, show=args.dont_show)
 
 
-def scheduler_command():
+def scheduler_command(args: argparse.Namespace):
     """Start the Scheduler app."""
     s_app()
 
