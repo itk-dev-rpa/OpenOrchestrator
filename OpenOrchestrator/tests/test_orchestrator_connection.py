@@ -4,12 +4,14 @@ import unittest
 from datetime import datetime
 from uuid import UUID
 import os
+import time
 
 from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConnection
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.database.queues import QueueStatus
+from OpenOrchestrator.database.triggers import TriggerStatus
 
 from OpenOrchestrator.tests import db_test_util
 
@@ -119,6 +121,44 @@ class TestOrchestratorConnection(unittest.TestCase):
         self.connection.delete_queue_element(element.id)
         elements = self.connection.get_queue_elements("Bulk Queue")
         self.assertEqual(len(elements), 9)
+    
+    def test_run_process(self):
+        """Test running and pausing a process."""
+        # Create a process and trigger
+        trigger = db_util.create_single_trigger("TestTrigger",
+                                                self.connection.process_name,
+                                                datetime.now(),
+                                                "https://github.com/itk-dev-rpa/Babys-first-robot.git",
+                                                "",
+                                                True,
+                                                False)
+        # Start running process
+        db_util.begin_scheduled_trigger(trigger.id)
+        # Confirm process runs
+        process_status = db_util.get_trigger(trigger.id).process_status
+        self.assertTrue(process_status == TriggerStatus.RUNNING)
+        # Confirm process ends within X time
+        time.sleep(5)
+        process_status = db_util.get_trigger(trigger.id).process_status
+        self.assertTrue(process_status == TriggerStatus.IDLE)
+        # Start running process
+        db_util.begin_single_trigger(trigger.id)
+        # Pause process
+        db_util.set_trigger_status(trigger.id, TriggerStatus.PAUSING)
+        time.sleep(5)
+        # Confirm process paused
+        process_status = db_util.get_trigger(trigger.id).process_status
+        self.assertTrue(process_status == TriggerStatus.PAUSED)
+        # Unpause process
+        db_util.set_trigger_status(trigger.id, TriggerStatus.IDLE)
+        # Confirm process running
+        time.sleep(5)
+        process_status = db_util.get_trigger(trigger.id).process_status
+        self.assertTrue(process_status == TriggerStatus.RUNNING)
+        # Confirm process ends
+        time.sleep(5)
+        process_status = db_util.get_trigger(trigger.id).process_status
+        self.assertTrue(process_status == TriggerStatus.IDLE)
 
 
 if __name__ == '__main__':
