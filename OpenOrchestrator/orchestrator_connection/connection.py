@@ -10,6 +10,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
+from OpenOrchestrator.database.triggers import TriggerStatus
 
 
 class OrchestratorConnection:
@@ -187,6 +188,19 @@ class OrchestratorConnection:
             element_id: The id of the queue element.
         """
         db_util.delete_queue_element(element_id)
+
+    def is_process_pausing(self) -> bool:
+        """Check if any trigger associated with the process is set to pausing.
+        Intended for use to stop a running process from the orchestrator.
+
+        Returns:
+            Bool: Whether or not any trigger is set to PAUSING.
+        """
+        triggers = db_util.get_triggers(self.process_name)
+        for trigger in triggers:
+            if trigger.process_status == TriggerStatus.PAUSING:
+                return True
+        return False
 
     @classmethod
     def create_connection_from_args(cls):

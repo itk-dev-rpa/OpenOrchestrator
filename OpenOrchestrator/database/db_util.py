@@ -125,6 +125,24 @@ def get_trigger(trigger_id: UUID | str) -> Trigger:
     return trigger
 
 
+def get_triggers(process_name: str) -> list[Trigger]:
+    """Get all triggers associated with the given process.
+
+    Args:
+        process_name: Process name of the triggers.
+
+    Returns:
+        List[Trigger]: List of triggers associated with the process.
+    """
+    with _get_session() as session:
+        query = (
+            select(Trigger)
+            .where(Trigger.process_name == process_name)
+            .options(selectin_polymorphic(Trigger, (ScheduledTrigger, QueueTrigger, SingleTrigger)))
+        )
+        return session.scalar(query)
+
+
 def get_all_triggers() -> tuple[Trigger, ...]:
     """Get all triggers in the database.
 
