@@ -140,7 +140,7 @@ def get_triggers(process_name: str) -> list[Trigger]:
             .where(Trigger.process_name == process_name)
             .options(selectin_polymorphic(Trigger, (ScheduledTrigger, QueueTrigger, SingleTrigger)))
         )
-        return session.scalar(query)
+        return session.scalars(query).all()
 
 
 def get_all_triggers() -> tuple[Trigger, ...]:
@@ -297,7 +297,7 @@ def get_unique_log_process_names() -> tuple[str, ...]:
 
 
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
-                          process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool) -> Trigger:
+                          process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool) -> str:
     """Create a new single trigger in the database.
 
     Args:
@@ -310,7 +310,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         is_blocking: If the process should be blocking.
 
     Returns:
-        The trigger that was created.
+        The id of the trigger that was created.
     """
     with _get_session() as session:
         trigger = SingleTrigger(
@@ -324,12 +324,12 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         )
         session.add(trigger)
         session.commit()
-    return trigger
+        return trigger.id
 
 
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
-                             is_blocking: bool) -> Trigger:
+                             is_blocking: bool) -> str:
     """Create a new scheduled trigger in the database.
 
     Args:
@@ -343,7 +343,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         is_blocking: If the process should be blocking.
 
     Returns:
-        The trigger that was created.
+        The id of the trigger that was created.
     """
     with _get_session() as session:
         trigger = ScheduledTrigger(
@@ -358,12 +358,12 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         )
         session.add(trigger)
         session.commit()
-    return trigger
+        return trigger.id
 
 
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int) -> Trigger:
+                         min_batch_size: int) -> str:
     """Create a new queue trigger in the database.
 
     Args:
@@ -377,7 +377,7 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         min_batch_size: The minimum number of queue elements before triggering.
 
     Returns:
-        The trigger that was created.
+        The id of the trigger that was created.
     """
     with _get_session() as session:
         trigger = QueueTrigger(
@@ -392,7 +392,7 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         )
         session.add(trigger)
         session.commit()
-    return trigger
+        return trigger.id
 
 
 def get_constant(name: str) -> Constant:

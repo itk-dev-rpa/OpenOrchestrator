@@ -202,6 +202,14 @@ class OrchestratorConnection:
                 return True
         return False
 
+    def pause_my_triggers(self) -> None:
+        """Run through all associated triggers and set their status to PAUSED.
+        """
+        triggers = db_util.get_triggers(self.process_name)
+        for trigger in triggers:
+            if trigger.process_status == TriggerStatus.PAUSING:
+                db_util.set_trigger_status(trigger.id, TriggerStatus.PAUSED)
+
     @classmethod
     def create_connection_from_args(cls):
         """Create a Connection object using the arguments passed to sys.argv.
