@@ -1,3 +1,4 @@
+"""A simple script to run from tests, to emulate running a robot with an OrchestratorConnection, testing TriggerStatus updates."""
 import time
 import sys
 
@@ -8,6 +9,14 @@ from OpenOrchestrator.database.triggers import TriggerStatus
 
 
 def run_queue_elements(conn: OrchestratorConnection):
+    """Run a simple iteration through an existing queue on this orchestrator connection.
+
+    Args:
+        conn: An orchestrator connection with a queue of elements to iterate through.
+
+    Returns:
+        Return true if the process ran through all elements before pausing.
+    """
     # Get queue elements
     queue_elements = db_util.get_queue_elements(conn.process_name, status=QueueStatus.NEW)
     # Iterate through queue and check for pausing

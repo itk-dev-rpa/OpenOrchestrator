@@ -1,3 +1,4 @@
+"""Tests for running a process and setting the process to PAUSING, expecting status to go to PAUSED."""
 import unittest
 import time
 import os
@@ -12,7 +13,7 @@ from OpenOrchestrator.tests import db_test_util
 
 
 class TestRunProcess(unittest.TestCase):
-    """Tests for OrchestratorConnection."""
+    """Tests for running a process."""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -22,15 +23,19 @@ class TestRunProcess(unittest.TestCase):
     def test_run_process(self):
         """Test running and pausing a process."""
         # Create a process and trigger
+        process_file = os.path.join(os.getcwd(), "OpenOrchestrator", "tests", "process_pause_util.py")
         trigger_id = db_util.create_queue_trigger(trigger_name=self.connection.process_name,
                                                   process_name=self.connection.process_name,
                                                   queue_name=self.connection.process_name,
-                                                  process_path=f"{os.getcwd()}\\OpenOrchestrator\\tests\\process_pause_util.py",
+                                                  process_path=process_file,
                                                   process_args="",
                                                   is_git_repo=False,
                                                   is_blocking=False,
                                                   min_batch_size=1)
-        
+        # Create initial queue for checking run works
+        for _ in range(4):
+            db_util.create_queue_element(self.connection.process_name)  # Each queue element takes 1 second
+
         # Start running process trigger
         trigger = db_util.get_trigger(trigger_id)
         db_util.begin_queue_trigger(trigger.id)
@@ -40,18 +45,16 @@ class TestRunProcess(unittest.TestCase):
 
         venv_python = os.path.join(os.environ.get('VIRTUAL_ENV', ''), 'Scripts', 'python.exe')
         command_args = [venv_python, trigger.process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
-        fake_scheduler = subprocess.Popen(command_args)
+        with subprocess.Popen(command_args) as fake_scheduler:
+            time.sleep(1)
 
-        for _ in range(4):
-            db_util.create_queue_element(self.connection.process_name)  # Each queue element takes 1 second
-        time.sleep(1)
+            # Confirm process runs
+            process_status = db_util.get_trigger(trigger.id).process_status
+            self.assertTrue(process_status == TriggerStatus.RUNNING)
 
-        # Confirm process runs
-        process_status = db_util.get_trigger(trigger.id).process_status
-        self.assertTrue(process_status == TriggerStatus.RUNNING)
+            # Confirm process ends within X time
+            fake_scheduler.wait(10)
 
-        # Confirm process ends within X time
-        fake_scheduler.wait(10)
         process_status = db_util.get_trigger(trigger.id).process_status
         self.assertTrue(process_status == TriggerStatus.IDLE)
 
@@ -60,13 +63,13 @@ class TestRunProcess(unittest.TestCase):
             db_util.create_queue_element(self.connection.process_name)
 
         # Start running process
-        fake_scheduler = subprocess.Popen(command_args)
-        db_util.begin_queue_trigger(trigger.id)
-        time.sleep(4)
+        with subprocess.Popen(command_args) as fake_scheduler:
+            db_util.begin_queue_trigger(trigger.id)
+            time.sleep(4)
 
-        # Pause process
-        db_util.set_trigger_status(trigger.id, TriggerStatus.PAUSING)
-        fake_scheduler.wait(10)
+            # Pause process
+            db_util.set_trigger_status(trigger.id, TriggerStatus.PAUSING)
+            fake_scheduler.wait(10)
 
         # Confirm process paused
         process_status = db_util.get_trigger(trigger.id).process_status
