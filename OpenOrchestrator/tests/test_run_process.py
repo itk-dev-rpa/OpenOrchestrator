@@ -2,6 +2,7 @@
 import unittest
 import time
 import os
+import sys
 import subprocess
 
 from OpenOrchestrator.database import db_util
@@ -43,7 +44,7 @@ class TestRunProcess(unittest.TestCase):
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
-        venv_python = os.path.join(os.environ.get('VIRTUAL_ENV', ''), 'Scripts', 'python.exe')
+        venv_python = sys.executable
         command_args = [venv_python, trigger.process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
         with subprocess.Popen(command_args) as fake_scheduler:
             time.sleep(1)
