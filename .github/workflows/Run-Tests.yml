@@ -9,6 +9,13 @@ jobs:
       matrix:
         python-version: ["3.11"]
     steps:
+      
+    # https://github.com/mxschmitt/action-tmate?tab=readme-ov-file#manually-triggered-debug
+    # Enable tmate debugging if debug logging is enabled (cf.
+    # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#runner-context)
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: 1 == runner.debug
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -30,8 +37,3 @@ jobs:
         python -m unittest discover
       env:
         CONN_STRING: sqlite+pysqlite:///test_db.db
-    # https://github.com/mxschmitt/action-tmate?tab=readme-ov-file#manually-triggered-debug
-    # Enable tmate debugging if debug logging is enabled (cf.
-    # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#runner-context)
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
