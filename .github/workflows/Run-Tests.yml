@@ -31,7 +31,6 @@ jobs:
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#runner-context)
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
-      if: 1 == runner.debug
       with:
           limit-access-to-actor: false
     - name: Run tests
