@@ -32,6 +32,8 @@ jobs:
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
       if: 1 == runner.debug
+      with:
+          limit-access-to-actor: false
     - name: Run tests
       run: |
         python -m unittest discover
