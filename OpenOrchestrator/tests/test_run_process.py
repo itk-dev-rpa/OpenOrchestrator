@@ -45,18 +45,15 @@ class TestRunProcess(unittest.TestCase):
 
         venv_python = os.path.join(os.environ.get('VIRTUAL_ENV', ''), 'Scripts', 'python.exe')
         command_args = [venv_python, trigger.process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
-        try:
-            with subprocess.Popen(command_args) as fake_scheduler:
-                time.sleep(1)
+        with subprocess.Popen(command_args) as fake_scheduler:
+            time.sleep(1)
 
-                # Confirm process runs
-                process_status = db_util.get_trigger(trigger.id).process_status
-                self.assertTrue(process_status == TriggerStatus.RUNNING)
+            # Confirm process runs
+            process_status = db_util.get_trigger(trigger.id).process_status
+            self.assertTrue(process_status == TriggerStatus.RUNNING)
 
-                # Confirm process ends within X time
-                fake_scheduler.wait(10)
-        except Exception:
-            print(process_file)
+            # Confirm process ends within X time
+            fake_scheduler.wait(10)
 
         process_status = db_util.get_trigger(trigger.id).process_status
         self.assertTrue(process_status == TriggerStatus.IDLE)
