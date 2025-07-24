@@ -14,7 +14,7 @@ def establish_clean_database():
     crypto_util.set_key(crypto_util.generate_key().decode())
 
     drop_all_tables()
-    db_util.initialize_database()
+    base.Base.metadata.create_all(db_util._connection_engine)
 
 
 def drop_all_tables():
