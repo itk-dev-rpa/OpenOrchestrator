@@ -12,7 +12,6 @@ from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import base
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
