@@ -30,3 +30,10 @@ jobs:
         python -m unittest discover
       env:
         CONN_STRING: sqlite+pysqlite:///test_db.db
+
+    - name: Upload screenshots if tests fail
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: error_screenshots
+        path: error_screenshots/

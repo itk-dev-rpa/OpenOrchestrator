@@ -22,6 +22,7 @@ class TestConstantsTab(unittest.TestCase):
     def tearDown(self) -> None:
         self.browser.quit()
 
+    @ui_util.screenshot_on_error
     def test_constants_table(self):
         """Test that constants are shown correctly in the constants table."""
         db_util.create_constant("Constant 1", "Value 1")
@@ -38,6 +39,7 @@ class TestConstantsTab(unittest.TestCase):
         self.assertEqual(table_data[1][1], "Value 2")
         self.assertRegex(table_data[1][2], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")
 
+    @ui_util.screenshot_on_error
     def test_credentials_table(self):
         """Test that credentials are shown correctly in the credentials table."""
         db_util.create_credential("Credential 1", "Username 1", "abc")
@@ -56,6 +58,7 @@ class TestConstantsTab(unittest.TestCase):
         self.assertEqual(table_data[1][2], "120 encrypted bytes. 16-31 decrypted bytes.")
         self.assertRegex(table_data[1][3], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")
 
+    @ui_util.screenshot_on_error
     def test_create_constant(self):
         """Test creating a constant."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constants_tab_constant_button]").click()
@@ -68,6 +71,7 @@ class TestConstantsTab(unittest.TestCase):
         self.assertEqual(constant.name, "Constant Name")
         self.assertEqual(constant.value, "Constant Value")
 
+    @ui_util.screenshot_on_error
     def test_create_credential(self):
         """Test creating a credential."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constants_tab_credential_button]").click()
@@ -85,6 +89,7 @@ class TestConstantsTab(unittest.TestCase):
         self.assertEqual(credential.username, "Credential Username")
         self.assertEqual(credential.password, "Credential Password")
 
+    @ui_util.screenshot_on_error
     def test_edit_constant(self):
         """Test editing an existing constant."""
         # Create a constant
@@ -101,6 +106,7 @@ class TestConstantsTab(unittest.TestCase):
         constant = db_util.get_constant("Constant Name")
         self.assertEqual(constant.value, "Value New")
 
+    @ui_util.screenshot_on_error
     def test_edit_credential(self):
         """Test editing an existing credential."""
         # Create a credential
@@ -122,6 +128,7 @@ class TestConstantsTab(unittest.TestCase):
         self.assertEqual(credential.username, "Username New")
         self.assertEqual(credential.password, "Password New")
 
+    @ui_util.screenshot_on_error
     def test_delete_constant(self):
         """Test deleting a constant."""
         # Create a constant
@@ -138,6 +145,7 @@ class TestConstantsTab(unittest.TestCase):
         with self.assertRaises(ValueError):
             db_util.get_constant("Constant Name")
 
+    @ui_util.screenshot_on_error
     def test_delete_credential(self):
         """Test deleting a credential."""
         # Create a credential

@@ -4,6 +4,8 @@ import subprocess
 import os
 import sys
 import time
+from typing import Callable
+from pathlib import Path
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -109,6 +111,24 @@ def click_table_row(browser: webdriver.Chrome, auto_id: str, index: int):
     time.sleep(0.5)
 
 
-if __name__ == '__main__':
-    b = open_orchestrator()
-    input("Continue...")
+def screenshot_on_error(test_func: Callable):
+    """A decorator that can be used on test functions to tak a Selenium screenshot on errors.
+    The unittest class must have a instance variable called "browser" which is the Selenium webdriver.
+
+    Args:
+        test_func: The test function to decorate.
+    """
+    def wrapper(*args, **kwargs):
+        browser: webdriver.Chrome = args[0].browser
+
+        try:
+            test_func(*args, **kwargs)
+            raise RuntimeError()
+        except:
+            folder = Path("error_screenshots").absolute()
+            folder.mkdir(exist_ok=True)
+            path = folder / Path(f"{test_func.__name__}.png")
+            browser.save_screenshot(str(path))
+            raise
+
+    return wrapper
