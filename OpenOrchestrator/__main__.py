@@ -41,7 +41,7 @@ def orchestrator_command(args: argparse.Namespace):
     o_app(port=args.port, show=args.dont_show)
 
 
-def scheduler_command(args: argparse.Namespace):
+def scheduler_command(args: argparse.Namespace):  # pylint: disable=unused-argument
     """Start the Scheduler app."""
     s_app()
 
@@ -66,7 +66,6 @@ def upgrade_command(args: argparse.Namespace):
 
         subprocess.run(["alembic", "-x", args.connection_string, "upgrade", "head"], check=True)
         print("Database upgraded to the newest revision!")
-        return
     else:
         print("Upgrade canceled")
 

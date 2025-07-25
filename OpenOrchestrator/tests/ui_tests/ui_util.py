@@ -123,7 +123,7 @@ def screenshot_on_error(test_func: Callable) -> Callable:
 
         try:
             test_func(*args, **kwargs)
-        except:
+        except Exception:
             folder = Path("error_screenshots")
             folder.mkdir(exist_ok=True)
             path = folder / Path(f"{test_func.__name__}.png")

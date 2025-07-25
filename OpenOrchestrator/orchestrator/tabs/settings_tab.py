@@ -17,4 +17,3 @@ class SettingsTab():
                 self.key_button = ui.button("Generate Key", on_click=conn_frame.new_key)
 
         test_helper.set_automation_ids(self, "settings_tab")
-

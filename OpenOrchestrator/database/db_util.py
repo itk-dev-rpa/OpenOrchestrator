@@ -63,7 +63,7 @@ def check_database_revision() -> bool:
             version = session.execute(text(
                 """SELECT version_num FROM alembic_version"""
             )).scalar()
-    except Exception:
+    except alc_exc.ProgrammingError:
         return False
 
     return version == "526b6edac328"

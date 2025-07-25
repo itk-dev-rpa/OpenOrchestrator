@@ -14,7 +14,7 @@ def establish_clean_database():
     crypto_util.set_key(crypto_util.generate_key().decode())
 
     drop_all_tables()
-    base.Base.metadata.create_all(db_util._connection_engine)
+    base.Base.metadata.create_all(db_util._connection_engine)  # pylint: disable=protected-access
 
 
 def drop_all_tables():
