@@ -3,7 +3,7 @@ name: Run-Tests
 on: [pull_request]
 
 jobs:
-  build:
+  Run-tests:
     runs-on: windows-latest
     strategy:
       matrix:
@@ -22,7 +22,6 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install .
         pip install .[dev]
 
     - name: Run tests
@@ -30,6 +29,7 @@ jobs:
         python -m unittest discover
       env:
         CONN_STRING: sqlite+pysqlite:///test_db.db
+        Orchestrator_Test: True
 
     - name: Upload screenshots if tests fail
       if: failure()
