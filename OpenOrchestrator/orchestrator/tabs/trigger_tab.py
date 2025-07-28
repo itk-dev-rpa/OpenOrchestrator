@@ -10,6 +10,7 @@ from OpenOrchestrator.orchestrator import test_helper
 
 COLUMNS = [
     {'name': "Trigger Name", 'label': "Trigger Name", 'field': "Trigger Name", 'align': 'left', 'sortable': True},
+    {'name': "Priority", 'label': "Priority", 'field': "Priority", 'align': 'left', 'sortable': True},
     {'name': "Type", 'label': "Type", 'field': "Type", 'align': 'left', 'sortable': True},
     {'name': "Status", 'label': "Status", 'field': "Status", 'align': 'left', 'sortable': True},
     {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left', 'sortable': True},
