@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added argument to prevent Orchestrator from opening in the browser automatically.
 - Commandline command to upgrade a database to the newest schema.
 - Added 'Scheduler' tab with overview of running schedulers.
-- Raise error if git is not installed when trying to clone a git repo
+- Raise error if git is not installed when trying to clone a git repo.
+- Added priority and scheduler whitelist to triggers.
 
 ### Changed
 
@@ -22,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Arguments to start Scheduler and Orchestrator are now subcommands (no '-' before 'o' and 's').
 - Trigger status 'Paused' is now colored orange in the trigger tab.
 - When creating a new trigger, blocking process is now default.
+- Scheduler no longer auto-connects.
+- Removed 'Initialize database' button from Orchestrator. Use upgrade command instead.
 
 ### Fixed
 
