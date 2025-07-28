@@ -66,7 +66,7 @@ def check_database_revision() -> bool:
     except alc_exc.ProgrammingError:
         return False
 
-    return version == "526b6edac328"
+    return version == "90d46abd44a3"
 
 
 def _get_session() -> Session:
@@ -280,7 +280,8 @@ def get_unique_log_process_names() -> tuple[str, ...]:
 
 
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
-                          process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool) -> None:
+                          process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool,
+                          priority: int, scheduler_whitelist: str) -> None:
     """Create a new single trigger in the database.
 
     Args:
@@ -291,6 +292,8 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         process_args: The argument string of the process.
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
+        priority: The integer priority of the trigger.
+        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
     """
     with _get_session() as session:
         trigger = SingleTrigger(
@@ -300,7 +303,9 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
             process_args = process_args,
             is_git_repo = is_git_repo,
             is_blocking = is_blocking,
-            next_run = next_run
+            next_run = next_run,
+            priority=priority,
+            scheduler_whitelist=scheduler_whitelist
         )
         session.add(trigger)
         session.commit()
@@ -308,7 +313,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
 
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
-                             is_blocking: bool) -> None:
+                             is_blocking: bool, priority: int, scheduler_whitelist: str) -> None:
     """Create a new scheduled trigger in the database.
 
     Args:
@@ -320,6 +325,8 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         process_args: The argument string of the process.
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
+        priority: The integer priority of the trigger.
+        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
     """
     with _get_session() as session:
         trigger = ScheduledTrigger(
@@ -330,7 +337,9 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
             is_git_repo = is_git_repo,
             is_blocking = is_blocking,
             next_run = next_run,
-            cron_expr = cron_expr
+            cron_expr = cron_expr,
+            priority=priority,
+            scheduler_whitelist=scheduler_whitelist
         )
         session.add(trigger)
         session.commit()
@@ -338,7 +347,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
 
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int) -> None:
+                         min_batch_size: int, priority: int, scheduler_whitelist: str) -> None:
     """Create a new queue trigger in the database.
 
     Args:
@@ -350,6 +359,8 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         is_git_repo: The is_git value of the process.
         is_blocking: The is_blocking value of the process.
         min_batch_size: The minimum number of queue elements before triggering.
+        priority: The integer priority of the trigger.
+        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
     """
     with _get_session() as session:
         trigger = QueueTrigger(
@@ -360,7 +371,9 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
             is_git_repo = is_git_repo,
             is_blocking = is_blocking,
             queue_name = queue_name,
-            min_batch_size = min_batch_size
+            min_batch_size = min_batch_size,
+            priority=priority,
+            scheduler_whitelist=scheduler_whitelist
         )
         session.add(trigger)
         session.commit()
