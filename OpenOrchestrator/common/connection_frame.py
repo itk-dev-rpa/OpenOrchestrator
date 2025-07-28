@@ -45,7 +45,7 @@ class ConnectionFrame():
             self._set_state(True)
             ui.notify("Connected!", type='positive')
 
-            if not os.getenv("Orchestrator_Test") and not db_util.check_database_revision():
+            if not os.getenv("ORCHESTRATOR_TEST") and not db_util.check_database_revision():
                 await generic_popups.info_popup("This version of Orchestrator doesn't match the version of the connected database. Unexpected errors might occur.")
 
     def _disconnect(self) -> None:

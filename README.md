@@ -85,11 +85,11 @@ This means that any changes to the code is automatically included in the install
 
 OpenOrchestrator contains automated tests.
 
-Before running the tests you need to define the connection string to your test database
-as a environment variable:
+Before running the tests you need to define the following environment variables:
 
 ```bash
-SET CONN_STRING= *connection string here*
+SET CONN_STRING="<connection string to test db>"
+SET ORCHESTRATOR_TEST=True
 ```
 
 Examples of connection strings:
