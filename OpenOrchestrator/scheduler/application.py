@@ -27,7 +27,7 @@ class Application(tkinter.Tk):
         notebook.pack(expand=True, fill='both')
 
         run_tab_ = run_tab.RunTab(notebook, self)
-        settings_tab_ = settings_tab.create_tab(notebook)
+        settings_tab_ = settings_tab.SettingsTab(notebook)
 
         notebook.add(run_tab_, text='Run')
         notebook.add(settings_tab_, text="Settings")
