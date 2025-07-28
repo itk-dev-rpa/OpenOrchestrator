@@ -1,17 +1,13 @@
 """This module is responsible for the layout and functionality of the settings tab
 in Scheduler."""
 
-from __future__ import annotations
-from typing import TYPE_CHECKING
 import os
 import tkinter
 from tkinter import ttk, messagebox
+import platform
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
-
-if TYPE_CHECKING:
-    from OpenOrchestrator.scheduler.application import Application
 
 
 class SettingsTab(ttk.Frame):
@@ -38,9 +34,11 @@ class SettingsTab(ttk.Frame):
         self._disconn_button = ttk.Button(self, text="Disconnect", command=self._disconnect, state='disabled')
         self._disconn_button.grid(row=1, column=2, sticky='e')
 
+        ttk.Label(self, text=f"Scheduler name: {platform.node()}").grid(row=2, column=0, sticky='w', columnspan=2, pady=10)
+
         self.whitelist_value = tkinter.BooleanVar()
         self._whitelist_check = ttk.Checkbutton(self, text="Only run whitelisted triggers", variable=self.whitelist_value)
-        self._whitelist_check.grid(row=2, column=0, sticky='w', columnspan=2, pady=10)
+        self._whitelist_check.grid(row=3, column=0, sticky='w', columnspan=2)
 
         self._auto_fill()
 
