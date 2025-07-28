@@ -3,6 +3,7 @@ in Scheduler."""
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import platform
 
 import tkinter
 from tkinter import ttk
@@ -111,6 +112,8 @@ def loop(app: Application) -> None:
         app: The Scheduler Application object.
     """
     try:
+        send_ping_to_orchestrator()
+
         check_heartbeats(app)
 
         if app.running:
@@ -173,3 +176,9 @@ def check_triggers(app: Application) -> None:
 
         if job is not None:
             app.running_jobs.append(job)
+
+
+def send_ping_to_orchestrator():
+    """Send a ping to the connected Orchestrator with the machine's hostname."""
+    machine_name = platform.node()
+    db_util.send_ping_from_scheduler(machine_name)
