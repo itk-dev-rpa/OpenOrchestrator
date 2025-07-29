@@ -4,12 +4,13 @@ in Scheduler."""
 import os
 import tkinter
 from tkinter import ttk, messagebox
-import platform
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.scheduler import util
 
 
+# pylint: disable=too-many-ancestors
 class SettingsTab(ttk.Frame):
     """A ttk.Frame object containing the functionality of the settings tab in Scheduler."""
     def __init__(self, parent: ttk.Notebook):
@@ -34,7 +35,7 @@ class SettingsTab(ttk.Frame):
         self._disconn_button = ttk.Button(self, text="Disconnect", command=self._disconnect, state='disabled')
         self._disconn_button.grid(row=1, column=2, sticky='e')
 
-        ttk.Label(self, text=f"Scheduler name: {platform.node()}").grid(row=2, column=0, sticky='w', columnspan=2, pady=10)
+        ttk.Label(self, text=f"Scheduler name: {util.get_scheduler_name()}").grid(row=2, column=0, sticky='w', columnspan=2, pady=10)
 
         self.whitelist_value = tkinter.BooleanVar()
         self._whitelist_check = ttk.Checkbutton(self, text="Only run whitelisted triggers", variable=self.whitelist_value)

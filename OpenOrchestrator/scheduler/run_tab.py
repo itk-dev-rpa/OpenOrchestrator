@@ -3,7 +3,6 @@ in Scheduler."""
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
-import platform
 
 import tkinter
 from tkinter import ttk
@@ -13,7 +12,7 @@ from sqlalchemy import exc as alc_exc
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
-from OpenOrchestrator.scheduler import runner
+from OpenOrchestrator.scheduler import runner, util
 
 if TYPE_CHECKING:
     from OpenOrchestrator.scheduler.application import Application
@@ -179,6 +178,5 @@ def check_triggers(app: Application) -> None:
 
 
 def send_ping_to_orchestrator():
-    """Send a ping to the connected Orchestrator with the machine's hostname."""
-    machine_name = platform.node()
-    db_util.send_ping_from_scheduler(machine_name)
+    """Send a ping to the connected Orchestrator with the Scheduler application's name."""
+    db_util.send_ping_from_scheduler(util.get_scheduler_name())
