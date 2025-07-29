@@ -279,6 +279,7 @@ def get_unique_log_process_names() -> tuple[str, ...]:
         return tuple(result)
 
 
+# pylint: disable=too-many-positional-arguments
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
                           process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool,
                           priority: int, scheduler_whitelist: str) -> None:
@@ -311,6 +312,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         session.commit()
 
 
+# pylint: disable=too-many-positional-arguments
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
                              is_blocking: bool, priority: int, scheduler_whitelist: str) -> None:
@@ -345,6 +347,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         session.commit()
 
 
+# pylint: disable=too-many-positional-arguments
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
                          min_batch_size: int, priority: int, scheduler_whitelist: str) -> None:
@@ -575,11 +578,11 @@ def begin_single_trigger(trigger_id: UUID | str) -> bool:
         return True
 
 
-def get_next_single_trigger() -> SingleTrigger | None:
-    """Get the single trigger that should trigger next.
+def get_pending_single_triggers() -> list[SingleTrigger]:
+    """Get all single triggers that are ready to run.
 
     Returns:
-        The next single trigger to run if any.
+        All single triggers ready to run if any.
     """
     with _get_session() as session:
         query = (
@@ -587,16 +590,15 @@ def get_next_single_trigger() -> SingleTrigger | None:
             .where(SingleTrigger.process_status == TriggerStatus.IDLE)
             .where(SingleTrigger.next_run <= datetime.now())
             .order_by(SingleTrigger.next_run)
-            .limit(1)
         )
-        return session.scalar(query)
+        return list(session.scalars(query))
 
 
-def get_next_scheduled_trigger() -> ScheduledTrigger | None:
-    """Get the scheduled trigger that should trigger next.
+def get_pending_scheduled_triggers() -> list[ScheduledTrigger]:
+    """Get all scheduled triggers that are ready to run.
 
     Returns:
-        The next scheduled trigger to run if any.
+        All scheduled triggers ready to run if any.
     """
     with _get_session() as session:
         query = (
@@ -604,9 +606,8 @@ def get_next_scheduled_trigger() -> ScheduledTrigger | None:
             .where(ScheduledTrigger.process_status == TriggerStatus.IDLE)
             .where(ScheduledTrigger.next_run <= datetime.now())
             .order_by(ScheduledTrigger.next_run)
-            .limit(1)
         )
-        return session.scalar(query)
+        return list(session.scalars(query))
 
 
 def begin_scheduled_trigger(trigger_id: UUID | str) -> bool:
@@ -641,14 +642,11 @@ def begin_scheduled_trigger(trigger_id: UUID | str) -> bool:
         return True
 
 
-def get_next_queue_trigger() -> QueueTrigger | None:
-    """Get the next queue trigger to run.
-    This functions loops through the queue triggers and checks
-    if the number of queue elements with status 'New' is above
-    the triggers min_batch_size.
+def get_pending_queue_triggers() -> list[QueueTrigger]:
+    """Get all queue triggers that are ready to run.
 
     Returns:
-        QueueTrigger | None: The next queue trigger to run if any.
+        All queue triggers that are ready to run if any.
     """
 
     with _get_session() as session:
@@ -664,9 +662,8 @@ def get_next_queue_trigger() -> QueueTrigger | None:
             select(QueueTrigger)
             .where(QueueTrigger.process_status == TriggerStatus.IDLE)
             .where(sub_query >= QueueTrigger.min_batch_size)
-            .limit(1)
         )
-        return session.scalar(query)
+        return list(session.scalars(query))
 
 
 def begin_queue_trigger(trigger_id: UUID | str) -> bool:
