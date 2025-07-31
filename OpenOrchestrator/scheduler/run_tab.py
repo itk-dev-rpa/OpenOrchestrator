@@ -171,10 +171,13 @@ def check_triggers(app: Application) -> None:
     # Check triggers
     if not blocking:
         print('Checking triggers...')
-        job = runner.poll_triggers(app)
+        trigger = runner.poll_triggers(app)
 
-        if job is not None:
-            app.running_jobs.append(job)
+        if trigger:
+            job = runner.run_trigger(trigger)
+
+            if job:
+                app.running_jobs.append(job)
 
 
 def send_ping_to_orchestrator():
