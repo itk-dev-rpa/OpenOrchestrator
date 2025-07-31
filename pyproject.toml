@@ -30,5 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "pylint"
+  "pylint",
+  "flake8",
+  "selenium"
 ]

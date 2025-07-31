@@ -1,9 +1,11 @@
 """This module is responsible for checking triggers and running processes."""
 
 import os
+import shutil
 import subprocess
 from dataclasses import dataclass
 import uuid
+import platform
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
@@ -31,6 +33,9 @@ def poll_triggers(app) -> Job | None:
     """
 
     other_processes_running = len(app.running_jobs) != 0
+
+    machine_name = platform.node()
+    db_util.send_ping_from_scheduler(machine_name)
 
     # Single triggers
     next_single_trigger = db_util.get_next_single_trigger()
@@ -123,6 +128,10 @@ def clone_git_repo(repo_url: str) -> str:
     repo_path = os.path.join(repo_folder, unique_id)
 
     os.makedirs(repo_path)
+
+    if shutil.which('git') is None:
+        raise RuntimeError('git is not installed or not found in the system PATH.')
+
     try:
         subprocess.run(['git', 'clone', repo_url, repo_path], check=True)
     except subprocess.CalledProcessError as exc:
@@ -232,7 +241,7 @@ def run_process(trigger: Trigger) -> Job | None:
         trigger: The trigger whose process to run.
 
     Returns:
-        Job: A Job object referencing the process if succesful.
+        Job: A Job object referencing the process if successful.
     """
     process_path = trigger.process_path
     folder_path = None
@@ -254,6 +263,9 @@ def run_process(trigger: Trigger) -> Job | None:
         command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
 
         process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
+
+        machine_name = platform.node()
+        db_util.start_trigger_from_machine(machine_name, str(trigger.trigger_name))
 
         return Job(process, trigger, folder_path)
 

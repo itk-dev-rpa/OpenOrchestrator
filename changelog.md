@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Automated tests of the Orchestrator ui
+- Added argument to manually set Orchestrator port.
+- Added argument to prevent Orchestrator from opening in the browser automatically.
+- Added 'Scheduler' tab with overview of running schedulers
+- Raise error if git is not installed when trying to clone a git repo
+
+### Changed
+
+- Changed cli to use argparser.
+- Trigger status 'Paused' is now colored orange in the trigger tab.
+- When creating a new trigger, blocking process is now default.
+
 ## [1.3.1] - 2025-03-12
 
 ### Fixed
