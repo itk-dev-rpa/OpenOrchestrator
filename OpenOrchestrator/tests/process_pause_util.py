@@ -1,6 +1,5 @@
 """A simple script to run from tests, to emulate running a robot with an OrchestratorConnection, testing TriggerStatus updates."""
 import time
-import sys
 
 from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConnection
 from OpenOrchestrator.database.queues import QueueStatus
@@ -31,7 +30,7 @@ def run_queue_elements(conn: OrchestratorConnection):
 
 
 if __name__ == "__main__":
-    oc = OrchestratorConnection(process_name=sys.argv[1], connection_string=sys.argv[2], crypto_key=sys.argv[3], process_arguments="")
+    oc = OrchestratorConnection.create_connection_from_args()
     trigger = db_util.get_triggers(oc.process_name)[0]
     db_util.set_trigger_status(trigger.id, TriggerStatus.RUNNING)
     if run_queue_elements(oc):
