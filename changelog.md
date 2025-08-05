@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
 ### Added
 
 - Automated tests of the Orchestrator ui
@@ -22,9 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trigger status 'Paused' is now colored orange in the trigger tab.
 - When creating a new trigger, blocking process is now default.
 
+## [1.3.1] - 2025-03-12
+
 ### Fixed
 
-- Switched croniter module with cronsim module
+- Switched croniter with cronsim
 
 ## [1.3.0] - 2024-06-19
 
