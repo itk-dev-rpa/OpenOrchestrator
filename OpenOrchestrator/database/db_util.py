@@ -5,13 +5,13 @@ from typing import TypeVar, ParamSpec
 from uuid import UUID
 
 from cronsim import CronSim
-from sqlalchemy import Engine, create_engine, select, insert, desc
+from sqlalchemy import Engine, create_engine, select, insert, desc, text
+
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import logs, triggers, constants, queues, schedulers
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
@@ -56,6 +56,19 @@ def disconnect() -> None:
     _connection_engine = None
 
 
+def check_database_revision() -> bool:
+    """Check if the revision number of the connected database matches the expected revision."""
+    try:
+        with _get_session() as session:
+            version = session.execute(text(
+                """SELECT version_num FROM alembic_version"""
+            )).scalar()
+    except alc_exc.ProgrammingError:
+        return False
+
+    return version == "526b6edac328"
+
+
 def _get_session() -> Session:
     """Check if theres a database connection and return a
     session to it.
@@ -82,18 +95,6 @@ def get_conn_string() -> str:
         raise RuntimeError("Not connected to database.")
 
     return str(_connection_engine.url)
-
-
-def initialize_database() -> None:
-    """Initializes the database with all the needed tables."""
-    if not _connection_engine:
-        raise RuntimeError("Not connected to database.")
-
-    logs.create_tables(_connection_engine)
-    triggers.create_tables(_connection_engine)
-    constants.create_tables(_connection_engine)
-    queues.create_tables(_connection_engine)
-    schedulers.create_tables(_connection_engine)
 
 
 def get_trigger(trigger_id: UUID | str) -> Trigger:

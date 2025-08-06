@@ -3,6 +3,7 @@ in Scheduler."""
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import platform
 
 import tkinter
 from tkinter import ttk
@@ -111,13 +112,15 @@ def loop(app: Application) -> None:
         app: The Scheduler Application object.
     """
     try:
+        send_ping_to_orchestrator()
+
         check_heartbeats(app)
 
         if app.running:
             check_triggers(app)
 
-    except alc_exc.OperationalError:
-        print("Couldn't connect to database.")
+    except (alc_exc.OperationalError, alc_exc.ProgrammingError) as e:
+        print(f"Couldn't connect to database. {e}")
 
     if len(app.running_jobs) == 0:
         print("Doing cleanup...")
@@ -173,3 +176,9 @@ def check_triggers(app: Application) -> None:
 
         if job is not None:
             app.running_jobs.append(job)
+
+
+def send_ping_to_orchestrator():
+    """Send a ping to the connected Orchestrator with the machine's hostname."""
+    machine_name = platform.node()
+    db_util.send_ping_from_scheduler(machine_name)

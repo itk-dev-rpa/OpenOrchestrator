@@ -53,6 +53,8 @@ class ConnectionFrame(ttk.Frame):
         if db_util.connect(conn_string):
             crypto_util.set_key(crypto_key)
             self._set_state(True)
+            if not db_util.check_database_revision():
+                messagebox.showerror("Warning", "This version of Scheduler doesn't match the version of the connected database. Unexpected errors might occur.")
 
     def _disconnect(self) -> None:
         db_util.disconnect()

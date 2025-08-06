@@ -10,7 +10,7 @@ from OpenOrchestrator.tests.ui_tests import ui_util
 
 
 class TestSchedulersTab(unittest.TestCase):
-    """Test functionality of the constants tab ui."""
+    """Test functionality of the schedulers tab ui."""
     @classmethod
     def setUpClass(cls) -> None:
         cls.browser = ui_util.open_orchestrator()
@@ -24,8 +24,9 @@ class TestSchedulersTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=schedulers_tab]").click()
         ui_util.refresh_ui(self.browser)
 
+    @ui_util.screenshot_on_error
     def test_schedulers_table(self):
-        """Test that constants are shown correctly in the constants table."""
+        """Test that schedulers are shown correctly in the schedulers table."""
         db_util.send_ping_from_scheduler("Testmachine")
         db_util.start_trigger_from_machine("Testmachine2", "RPA Process")
         ui_util.refresh_ui(self.browser)

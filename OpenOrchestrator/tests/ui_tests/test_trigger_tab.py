@@ -24,6 +24,7 @@ class TestTriggerTab(unittest.TestCase):
     def tearDown(self) -> None:
         self.browser.quit()
 
+    @ui_util.screenshot_on_error
     def test_single_trigger_creation(self):
         """Test creation of a single trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_single_button]").click()
@@ -53,6 +54,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, True)
 
+    @ui_util.screenshot_on_error
     def test_scheduled_trigger_creation(self):
         """Test creation of a scheduled trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_scheduled_button]").click()
@@ -82,6 +84,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, False)
 
+    @ui_util.screenshot_on_error
     def test_queue_trigger_creation(self):
         """Test creation of a queue trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_queue_button]").click()
@@ -113,6 +116,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, False)
 
+    @ui_util.screenshot_on_error
     def test_trigger_table(self):
         """Test that data is shown correctly in the trigger table."""
         # Create some triggers
@@ -150,6 +154,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(table_data[2][4], "Never")
         self.assertEqual(table_data[2][5], "N/A")
 
+    @ui_util.screenshot_on_error
     def test_delete_trigger(self):
         """Test deleting a trigger."""
         # Create a trigger
@@ -168,6 +173,7 @@ class TestTriggerTab(unittest.TestCase):
         triggers = db_util.get_all_triggers()
         self.assertEqual(len(triggers), 0)
 
+    @ui_util.screenshot_on_error
     def test_enable_disable(self):
         """Test disabling and enabling a trigger."""
         # Create a trigger
@@ -194,6 +200,7 @@ class TestTriggerTab(unittest.TestCase):
         # Close trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_cancel_button]").click()
 
+    @ui_util.screenshot_on_error
     def test_edit_trigger(self):
         """Test editing a trigger."""
         # Create a trigger

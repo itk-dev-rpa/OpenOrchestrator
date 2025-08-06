@@ -5,10 +5,11 @@ import enum
 from typing import Optional
 import uuid
 
-from sqlalchemy import String, ForeignKey, Engine
-from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
+from sqlalchemy import String, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
 
 from OpenOrchestrator.common import datetime_util
+from OpenOrchestrator.database.base import Base
 
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
@@ -29,10 +30,6 @@ class TriggerType(enum.Enum):
     SINGLE = "Single"
     SCHEDULED = "Scheduled"
     QUEUE = "Queue"
-
-
-class Base(DeclarativeBase):
-    """SqlAlchemy base class for all ORM classes in this module."""
 
 
 class Trigger(Base):
@@ -115,12 +112,3 @@ class QueueTrigger(Trigger):
         row_dict = super().to_row_dict()
         row_dict["Next Run"] = "N/A"
         return row_dict
-
-
-def create_tables(engine: Engine):
-    """Create all SQL tables related to ORM classes in this module.
-
-    Args:
-        engine: The SqlAlchemy connection engine used to create the tables.
-    """
-    Base.metadata.create_all(engine)
