@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When creating a new trigger, blocking process is now default.
 - Scheduler no longer auto-connects.
 - Removed 'Initialize database' button from Orchestrator. Use upgrade command instead.
+- Updated all dependenices to newest version.
 
 ## [1.3.1] - 2025-03-12
 
