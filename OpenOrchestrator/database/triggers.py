@@ -45,6 +45,8 @@ class Trigger(Base):
     process_status: Mapped[TriggerStatus] = mapped_column(default=TriggerStatus.IDLE)
     is_git_repo: Mapped[bool]
     is_blocking: Mapped[bool]
+    scheduler_whitelist: Mapped[str] = mapped_column(String(250), nullable=True)
+    priority: Mapped[int] = mapped_column(default=0)
     type: Mapped[TriggerType]
 
     __mapper_args__ = {
@@ -63,7 +65,8 @@ class Trigger(Base):
             "Status": self.process_status.value,
             "Process Name": self.process_name,
             "Last Run": datetime_util.format_datetime(self.last_run, "Never"),
-            "ID": str(self.id)
+            "ID": str(self.id),
+            "Priority": str(self.priority)
         }
 
 

@@ -225,7 +225,7 @@ class TestDBUtil(unittest.TestCase):
         db_test_util.reset_triggers()
 
         # Get next single trigger
-        trigger = db_util.get_next_single_trigger()
+        trigger = db_util.get_pending_single_triggers()[0]
         self.assertIsNotNone(trigger)
 
         # Begin trigger
@@ -242,8 +242,8 @@ class TestDBUtil(unittest.TestCase):
         self.assertIsNotNone(trigger.last_run)
 
         # No new trigger when the other is running
-        none_trigger = db_util.get_next_single_trigger()
-        self.assertIsNone(none_trigger)
+        none_trigger = db_util.get_pending_single_triggers()
+        self.assertEqual(len(none_trigger), 0)
 
         # Set status
         db_util.set_trigger_status(trigger.id, TriggerStatus.DONE)
@@ -255,7 +255,7 @@ class TestDBUtil(unittest.TestCase):
         db_test_util.reset_triggers()
 
         # Get next trigger
-        trigger = db_util.get_next_scheduled_trigger()
+        trigger = db_util.get_pending_scheduled_triggers()[0]
         self.assertIsNotNone(trigger)
 
         # Begin trigger
@@ -274,25 +274,25 @@ class TestDBUtil(unittest.TestCase):
         self.assertIsNotNone(trigger.last_run)
 
         # No new trigger when other is running
-        trigger = db_util.get_next_scheduled_trigger()
-        self.assertIsNone(trigger)
+        trigger_list = db_util.get_pending_scheduled_triggers()
+        self.assertEqual(len(trigger_list), 0)
 
     def test_queue_triggers(self):
         """Test running and updating queue triggers."""
         db_test_util.reset_triggers()
 
         # Test with empty queue
-        trigger = db_util.get_next_queue_trigger()
-        self.assertIsNone(trigger)
+        trigger_list = db_util.get_pending_queue_triggers()
+        self.assertEqual(len(trigger_list), 0)
 
         # Test with 1 item in queue (triggers on 2)
         db_util.create_queue_element("Trigger Queue")
-        trigger = db_util.get_next_queue_trigger()
-        self.assertIsNone(trigger)
+        trigger_list = db_util.get_pending_queue_triggers()
+        self.assertEqual(len(trigger_list), 0)
 
         # Test with 2 items in queue
         db_util.create_queue_element("Trigger Queue")
-        trigger = db_util.get_next_queue_trigger()
+        trigger = db_util.get_pending_queue_triggers()[0]
         self.assertIsNotNone(trigger)
 
         # Begin trigger
@@ -309,8 +309,8 @@ class TestDBUtil(unittest.TestCase):
         self.assertIsNotNone(trigger.last_run)
 
         # No new trigger when other is running
-        trigger = db_util.get_next_queue_trigger()
-        self.assertIsNone(trigger)
+        trigger_list = db_util.get_pending_queue_triggers()
+        self.assertEqual(len(trigger_list), 0)
 
     def test_log_truncation(self):
         """Create logs with various lengths and test if their length is as expected"""
