@@ -43,7 +43,7 @@ class ConnectionFrame():
         if db_util.connect(conn_string):
             crypto_util.set_key(crypto_key)
             self._set_state(True)
-            ui.notify("Connected!", type='positive')
+            ui.notify("Connected!", type='positive', timeout=1000)
 
             if not os.getenv("ORCHESTRATOR_TEST") and not db_util.check_database_revision():
                 await generic_popups.info_popup("This version of Orchestrator doesn't match the version of the connected database. Unexpected errors might occur.")
