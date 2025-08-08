@@ -26,8 +26,8 @@ class ConnectionFrame():
         test_helper.set_automation_ids(self, "connection_frame")
 
     def _define_validation(self):
-        self.conn_input.validation = {"Please enter a connection string": bool}
-        self.key_input.validation = {"Invalid AES key": crypto_util.validate_key}
+        self.conn_input._validation = {"Please enter a connection string": bool}  # pylint: disable=protected-access
+        self.key_input._validation = {"Invalid AES key": crypto_util.validate_key}  # pylint: disable=protected-access
 
     async def _connect(self) -> None:
         """Validate the connection string and encryption key

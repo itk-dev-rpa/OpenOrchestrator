@@ -47,8 +47,8 @@ class ConstantPopup():
 
     def _define_validation(self):
         """Define validation rules for input elements."""
-        self.name_input.validation = {"Please enter a name": bool}
-        self.value_input.validation = {"Please enter a value": bool}
+        self.name_input._validation = {"Please enter a name": bool}  # pylint: disable=protected-access
+        self.value_input._validation = {"Please enter a value": bool}  # pylint: disable=protected-access
 
     def _pre_populate(self):
         """Pre populate the inputs with an existing constant."""

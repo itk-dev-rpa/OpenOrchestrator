@@ -73,10 +73,10 @@ class TriggerPopup():
         test_helper.set_automation_ids(self, "trigger_popup")
 
     def _define_validation(self):
-        self.trigger_input.validation = {"Please enter a trigger name": bool}
-        self.name_input.validation = {"Please enter a process name": bool}
-        self.path_input.validation = {"Please enter a process path": bool}
-        self.queue_input.validation = {"Please enter a queue name": bool}
+        self.trigger_input._validation = {"Please enter a trigger name": bool}  # pylint: disable=protected-access
+        self.name_input._validation = {"Please enter a process name": bool}  # pylint: disable=protected-access
+        self.path_input._validation = {"Please enter a process path": bool}  # pylint: disable=protected-access
+        self.queue_input._validation = {"Please enter a queue name": bool}  # pylint: disable=protected-access
 
         def validate_cron(value: str):
             try:
@@ -85,7 +85,7 @@ class TriggerPopup():
             except CronSimError:
                 return False
 
-        self.cron_input.validation = {"Invalid cron expression": validate_cron}
+        self.cron_input._validation = {"Invalid cron expression": validate_cron}  # pylint: disable=protected-access
 
     def _pre_populate(self):
         """Populate the form with values from an existing trigger"""
