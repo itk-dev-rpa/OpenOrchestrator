@@ -25,12 +25,12 @@ class TestTriggerPolling(unittest.TestCase):
         self.assertIsNone(trigger)
 
         # Test with idle trigger
-        db_util.create_single_trigger("Future single trigger", "", datetime(2100, 1, 1), "", "", False, False, 0, "")
+        db_util.create_single_trigger("Future single trigger", "", datetime(2100, 1, 1), "", "", False, False, 0, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertIsNone(trigger)
 
         # Test with overdue trigger
-        db_util.create_single_trigger("Past single trigger", "", datetime(2020, 1, 1), "", "", False, False, 0, "")
+        db_util.create_single_trigger("Past single trigger", "", datetime(2020, 1, 1), "", "", False, False, 0, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertIsInstance(trigger, SingleTrigger)
         self.assertEqual(trigger.trigger_name, "Past single trigger")
@@ -39,13 +39,13 @@ class TestTriggerPolling(unittest.TestCase):
         """Test polling triggers with priorities set."""
         mock_app = setup_mock_app(has_running_jobs=False, is_exclusive=False)
 
-        db_util.create_single_trigger("Low", "", datetime(2000, 1, 1), "", "", False, False, 0, "")
-        db_util.create_single_trigger("High", "", datetime(2000, 1, 1), "", "", False, False, 100, "")
+        db_util.create_single_trigger("Low", "", datetime(2000, 1, 1), "", "", False, False, 0, [])
+        db_util.create_single_trigger("High", "", datetime(2000, 1, 1), "", "", False, False, 100, [])
 
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "High")
 
-        db_util.create_single_trigger("Higher Future", "", datetime(2100, 1, 1), "", "", False, False, 200, "")
+        db_util.create_single_trigger("Higher Future", "", datetime(2100, 1, 1), "", "", False, False, 200, [])
 
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "High")
@@ -57,28 +57,28 @@ class TestTriggerPolling(unittest.TestCase):
         """
         mock_app = setup_mock_app(has_running_jobs=False, is_exclusive=False)
 
-        db_util.create_queue_trigger("Queue", "", "Queue", "", "", False, False, 1, 0, "")
+        db_util.create_queue_trigger("Queue", "", "Queue", "", "", False, False, 1, 0, [])
         db_util.create_queue_element("Queue")
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Queue")
 
-        db_util.create_scheduled_trigger("Scheduled", "", "", datetime(2000, 1, 1), "", "", False, False, 0, "")
+        db_util.create_scheduled_trigger("Scheduled", "", "", datetime(2000, 1, 1), "", "", False, False, 0, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Scheduled")
 
-        db_util.create_single_trigger("Single", "", datetime(2000, 1, 1), "", "", False, False, 0, "")
+        db_util.create_single_trigger("Single", "", datetime(2000, 1, 1), "", "", False, False, 0, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Single")
 
-        db_util.create_queue_trigger("Queue High", "", "Queue", "", "", False, False, 1, 1, "")
+        db_util.create_queue_trigger("Queue High", "", "Queue", "", "", False, False, 1, 1, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Queue High")
 
-        db_util.create_scheduled_trigger("Scheduled High", "", "", datetime(2000, 1, 1), "", "", False, False, 1, "")
+        db_util.create_scheduled_trigger("Scheduled High", "", "", datetime(2000, 1, 1), "", "", False, False, 1, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Scheduled High")
 
-        db_util.create_single_trigger("Single High", "", datetime(2000, 1, 1), "", "", False, False, 1, "")
+        db_util.create_single_trigger("Single High", "", datetime(2000, 1, 1), "", "", False, False, 1, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Single High")
 
@@ -86,11 +86,11 @@ class TestTriggerPolling(unittest.TestCase):
         """Test polling triggers when other jobs are running."""
         mock_app = setup_mock_app(has_running_jobs=True, is_exclusive=False)
 
-        db_util.create_single_trigger("Single Blocking", "", datetime(2000, 1, 1), "", "", False, True, 0, "")
+        db_util.create_single_trigger("Single Blocking", "", datetime(2000, 1, 1), "", "", False, True, 0, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertIsNone(trigger)
 
-        db_util.create_single_trigger("Single Non-blocking", "", datetime(2000, 1, 1), "", "", False, False, 0, "")
+        db_util.create_single_trigger("Single Non-blocking", "", datetime(2000, 1, 1), "", "", False, False, 0, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Single Non-blocking")
 
@@ -98,11 +98,11 @@ class TestTriggerPolling(unittest.TestCase):
         """Test polling whitelisted triggers when Scheduler is not exclusive."""
         mock_app = setup_mock_app(has_running_jobs=False, is_exclusive=False)
 
-        db_util.create_single_trigger("Single non machine", "", datetime(2000, 1, 1), "", "", False, False, 0, "Non machine")
+        db_util.create_single_trigger("Single non machine", "", datetime(2000, 1, 1), "", "", False, False, 0, ["Non machine"])
         trigger = runner.poll_triggers(mock_app)
         self.assertIsNone(trigger)
 
-        db_util.create_single_trigger("Single no whitelist", "", datetime(2000, 1, 1), "", "", False, False, 0, "")
+        db_util.create_single_trigger("Single no whitelist", "", datetime(2000, 1, 1), "", "", False, False, 0, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Single no whitelist")
 
@@ -110,15 +110,15 @@ class TestTriggerPolling(unittest.TestCase):
         """Test polling whitelisted triggers when Scheduler is exclusive."""
         mock_app = setup_mock_app(has_running_jobs=False, is_exclusive=True)
 
-        db_util.create_single_trigger("Single non machine", "", datetime(2000, 1, 1), "", "", False, False, 0, "Non machine")
+        db_util.create_single_trigger("Single non machine", "", datetime(2000, 1, 1), "", "", False, False, 0, ["Non machine"])
         trigger = runner.poll_triggers(mock_app)
         self.assertIsNone(trigger)
 
-        db_util.create_single_trigger("Single no whitelist", "", datetime(2000, 1, 1), "", "", False, False, 0, "")
+        db_util.create_single_trigger("Single no whitelist", "", datetime(2000, 1, 1), "", "", False, False, 0, [])
         trigger = runner.poll_triggers(mock_app)
         self.assertIsNone(trigger)
 
-        db_util.create_single_trigger("Single whitelist", "", datetime(2000, 1, 1), "", "", False, False, 0, "Machine")
+        db_util.create_single_trigger("Single whitelist", "", datetime(2000, 1, 1), "", "", False, False, 0, ["Machine"])
         trigger = runner.poll_triggers(mock_app)
         self.assertEqual(trigger.trigger_name, "Single whitelist")
 

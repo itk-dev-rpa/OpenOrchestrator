@@ -28,6 +28,7 @@ def open_orchestrator() -> webdriver.Chrome:
         The Chrome browser logged in to Orchestrator.
     """
     conn_string = os.environ['CONN_STRING']
+    os.environ['ORCHESTRATOR_TEST'] = "True"
 
     port = get_free_port()
     subprocess.Popen([sys.executable, "-m", "OpenOrchestrator", "o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
