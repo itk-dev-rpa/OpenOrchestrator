@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from dataclasses import dataclass
 import uuid
+import json
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
@@ -54,8 +55,9 @@ def poll_triggers(app: Application) -> Trigger | None:
     is_exclusive = app.settings_tab_.whitelist_value.get()
 
     for trigger in trigger_list:
-        whitelisted = scheduler_name in trigger.scheduler_whitelist.split()  # Is the Scheduler in the whitelist
-        unlisted_allowed = not is_exclusive and not trigger.scheduler_whitelist  # Is the scheduler allowed to run non-designated triggers
+        trigger_whitelist = json.loads(trigger.scheduler_whitelist)
+        whitelisted = scheduler_name in trigger_whitelist  # Is the Scheduler in the whitelist
+        unlisted_allowed = not is_exclusive and not trigger_whitelist  # Is the scheduler allowed to run non-designated triggers
 
         if whitelisted or unlisted_allowed:
             if not (trigger.is_blocking and other_jobs_running):

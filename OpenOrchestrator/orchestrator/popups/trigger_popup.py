@@ -3,6 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime
+import json
 
 from nicegui import ui
 from cronsim import CronSim, CronSimError
@@ -51,7 +52,7 @@ class TriggerPopup():
             self.args_input = ui.input("Process Arguments").classes("w-full")
             self.blocking_check = ui.checkbox(text="Is process blocking?", value=True)
             self.priority_input = ui.number("Priority", value=0, precision=0, format="%.0f")
-            self.whitelist_input = ui.input("Scheduler whitelist").classes("w-full")
+            self.whitelist_input = ui.input_chips("Scheduler whitelist").classes("w-full")
 
             if trigger:
                 with ui.row():
@@ -98,7 +99,7 @@ class TriggerPopup():
         self.git_check.value = self.trigger.is_git_repo
         self.blocking_check.value = self.trigger.is_blocking
         self.priority_input.value = self.trigger.priority
-        self.whitelist_input.value = self.trigger.scheduler_whitelist
+        self.whitelist_input.value = json.loads(self.trigger.scheduler_whitelist)
 
         if isinstance(self.trigger, ScheduledTrigger):
             self.cron_input.value = self.trigger.cron_expr
@@ -191,7 +192,7 @@ class TriggerPopup():
             self.trigger.is_git_repo = is_git
             self.trigger.is_blocking = is_blocking
             self.trigger.priority = priority
-            self.trigger.scheduler_whitelist = whitelist
+            self.trigger.scheduler_whitelist = json.dumps(whitelist)
 
             if isinstance(self.trigger, SingleTrigger):
                 self.trigger.next_run = next_run
