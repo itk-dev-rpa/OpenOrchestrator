@@ -37,8 +37,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_git_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_args_input]").send_keys("Process args")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\n")
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler2\n")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
@@ -73,8 +72,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_args_input]").send_keys("Process args")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_blocking_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\n")
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler2\n")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
 
         # Check result
@@ -109,8 +107,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_args_input]").send_keys("Process args")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_blocking_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\n")
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler2\n")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
 
         # Check result
@@ -239,7 +236,7 @@ class TestTriggerTab(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # unittest.main()
+    # unittest.main(failfast=True)
     t = TestTriggerTab()
     t.setUp()
     t.test_single_trigger_creation()
