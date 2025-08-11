@@ -44,6 +44,7 @@ class Trigger(Base):
     process_args: Mapped[Optional[str]] = mapped_column(String(1000))
     process_status: Mapped[TriggerStatus] = mapped_column(default=TriggerStatus.IDLE)
     is_git_repo: Mapped[bool]
+    git_branch: Mapped[str] = mapped_column(String(100), nullable=True)
     is_blocking: Mapped[bool]
     scheduler_whitelist: Mapped[str] = mapped_column(String(250))
     priority: Mapped[int] = mapped_column(default=0)
