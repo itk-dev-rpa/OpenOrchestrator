@@ -20,7 +20,7 @@ class OrchestratorConnection:
     to instead of initializing the object manually.
     """
 
-    def __init__(self, process_name: str, connection_string: str, crypto_key: str, process_arguments: str):
+    def __init__(self, process_name: str, connection_string: str, crypto_key: str, process_arguments: str, trigger_id: str):
         """
         Args:
             process_name: A human friendly tag to identify the process.
@@ -30,6 +30,7 @@ class OrchestratorConnection:
         """
         self.process_name = process_name
         self.process_arguments = process_arguments
+        self.trigger_id = trigger_id
         crypto_util.set_key(crypto_key)
         db_util.connect(connection_string)
 
@@ -218,4 +219,5 @@ class OrchestratorConnection:
         connection_string = sys.argv[2]
         crypto_key = sys.argv[3]
         process_arguments = sys.argv[4]
-        return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments)
+        trigger_id = sys.argv[5]
+        return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments, trigger_id)

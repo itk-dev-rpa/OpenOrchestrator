@@ -19,26 +19,29 @@ class TestRunProcess(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         db_test_util.establish_clean_database()
-        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args")
+        # Create a process and trigger
+        process_name = "Process"
+        process_file = os.path.join(os.getcwd(), "OpenOrchestrator", "tests", "process_pause_util.py")
+        cls.trigger_id = db_util.create_queue_trigger(trigger_name=process_name,
+                                                      process_name=process_name,
+                                                      queue_name=process_name,
+                                                      process_path=process_file,
+                                                      process_args="",
+                                                      is_git_repo=False,
+                                                      is_blocking=False,
+                                                      min_batch_size=1,
+                                                      priority=0,
+                                                      scheduler_whitelist="")
+        cls.connection = OrchestratorConnection(process_name, os.environ["CONN_STRING"], crypto_util.get_key(), "Args", cls.trigger_id)
 
     def test_run_process(self):
         """Test running and pausing a process."""
-        # Create a process and trigger
-        process_file = os.path.join(os.getcwd(), "OpenOrchestrator", "tests", "process_pause_util.py")
-        trigger_id = db_util.create_queue_trigger(trigger_name=self.connection.process_name,
-                                                  process_name=self.connection.process_name,
-                                                  queue_name=self.connection.process_name,
-                                                  process_path=process_file,
-                                                  process_args="",
-                                                  is_git_repo=False,
-                                                  is_blocking=False,
-                                                  min_batch_size=1)
         # Create initial queue for checking run works
         for _ in range(4):
             db_util.create_queue_element(self.connection.process_name)  # Each queue element takes 1 second
 
         # Start running process trigger
-        trigger = db_util.get_trigger(trigger_id)
+        trigger = db_util.get_trigger(self.trigger_id)
         db_util.begin_queue_trigger(trigger.id)
 
         conn_string = db_util.get_conn_string()
