@@ -23,6 +23,7 @@ class TestQueuesTab(unittest.TestCase):
     def tearDown(self) -> None:
         self.browser.quit()
 
+    @ui_util.screenshot_on_error
     def test_queues_table(self):
         """Test that queues are displayed correctly in the queues table."""
         self._create_queue_elements()
@@ -32,6 +33,7 @@ class TestQueuesTab(unittest.TestCase):
         self.assertEqual(table_data[0], ["Queue Name 1", "1", "2", "3", "4", "5"])
         self.assertEqual(table_data[1], ["Queue Name 2", "1", "2", "3", "4", "5"])
 
+    @ui_util.screenshot_on_error
     def test_queue_popup(self):
         """Test that queue elements are displayed correctly in the queue popup."""
         self._create_queue_elements()
@@ -56,6 +58,7 @@ class TestQueuesTab(unittest.TestCase):
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
+    @ui_util.screenshot_on_error
     def test_queue_popup_filters(self):
         """Test setting filters in the queue popup."""
         self._create_queue_elements()

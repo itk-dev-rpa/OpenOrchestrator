@@ -24,6 +24,7 @@ class TestLogsTab(unittest.TestCase):
     def tearDown(self) -> None:
         self.browser.quit()
 
+    @ui_util.screenshot_on_error
     def test_logs_table(self):
         """Test that logs are shown correctly in the logs table."""
         # Create some logs
@@ -48,6 +49,7 @@ class TestLogsTab(unittest.TestCase):
         self.assertEqual(table_data[2][2], LogLevel.TRACE.value)
         self.assertEqual(table_data[2][3], "Trace Message")
 
+    @ui_util.screenshot_on_error
     def test_date_filter(self):
         """Test filtering on date."""
         yesterday = datetime.today() - timedelta(days=1)
@@ -88,6 +90,7 @@ class TestLogsTab(unittest.TestCase):
         # Clear filter
         self._set_date_filter(None, None)
 
+    @ui_util.screenshot_on_error
     def test_process_filter(self):
         """Test filtering on process name."""
         self._create_logs()
@@ -108,6 +111,7 @@ class TestLogsTab(unittest.TestCase):
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertEqual(len(table_data), 3)
 
+    @ui_util.screenshot_on_error
     def test_level_filter(self):
         """Test filtering on log level."""
         self._create_logs()

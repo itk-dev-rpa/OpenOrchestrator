@@ -10,6 +10,7 @@ from OpenOrchestrator.orchestrator import test_helper
 
 COLUMNS = [
     {'name': "Trigger Name", 'label': "Trigger Name", 'field': "Trigger Name", 'align': 'left', 'sortable': True},
+    {'name': "Priority", 'label': "Priority", 'field': "Priority", 'align': 'left', 'sortable': True, ':sort': '(a, b, rowA, rowB) => b-a'},
     {'name': "Type", 'label': "Type", 'field': "Type", 'align': 'left', 'sortable': True},
     {'name': "Status", 'label': "Status", 'field': "Status", 'align': 'left', 'sortable': True},
     {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left', 'sortable': True},
@@ -29,7 +30,7 @@ class TriggerTab():
                 self.scheduled_button = ui.button("New Scheduled Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.SCHEDULED))
                 self.queue_button = ui.button("New Queue Trigger", icon="add", on_click=lambda e: TriggerPopup(self, TriggerType.QUEUE))
 
-            self.trigger_table = ui.table(COLUMNS, [], title="Triggers", pagination={'rowsPerPage': 50, 'sortBy': 'Trigger Name'}, row_key='ID').classes("w-full")
+            self.trigger_table = ui.table(columns=COLUMNS, rows=[], title="Triggers", pagination={'rowsPerPage': 50, 'sortBy': 'Trigger Name'}, row_key='ID').classes("w-full")
             self.trigger_table.on('rowClick', self._row_click)
             self.add_column_colors()
 

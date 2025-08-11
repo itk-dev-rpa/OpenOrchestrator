@@ -24,6 +24,7 @@ class TestTriggerTab(unittest.TestCase):
     def tearDown(self) -> None:
         self.browser.quit()
 
+    @ui_util.screenshot_on_error
     def test_single_trigger_creation(self):
         """Test creation of a single trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_single_button]").click()
@@ -53,6 +54,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, True)
 
+    @ui_util.screenshot_on_error
     def test_scheduled_trigger_creation(self):
         """Test creation of a scheduled trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_scheduled_button]").click()
@@ -82,6 +84,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, False)
 
+    @ui_util.screenshot_on_error
     def test_queue_trigger_creation(self):
         """Test creation of a queue trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_queue_button]").click()
@@ -113,14 +116,15 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, False)
 
+    @ui_util.screenshot_on_error
     def test_trigger_table(self):
         """Test that data is shown correctly in the trigger table."""
         # Create some triggers
         yesterday = datetime.today() - timedelta(days=1)
         tomorrow = datetime.today() + timedelta(days=1)
-        db_util.create_single_trigger("A Single trigger", "Single Process", yesterday, "Single path", "Single args", False, False)
-        db_util.create_scheduled_trigger("B Scheduled trigger", "Scheduled Process", "1 2 3 4 5", tomorrow, "Scheduled path", "Scheduled args", False, False)
-        db_util.create_queue_trigger("C Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25)
+        db_util.create_single_trigger("A Single trigger", "Single Process", yesterday, "Single path", "Single args", False, False, 0, "")
+        db_util.create_scheduled_trigger("B Scheduled trigger", "Scheduled Process", "1 2 3 4 5", tomorrow, "Scheduled path", "Scheduled args", False, False, 0, "")
+        db_util.create_queue_trigger("C Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, "")
 
         ui_util.refresh_ui(self.browser)
 
@@ -128,32 +132,36 @@ class TestTriggerTab(unittest.TestCase):
 
         # Check single trigger
         self.assertEqual(table_data[0][0], "A Single trigger")
-        self.assertEqual(table_data[0][1], "Single")
-        self.assertEqual(table_data[0][2], "Idle")
-        self.assertEqual(table_data[0][3], "Single Process")
-        self.assertEqual(table_data[0][4], "Never")
-        self.assertEqual(table_data[0][5], f"{datetime_util.format_datetime(yesterday)}\nOverdue")
+        self.assertEqual(table_data[0][1], "0")
+        self.assertEqual(table_data[0][2], "Single")
+        self.assertEqual(table_data[0][3], "Idle")
+        self.assertEqual(table_data[0][4], "Single Process")
+        self.assertEqual(table_data[0][5], "Never")
+        self.assertEqual(table_data[0][6], f"{datetime_util.format_datetime(yesterday)}\nOverdue")
 
         # Check scheduled trigger
         self.assertEqual(table_data[1][0], "B Scheduled trigger")
-        self.assertEqual(table_data[1][1], "Scheduled")
-        self.assertEqual(table_data[1][2], "Idle")
-        self.assertEqual(table_data[1][3], "Scheduled Process")
-        self.assertEqual(table_data[1][4], "Never")
-        self.assertEqual(table_data[1][5], f"{datetime_util.format_datetime(tomorrow)}")
+        self.assertEqual(table_data[1][1], "0")
+        self.assertEqual(table_data[1][2], "Scheduled")
+        self.assertEqual(table_data[1][3], "Idle")
+        self.assertEqual(table_data[1][4], "Scheduled Process")
+        self.assertEqual(table_data[1][5], "Never")
+        self.assertEqual(table_data[1][6], f"{datetime_util.format_datetime(tomorrow)}")
 
         # Check queue trigger
         self.assertEqual(table_data[2][0], "C Queue trigger")
-        self.assertEqual(table_data[2][1], "Queue")
-        self.assertEqual(table_data[2][2], "Idle")
-        self.assertEqual(table_data[2][3], "Queue Process")
-        self.assertEqual(table_data[2][4], "Never")
-        self.assertEqual(table_data[2][5], "N/A")
+        self.assertEqual(table_data[2][1], "0")
+        self.assertEqual(table_data[2][2], "Queue")
+        self.assertEqual(table_data[2][3], "Idle")
+        self.assertEqual(table_data[2][4], "Queue Process")
+        self.assertEqual(table_data[2][5], "Never")
+        self.assertEqual(table_data[2][6], "N/A")
 
+    @ui_util.screenshot_on_error
     def test_delete_trigger(self):
         """Test deleting a trigger."""
         # Create a trigger
-        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25)
+        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, "")
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
@@ -168,10 +176,11 @@ class TestTriggerTab(unittest.TestCase):
         triggers = db_util.get_all_triggers()
         self.assertEqual(len(triggers), 0)
 
+    @ui_util.screenshot_on_error
     def test_enable_disable(self):
         """Test disabling and enabling a trigger."""
         # Create a trigger
-        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25)
+        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, "")
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
@@ -194,10 +203,11 @@ class TestTriggerTab(unittest.TestCase):
         # Close trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_cancel_button]").click()
 
+    @ui_util.screenshot_on_error
     def test_edit_trigger(self):
         """Test editing a trigger."""
         # Create a trigger
-        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25)
+        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, "")
         ui_util.refresh_ui(self.browser)
 
         # Click trigger

@@ -7,25 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
 ### Added
 
 - Added option for robots to check if they are pausing
 - Automated tests of the Orchestrator ui
 - Added argument to manually set Orchestrator port.
 - Added argument to prevent Orchestrator from opening in the browser automatically.
-- Added 'Scheduler' tab with overview of running schedulers
-- Raise error if git is not installed when trying to clone a git repo
+- Commandline command to upgrade a database to the newest schema.
+- Added 'Scheduler' tab with overview of running schedulers.
+- Raise error if git is not installed when trying to clone a git repo.
+- Added priority and scheduler whitelist to triggers.
 
 ### Changed
 
 - Changed cli to use argparser.
+- Arguments to start Scheduler and Orchestrator are now subcommands (no '-' before 'o' and 's').
 - Trigger status 'Paused' is now colored orange in the trigger tab.
 - When creating a new trigger, blocking process is now default.
+- Scheduler no longer auto-connects.
+- Removed 'Initialize database' button from Orchestrator. Use upgrade command instead.
+- Updated all dependenices to newest version.
+
+## [1.3.1] - 2025-03-12
 
 ### Fixed
 
-- Switched croniter module with cronsim module
+- Switched croniter with cronsim
+
+### Fixed
+
+- A database shutdown shouldn't cause Scheduler to crash anymore.
 
 ## [1.3.0] - 2024-06-19
 

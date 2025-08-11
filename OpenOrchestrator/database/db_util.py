@@ -5,13 +5,13 @@ from typing import TypeVar, ParamSpec
 from uuid import UUID
 
 from cronsim import CronSim
-from sqlalchemy import Engine, create_engine, select, insert, desc
+from sqlalchemy import Engine, create_engine, select, insert, desc, text
+
 from sqlalchemy import exc as alc_exc
 from sqlalchemy import func as alc_func
 from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
-from OpenOrchestrator.database import logs, triggers, constants, queues, schedulers
 from OpenOrchestrator.database.logs import Log, LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
@@ -56,6 +56,19 @@ def disconnect() -> None:
     _connection_engine = None
 
 
+def check_database_revision() -> bool:
+    """Check if the revision number of the connected database matches the expected revision."""
+    try:
+        with _get_session() as session:
+            version = session.execute(text(
+                """SELECT version_num FROM alembic_version"""
+            )).scalar()
+    except alc_exc.ProgrammingError:
+        return False
+
+    return version == "90d46abd44a3"
+
+
 def _get_session() -> Session:
     """Check if theres a database connection and return a
     session to it.
@@ -82,18 +95,6 @@ def get_conn_string() -> str:
         raise RuntimeError("Not connected to database.")
 
     return str(_connection_engine.url)
-
-
-def initialize_database() -> None:
-    """Initializes the database with all the needed tables."""
-    if not _connection_engine:
-        raise RuntimeError("Not connected to database.")
-
-    logs.create_tables(_connection_engine)
-    triggers.create_tables(_connection_engine)
-    constants.create_tables(_connection_engine)
-    queues.create_tables(_connection_engine)
-    schedulers.create_tables(_connection_engine)
 
 
 def get_trigger(trigger_id: UUID | str) -> Trigger:
@@ -296,8 +297,10 @@ def get_unique_log_process_names() -> tuple[str, ...]:
         return tuple(result)
 
 
+# pylint: disable=too-many-positional-arguments
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
-                          process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool) -> str:
+                          process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool,
+                          priority: int, scheduler_whitelist: str) -> str:
     """Create a new single trigger in the database.
 
     Args:
@@ -308,6 +311,8 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         process_args: The argument string of the process.
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
+        priority: The integer priority of the trigger.
+        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
 
     Returns:
         The id of the trigger that was created.
@@ -320,16 +325,19 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
             process_args = process_args,
             is_git_repo = is_git_repo,
             is_blocking = is_blocking,
-            next_run = next_run
+            next_run = next_run,
+            priority=priority,
+            scheduler_whitelist=scheduler_whitelist
         )
         session.add(trigger)
         session.commit()
         return trigger.id
 
 
+# pylint: disable=too-many-positional-arguments
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
-                             is_blocking: bool) -> str:
+                             is_blocking: bool, priority: int, scheduler_whitelist: str) -> str:
     """Create a new scheduled trigger in the database.
 
     Args:
@@ -341,7 +349,8 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         process_args: The argument string of the process.
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
-
+        priority: The integer priority of the trigger.
+        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
     Returns:
         The id of the trigger that was created.
     """
@@ -354,16 +363,19 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
             is_git_repo = is_git_repo,
             is_blocking = is_blocking,
             next_run = next_run,
-            cron_expr = cron_expr
+            cron_expr = cron_expr,
+            priority=priority,
+            scheduler_whitelist=scheduler_whitelist
         )
         session.add(trigger)
         session.commit()
         return trigger.id
 
 
+# pylint: disable=too-many-positional-arguments
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int) -> str:
+                         min_batch_size: int, priority: int, scheduler_whitelist: str) -> str:
     """Create a new queue trigger in the database.
 
     Args:
@@ -375,6 +387,8 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         is_git_repo: The is_git value of the process.
         is_blocking: The is_blocking value of the process.
         min_batch_size: The minimum number of queue elements before triggering.
+        priority: The integer priority of the trigger.
+        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
 
     Returns:
         The id of the trigger that was created.
@@ -388,7 +402,9 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
             is_git_repo = is_git_repo,
             is_blocking = is_blocking,
             queue_name = queue_name,
-            min_batch_size = min_batch_size
+            min_batch_size = min_batch_size,
+            priority=priority,
+            scheduler_whitelist=scheduler_whitelist
         )
         session.add(trigger)
         session.commit()
@@ -591,11 +607,11 @@ def begin_single_trigger(trigger_id: UUID | str) -> bool:
         return True
 
 
-def get_next_single_trigger() -> SingleTrigger | None:
-    """Get the single trigger that should trigger next.
+def get_pending_single_triggers() -> list[SingleTrigger]:
+    """Get all single triggers that are ready to run.
 
     Returns:
-        The next single trigger to run if any.
+        All single triggers ready to run if any.
     """
     with _get_session() as session:
         query = (
@@ -603,16 +619,15 @@ def get_next_single_trigger() -> SingleTrigger | None:
             .where(SingleTrigger.process_status == TriggerStatus.IDLE)
             .where(SingleTrigger.next_run <= datetime.now())
             .order_by(SingleTrigger.next_run)
-            .limit(1)
         )
-        return session.scalar(query)
+        return list(session.scalars(query))
 
 
-def get_next_scheduled_trigger() -> ScheduledTrigger | None:
-    """Get the scheduled trigger that should trigger next.
+def get_pending_scheduled_triggers() -> list[ScheduledTrigger]:
+    """Get all scheduled triggers that are ready to run.
 
     Returns:
-        The next scheduled trigger to run if any.
+        All scheduled triggers ready to run if any.
     """
     with _get_session() as session:
         query = (
@@ -620,9 +635,8 @@ def get_next_scheduled_trigger() -> ScheduledTrigger | None:
             .where(ScheduledTrigger.process_status == TriggerStatus.IDLE)
             .where(ScheduledTrigger.next_run <= datetime.now())
             .order_by(ScheduledTrigger.next_run)
-            .limit(1)
         )
-        return session.scalar(query)
+        return list(session.scalars(query))
 
 
 def begin_scheduled_trigger(trigger_id: UUID | str) -> bool:
@@ -657,14 +671,11 @@ def begin_scheduled_trigger(trigger_id: UUID | str) -> bool:
         return True
 
 
-def get_next_queue_trigger() -> QueueTrigger | None:
-    """Get the next queue trigger to run.
-    This functions loops through the queue triggers and checks
-    if the number of queue elements with status 'New' is above
-    the triggers min_batch_size.
+def get_pending_queue_triggers() -> list[QueueTrigger]:
+    """Get all queue triggers that are ready to run.
 
     Returns:
-        QueueTrigger | None: The next queue trigger to run if any.
+        All queue triggers that are ready to run if any.
     """
 
     with _get_session() as session:
@@ -680,9 +691,8 @@ def get_next_queue_trigger() -> QueueTrigger | None:
             select(QueueTrigger)
             .where(QueueTrigger.process_status == TriggerStatus.IDLE)
             .where(sub_query >= QueueTrigger.min_batch_size)
-            .limit(1)
         )
-        return session.scalar(query)
+        return list(session.scalars(query))
 
 
 def begin_queue_trigger(trigger_id: UUID | str) -> bool:

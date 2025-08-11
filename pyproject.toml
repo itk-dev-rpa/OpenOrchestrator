@@ -2,6 +2,9 @@
 requires = ["setuptools>=65.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["OpenOrchestrator"]
+
 [project]
 name = "OpenOrchestrator"
 version = "1.3.1"
@@ -17,11 +20,11 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-    "cryptography >= 41.0.3",
-    "cronsim >= 2.6",
-    "SQLAlchemy >= 2.0.22",
-    "pyodbc >= 4.0.39",
-    "nicegui == 1.4.12"
+    "cryptography == 45.0.*",
+    "cronsim == 2.6",
+    "SQLAlchemy == 2.0.*",
+    "pyodbc == 5.2.*",
+    "nicegui == 2.22.*"
 ]
 
 [project.urls]
@@ -33,4 +36,8 @@ dev = [
   "pylint",
   "flake8",
   "selenium"
+]
+
+alembic = [
+  "alembic == 1.16.*"
 ]

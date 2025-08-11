@@ -4,6 +4,8 @@ import subprocess
 import os
 import sys
 import time
+from typing import Callable
+from pathlib import Path
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -28,7 +30,7 @@ def open_orchestrator() -> webdriver.Chrome:
     conn_string = os.environ['CONN_STRING']
 
     port = get_free_port()
-    subprocess.Popen([sys.executable, "-m", "OpenOrchestrator", "-o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
+    subprocess.Popen([sys.executable, "-m", "OpenOrchestrator", "o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
 
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--disable-search-engine-choice-screen")
@@ -109,6 +111,23 @@ def click_table_row(browser: webdriver.Chrome, auto_id: str, index: int):
     time.sleep(0.5)
 
 
-if __name__ == '__main__':
-    b = open_orchestrator()
-    input("Continue...")
+def screenshot_on_error(test_func: Callable) -> Callable:
+    """A decorator that can be used on test functions to take a Selenium screenshot on errors.
+    The unittest class must have a instance variable called "browser" which is the Selenium webdriver.
+
+    Args:
+        test_func: The test function to decorate.
+    """
+    def wrapper(*args, **kwargs):
+        browser: webdriver.Chrome = args[0].browser
+
+        try:
+            test_func(*args, **kwargs)
+        except Exception:
+            folder = Path("error_screenshots")
+            folder.mkdir(exist_ok=True)
+            path = folder / Path(f"{test_func.__name__}.png")
+            browser.save_screenshot(str(path))
+            raise
+
+    return wrapper
