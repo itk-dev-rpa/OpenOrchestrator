@@ -10,6 +10,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.database.constants import Constant, Credential
+from OpenOrchestrator.database.triggers import TriggerStatus
 
 
 class OrchestratorConnection:
@@ -19,16 +20,18 @@ class OrchestratorConnection:
     to instead of initializing the object manually.
     """
 
-    def __init__(self, process_name: str, connection_string: str, crypto_key: str, process_arguments: str):
+    def __init__(self, process_name: str, connection_string: str, crypto_key: str, process_arguments: str, trigger_id: str):
         """
         Args:
             process_name: A human friendly tag to identify the process.
-            connection_string: An ODBC connection to the OpenOrchestrator database
-            crypto_key: Secret key for decrypting database content
+            connection_string: An ODBC connection to the OpenOrchestrator database.
+            crypto_key: Secret key for decrypting database content.
             process_arguments (optional): Arguments for the controlling how the process should run.
+            trigger_id: ID of trigger used to start this process.
         """
         self.process_name = process_name
         self.process_arguments = process_arguments
+        self.trigger_id = trigger_id
         crypto_util.set_key(crypto_key)
         db_util.connect(connection_string)
 
@@ -188,6 +191,19 @@ class OrchestratorConnection:
         """
         db_util.delete_queue_element(element_id)
 
+    def is_trigger_pausing(self) -> bool:
+        """Check if my trigger is pausing.
+
+        Returns:
+            bool: Whether or not the trigger used to start this process is pausing.
+        """
+        my_trigger = db_util.get_trigger(self.trigger_id)
+        return my_trigger.process_status in (TriggerStatus.PAUSING, TriggerStatus.PAUSED)
+
+    def pause_my_trigger(self) -> None:
+        """Pause the trigger used to start this process."""
+        db_util.set_trigger_status(self.trigger_id, TriggerStatus.PAUSING)
+
     @classmethod
     def create_connection_from_args(cls):
         """Create a Connection object using the arguments passed to sys.argv.
@@ -196,4 +212,5 @@ class OrchestratorConnection:
         connection_string = sys.argv[2]
         crypto_key = sys.argv[3]
         process_arguments = sys.argv[4]
-        return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments)
+        trigger_id = sys.argv[5]
+        return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments, trigger_id)

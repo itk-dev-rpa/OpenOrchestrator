@@ -42,7 +42,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result
-        time.sleep(1)
+        time.sleep(5)
         triggers = db_util.get_all_triggers()
         self.assertEqual(len(triggers), 1)
         trigger: SingleTrigger = triggers[0]
@@ -76,7 +76,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
 
         # Check result
-        time.sleep(1)
+        time.sleep(2)
         triggers = db_util.get_all_triggers()
         self.assertEqual(len(triggers), 1)
         trigger: ScheduledTrigger = triggers[0]
