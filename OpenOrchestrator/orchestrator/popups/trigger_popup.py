@@ -48,7 +48,7 @@ class TriggerPopup():
             self.queue_input = ui.input("Queue Name").classes("w-full")  # For queue triggers
             self.batch_input = ui.number("Min Batch Size", value=1, min=1, precision=0, format="%.0f")  # For queue triggers
             self.path_input = ui.input("Process Path").classes("w-full")
-            self.branch_input = ui.input("Git Branch (Optional)")
+            self.branch_input = ui.input("Git Branch/Tag (Optional)")
             self.git_check = ui.checkbox("Is path a Git Repo?")
             self.branch_input.bind_visibility_from(self.git_check, "value")
             self.args_input = ui.input("Process Arguments").classes("w-full")
