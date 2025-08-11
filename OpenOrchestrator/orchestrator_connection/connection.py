@@ -24,9 +24,10 @@ class OrchestratorConnection:
         """
         Args:
             process_name: A human friendly tag to identify the process.
-            connection_string: An ODBC connection to the OpenOrchestrator database
-            crypto_key: Secret key for decrypting database content
+            connection_string: An ODBC connection to the OpenOrchestrator database.
+            crypto_key: Secret key for decrypting database content.
             process_arguments (optional): Arguments for the controlling how the process should run.
+            trigger_id: ID of trigger used to start this process.
         """
         self.process_name = process_name
         self.process_arguments = process_arguments
@@ -190,26 +191,18 @@ class OrchestratorConnection:
         """
         db_util.delete_queue_element(element_id)
 
-    def is_process_pausing(self) -> bool:
-        """Check if any trigger associated with the process is set to pausing.
-        Intended for use to stop a running process from the orchestrator.
+    def is_trigger_pausing(self) -> bool:
+        """Check if my trigger is pausing.
 
         Returns:
-            Bool: Whether or not any trigger is set to PAUSING.
+            bool: Whether or not the trigger used to start this process is pausing.
         """
-        triggers = db_util.get_triggers(self.process_name)
-        for trigger in triggers:
-            if trigger.process_status == TriggerStatus.PAUSING:
-                return True
-        return False
+        my_trigger = db_util.get_trigger(self.trigger_id)
+        return my_trigger.process_status in (TriggerStatus.PAUSING, TriggerStatus.PAUSED)
 
-    def pause_my_triggers(self) -> None:
-        """Run through all associated triggers and set their status to PAUSED.
-        """
-        triggers = db_util.get_triggers(self.process_name)
-        for trigger in triggers:
-            if trigger.process_status == TriggerStatus.PAUSING:
-                db_util.set_trigger_status(trigger.id, TriggerStatus.PAUSED)
+    def pause_my_trigger(self) -> None:
+        """Pause the trigger used to start this process."""
+        db_util.set_trigger_status(self.trigger_id, TriggerStatus.PAUSING)
 
     @classmethod
     def create_connection_from_args(cls):
