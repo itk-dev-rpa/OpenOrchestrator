@@ -90,11 +90,12 @@ def run_trigger(trigger: Trigger) -> Job | None:
     return None
 
 
-def clone_git_repo(repo_url: str) -> str:
+def clone_git_repo(repo_url: str, branch: str) -> str:
     """Clone the git repo at the path to %USER%\\desktop\\Scheduler_Repos\\%UUID%.
 
     Args:
         repo_url: URL to the git repo to clone.
+        branch: The specific git branch to clone.
 
     Returns:
         str: The path to the cloned repo on the desktop.
@@ -108,10 +109,15 @@ def clone_git_repo(repo_url: str) -> str:
     if shutil.which('git') is None:
         raise RuntimeError('git is not installed or not found in the system PATH.')
 
+    args = ['git', 'clone']
+    if branch.strip():
+        args.extend(["-b", branch.strip()])
+    args.extend([repo_url, repo_path])
+
     try:
-        subprocess.run(['git', 'clone', repo_url, repo_path], check=True)
+        subprocess.run(args, check=True)
     except subprocess.CalledProcessError as exc:
-        raise ValueError(f"Failed to clone git repo at {repo_url}.") from exc
+        raise ValueError(f"Failed to clone git branch '{branch if branch else 'DEFAULT'}' at '{repo_url}'.") from exc
 
     return repo_path
 
@@ -224,7 +230,7 @@ def run_process(trigger: Trigger) -> Job | None:
 
     try:
         if trigger.is_git_repo:
-            folder_path = clone_git_repo(process_path)
+            folder_path = clone_git_repo(process_path, trigger.git_branch)
             process_path = find_main_file(folder_path)
 
         if not os.path.isfile(process_path):
