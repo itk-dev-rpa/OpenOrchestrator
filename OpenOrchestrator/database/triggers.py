@@ -45,7 +45,7 @@ class Trigger(Base):
     process_status: Mapped[TriggerStatus] = mapped_column(default=TriggerStatus.IDLE)
     is_git_repo: Mapped[bool]
     is_blocking: Mapped[bool]
-    scheduler_whitelist: Mapped[str] = mapped_column(String(250), nullable=True)
+    scheduler_whitelist: Mapped[str] = mapped_column(String(250))
     priority: Mapped[int] = mapped_column(default=0)
     type: Mapped[TriggerType]
 

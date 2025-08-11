@@ -11,6 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.remote.webelement import WebElement
 
 from OpenOrchestrator.orchestrator.application import get_free_port
 
@@ -28,6 +29,7 @@ def open_orchestrator() -> webdriver.Chrome:
         The Chrome browser logged in to Orchestrator.
     """
     conn_string = os.environ['CONN_STRING']
+    os.environ['ORCHESTRATOR_TEST'] = "True"
 
     port = get_free_port()
     subprocess.Popen([sys.executable, "-m", "OpenOrchestrator", "o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
@@ -51,7 +53,7 @@ def open_orchestrator() -> webdriver.Chrome:
 
     conn_input = browser.find_element(By.CSS_SELECTOR, "input[auto-id=connection_frame_conn_input]")
     conn_input.send_keys(Keys.CONTROL, "a", Keys.DELETE)
-    send_slow_keys(conn_input, conn_string)
+    conn_input.send_keys(conn_string)
 
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=settings_tab_key_button]").click()
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=connection_frame_conn_button]").click()
@@ -70,10 +72,26 @@ def refresh_ui(browser: webdriver.Chrome):
     time.sleep(0.5)
 
 
-def send_slow_keys(element, string: str):
-    """Send keys to an element one at a time."""
-    for c in string:
-        element.send_keys(c)
+def monkey_patch_send_keys():
+    """Monkey patch the WebElement.send_keys function with a
+    slower version. This works better with NiceGui elements.
+    """
+    old_send_keys = WebElement.send_keys
+
+    def send_slow_keys(element: WebElement, *value: str | list):
+        """Send keys to an element one at a time.
+        If "value" is a list fall back to the default behavior.
+        """
+        if len(value) == 1 and isinstance(value[0], str):
+            for c in value[0]:
+                old_send_keys(element, c)
+        else:
+            old_send_keys(element, value)
+
+    WebElement.send_keys = send_slow_keys
+
+
+monkey_patch_send_keys()
 
 
 def get_table_data(browser: webdriver.Chrome, auto_id: str) -> list[list[str]]:

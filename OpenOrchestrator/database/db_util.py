@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import TypeVar, ParamSpec
 from uuid import UUID
+import json
 
 from cronsim import CronSim
 from sqlalchemy import Engine, create_engine, select, insert, desc, text
@@ -282,7 +283,7 @@ def get_unique_log_process_names() -> tuple[str, ...]:
 # pylint: disable=too-many-positional-arguments
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
                           process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool,
-                          priority: int, scheduler_whitelist: str) -> None:
+                          priority: int, scheduler_whitelist: list[str]) -> None:
     """Create a new single trigger in the database.
 
     Args:
@@ -294,7 +295,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
         priority: The integer priority of the trigger.
-        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
+        scheduler_whitelist: A list of names of schedulers the trigger may run on.
     """
     with _get_session() as session:
         trigger = SingleTrigger(
@@ -306,7 +307,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
             is_blocking = is_blocking,
             next_run = next_run,
             priority=priority,
-            scheduler_whitelist=scheduler_whitelist
+            scheduler_whitelist=json.dumps(scheduler_whitelist)
         )
         session.add(trigger)
         session.commit()
@@ -315,7 +316,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
 # pylint: disable=too-many-positional-arguments
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
-                             is_blocking: bool, priority: int, scheduler_whitelist: str) -> None:
+                             is_blocking: bool, priority: int, scheduler_whitelist: list[str]) -> None:
     """Create a new scheduled trigger in the database.
 
     Args:
@@ -328,7 +329,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
         priority: The integer priority of the trigger.
-        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
+        scheduler_whitelist: A list of names of schedulers the trigger may run on.
     """
     with _get_session() as session:
         trigger = ScheduledTrigger(
@@ -341,7 +342,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
             next_run = next_run,
             cron_expr = cron_expr,
             priority=priority,
-            scheduler_whitelist=scheduler_whitelist
+            scheduler_whitelist=json.dumps(scheduler_whitelist)
         )
         session.add(trigger)
         session.commit()
@@ -350,7 +351,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
 # pylint: disable=too-many-positional-arguments
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int, priority: int, scheduler_whitelist: str) -> None:
+                         min_batch_size: int, priority: int, scheduler_whitelist: list[str]) -> None:
     """Create a new queue trigger in the database.
 
     Args:
@@ -363,7 +364,7 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         is_blocking: The is_blocking value of the process.
         min_batch_size: The minimum number of queue elements before triggering.
         priority: The integer priority of the trigger.
-        scheduler_whitelist: A list of schedulers the trigger may run on. Space separated.
+        scheduler_whitelist: A list of names of schedulers the trigger may run on.
     """
     with _get_session() as session:
         trigger = QueueTrigger(
@@ -376,7 +377,7 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
             queue_name = queue_name,
             min_batch_size = min_batch_size,
             priority=priority,
-            scheduler_whitelist=scheduler_whitelist
+            scheduler_whitelist=json.dumps(scheduler_whitelist)
         )
         session.add(trigger)
         session.commit()
