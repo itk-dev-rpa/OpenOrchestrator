@@ -89,7 +89,6 @@ Before running the tests you need to define the following environment variables:
 
 ```bash
 SET CONN_STRING="<connection string to test db>"
-SET ORCHESTRATOR_TEST=True
 ```
 
 Examples of connection strings:

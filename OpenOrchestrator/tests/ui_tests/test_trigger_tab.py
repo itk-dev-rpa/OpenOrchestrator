@@ -36,6 +36,8 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_path_input]").send_keys("Process Path")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_git_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_args_input]").send_keys("Process args")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
@@ -53,6 +55,8 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.is_git_repo, True)
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, True)
+        self.assertEqual(trigger.priority, 5)
+        self.assertEqual(trigger.scheduler_whitelist, '["Scheduler1", "Scheduler2"]')
 
     @ui_util.screenshot_on_error
     def test_scheduled_trigger_creation(self):
@@ -67,6 +71,8 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_git_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_args_input]").send_keys("Process args")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_blocking_check]").click()
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
 
         # Check result
@@ -83,6 +89,8 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.is_git_repo, True)
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, False)
+        self.assertEqual(trigger.priority, 5)
+        self.assertEqual(trigger.scheduler_whitelist, '["Scheduler1", "Scheduler2"]')
 
     @ui_util.screenshot_on_error
     def test_queue_trigger_creation(self):
@@ -98,6 +106,8 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_git_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_args_input]").send_keys("Process args")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_blocking_check]").click()
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
 
         # Check result
@@ -115,6 +125,8 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.is_git_repo, True)
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, False)
+        self.assertEqual(trigger.priority, 5)
+        self.assertEqual(trigger.scheduler_whitelist, '["Scheduler1", "Scheduler2"]')
 
     @ui_util.screenshot_on_error
     def test_trigger_table(self):
@@ -122,9 +134,9 @@ class TestTriggerTab(unittest.TestCase):
         # Create some triggers
         yesterday = datetime.today() - timedelta(days=1)
         tomorrow = datetime.today() + timedelta(days=1)
-        db_util.create_single_trigger("A Single trigger", "Single Process", yesterday, "Single path", "Single args", False, False, 0, "")
-        db_util.create_scheduled_trigger("B Scheduled trigger", "Scheduled Process", "1 2 3 4 5", tomorrow, "Scheduled path", "Scheduled args", False, False, 0, "")
-        db_util.create_queue_trigger("C Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, "")
+        db_util.create_single_trigger("A Single trigger", "Single Process", yesterday, "Single path", "Single args", False, False, 0, [])
+        db_util.create_scheduled_trigger("B Scheduled trigger", "Scheduled Process", "1 2 3 4 5", tomorrow, "Scheduled path", "Scheduled args", False, False, 0, [])
+        db_util.create_queue_trigger("C Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, [])
 
         ui_util.refresh_ui(self.browser)
 
@@ -161,7 +173,7 @@ class TestTriggerTab(unittest.TestCase):
     def test_delete_trigger(self):
         """Test deleting a trigger."""
         # Create a trigger
-        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, "")
+        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, [])
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
@@ -180,7 +192,7 @@ class TestTriggerTab(unittest.TestCase):
     def test_enable_disable(self):
         """Test disabling and enabling a trigger."""
         # Create a trigger
-        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, "")
+        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, [])
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
@@ -207,7 +219,7 @@ class TestTriggerTab(unittest.TestCase):
     def test_edit_trigger(self):
         """Test editing a trigger."""
         # Create a trigger
-        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, "")
+        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, [])
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
@@ -224,4 +236,8 @@ class TestTriggerTab(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main(failfast=True)
+    t = TestTriggerTab()
+    t.setUp()
+    t.test_single_trigger_creation()
+    t.tearDown()

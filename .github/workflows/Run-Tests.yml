@@ -28,7 +28,6 @@ jobs:
         python -m unittest discover
       env:
         CONN_STRING: sqlite+pysqlite:///test_db.db
-        ORCHESTRATOR_TEST: True
 
     - name: Upload screenshots if tests fail
       if: failure()

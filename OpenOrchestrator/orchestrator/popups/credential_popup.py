@@ -49,9 +49,9 @@ class CredentialPopup():
 
     def _define_validation(self):
         """Define validation functions for ui elements."""
-        self.name_input.validation = {"Please enter a name": bool}
-        self.username_input.validation = {"Please enter a username": bool}
-        self.password_input.validation = {"Please enter a password": bool}
+        self.name_input._validation = {"Please enter a name": bool}  # pylint: disable=protected-access
+        self.username_input._validation = {"Please enter a username": bool}  # pylint: disable=protected-access
+        self.password_input._validation = {"Please enter a password": bool}  # pylint: disable=protected-access
 
     def _pre_populate(self):
         """Pre populate the inputs with an existing credential."""

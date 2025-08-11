@@ -3,6 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime
+import json
 
 from nicegui import ui
 from cronsim import CronSim, CronSimError
@@ -51,7 +52,7 @@ class TriggerPopup():
             self.args_input = ui.input("Process Arguments").classes("w-full")
             self.blocking_check = ui.checkbox(text="Is process blocking?", value=True)
             self.priority_input = ui.number("Priority", value=0, precision=0, format="%.0f")
-            self.whitelist_input = ui.input("Scheduler whitelist").classes("w-full")
+            self.whitelist_input = ui.input_chips("Scheduler whitelist").classes("w-full")
 
             if trigger:
                 with ui.row():
@@ -72,10 +73,10 @@ class TriggerPopup():
         test_helper.set_automation_ids(self, "trigger_popup")
 
     def _define_validation(self):
-        self.trigger_input.validation = {"Please enter a trigger name": bool}
-        self.name_input.validation = {"Please enter a process name": bool}
-        self.path_input.validation = {"Please enter a process path": bool}
-        self.queue_input.validation = {"Please enter a queue name": bool}
+        self.trigger_input._validation = {"Please enter a trigger name": bool}  # pylint: disable=protected-access
+        self.name_input._validation = {"Please enter a process name": bool}  # pylint: disable=protected-access
+        self.path_input._validation = {"Please enter a process path": bool}  # pylint: disable=protected-access
+        self.queue_input._validation = {"Please enter a queue name": bool}  # pylint: disable=protected-access
 
         def validate_cron(value: str):
             try:
@@ -84,7 +85,7 @@ class TriggerPopup():
             except CronSimError:
                 return False
 
-        self.cron_input.validation = {"Invalid cron expression": validate_cron}
+        self.cron_input._validation = {"Invalid cron expression": validate_cron}  # pylint: disable=protected-access
 
     def _pre_populate(self):
         """Populate the form with values from an existing trigger"""
@@ -98,7 +99,7 @@ class TriggerPopup():
         self.git_check.value = self.trigger.is_git_repo
         self.blocking_check.value = self.trigger.is_blocking
         self.priority_input.value = self.trigger.priority
-        self.whitelist_input.value = self.trigger.scheduler_whitelist
+        self.whitelist_input.value = json.loads(self.trigger.scheduler_whitelist)
 
         if isinstance(self.trigger, ScheduledTrigger):
             self.cron_input.value = self.trigger.cron_expr
@@ -191,7 +192,7 @@ class TriggerPopup():
             self.trigger.is_git_repo = is_git
             self.trigger.is_blocking = is_blocking
             self.trigger.priority = priority
-            self.trigger.scheduler_whitelist = whitelist
+            self.trigger.scheduler_whitelist = json.dumps(whitelist)
 
             if isinstance(self.trigger, SingleTrigger):
                 self.trigger.next_run = next_run
