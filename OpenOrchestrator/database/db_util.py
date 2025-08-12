@@ -856,7 +856,7 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
             query = query.where(QueueElement.created_date <= to_date)
 
         if reference is not None:
-            query = query.where(QueueElement.reference == reference)
+            query = query.where(QueueElement.reference.startswith(reference))
 
         if status is not None:
             query = query.where(QueueElement.status == status)

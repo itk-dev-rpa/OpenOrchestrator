@@ -73,7 +73,13 @@ class QueuePopup():
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
-                self.from_input = DatetimeInput("From Date", on_change=self._update, allow_empty=True).style('margin-left: 1rem')
+                self.ref_search = ui.input(label='Search', placeholder="Reference", on_change=self._update).style('margin-left: 1rem')
+                self.status_select = ui.select(
+                    options= ["All", *[e.value for e in QueueStatus]],
+                    label="Status",
+                    value="All",
+                    on_change=self._update).classes("w-24")
+                self.from_input = DatetimeInput("From Date", on_change=self._update, allow_empty=True)
                 self.to_input = DatetimeInput("To Date", on_change=self._update, allow_empty=True)
 
                 self.limit_select = ui.select(
@@ -115,6 +121,13 @@ class QueuePopup():
 
     def _update(self):
         """Update the table with values from the database."""
+        ref_search = self.ref_search.value.strip()
+        if len(ref_search) == 0:
+            ref_search = None
+        status = self.status_select.value
+        if status == 'All':
+            status = None
+
         limit = self.limit_select.value
         if limit == 'All':
             limit = 1_000_000_000
@@ -122,6 +135,14 @@ class QueuePopup():
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
 
-        queue_elements = db_util.get_queue_elements(self.queue_name, limit=limit, from_date=from_date, to_date=to_date)
+        queue_elements = db_util.get_queue_elements(self.queue_name, reference=ref_search, status=status, limit=limit, from_date=from_date, to_date=to_date)
         rows = [element.to_row_dict() for element in queue_elements]
         self.table.update_rows(rows)
+
+    def _filter_status(self, status: QueueStatus, dropdown: ui.dropdown_button):
+        """Show only elements of the selected status, and update the status dropdown.
+
+        Args:
+            status: QueueStatus to show.
+        """
+        dropdown.text = status.value
