@@ -1,5 +1,7 @@
 """This module is responsible for the layout and functionality of the Queues tab
 in Orchestrator."""
+import json
+from datetime import datetime
 
 from nicegui import ui
 
@@ -7,6 +9,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import styling_constants as style
 
 
 QUEUE_COLUMNS = [
@@ -21,7 +24,7 @@ QUEUE_COLUMNS = [
 ELEMENT_COLUMNS = [
     {'name': "Reference", 'label': "Reference", 'field': "Reference", 'align': 'left', 'sortable': True},
     {'name': "Status", 'label': "Status", 'field': "Status", 'align': 'left', 'sortable': True},
-    {'name': "Data", 'label': "Data", 'field': "Data", 'align': 'left', 'sortable': True},
+    {'name': "Data", 'label': "Data", 'field': "Data", 'align': 'left', 'sortable': True, 'style': 'max-width: 200px; overflow: hidden; text-overflow: ellipsis;'},
     {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left', 'sortable': True},
     {'name': "Created Date", 'label': "Created Date", 'field': "Created Date", 'align': 'left', 'sortable': True},
     {'name': "Start Date", 'label': "Start Date", 'field': "Start Date", 'align': 'left', 'sortable': True},
@@ -57,6 +60,11 @@ class QueueTab():
             }
             rows.append(row)
 
+        for row in rows:
+            for date_field in ['Created Date', 'Start Date', 'End Date']:
+                if row.get(date_field):
+                    row[date_field] = datetime.strptime(row[date_field], '%d-%m-%Y %H:%M:%S')
+
         self.queue_table.update_rows(rows)
 
     def _row_click(self, event):
@@ -82,12 +90,6 @@ class QueuePopup():
                 self.from_input = DatetimeInput("From Date", on_change=self._update, allow_empty=True)
                 self.to_input = DatetimeInput("To Date", on_change=self._update, allow_empty=True)
 
-                self.limit_select = ui.select(
-                    options=[100, 200, 500, 1000, "All"],
-                    label="Limit",
-                    value=100,
-                    on_change=self._update).classes("w-24")
-
                 ui.space()
 
                 ui.switch("Dense", on_change=lambda e: self._dense_table(e.value))
@@ -96,6 +98,7 @@ class QueuePopup():
                 self.close_button = ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
                 self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination=100).classes("w-full")
+                self.table.on('rowClick', lambda e: self._show_row_details(e.args[1]))
 
         self._update()
         test_helper.set_automation_ids(self, "queue_popup")
@@ -128,14 +131,10 @@ class QueuePopup():
         if status == 'All':
             status = None
 
-        limit = self.limit_select.value
-        if limit == 'All':
-            limit = 1_000_000_000
-
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
 
-        queue_elements = db_util.get_queue_elements(self.queue_name, status=status, limit=limit, from_date=from_date, to_date=to_date, search_term=ref_search)
+        queue_elements = db_util.get_queue_elements(self.queue_name, status=status, limit=None, from_date=from_date, to_date=to_date, search_term=ref_search)
         rows = [element.to_row_dict() for element in queue_elements]
         self.table.update_rows(rows)
 
@@ -146,3 +145,61 @@ class QueuePopup():
             status: QueueStatus to show.
         """
         dropdown.text = status.value
+
+    def _show_row_details(self, row_data):
+        """Show a dialogue with details of the row selected.
+
+        Args:
+            row_data: Data from the row selected.
+        """
+        with ui.dialog() as dialog:
+            with ui.card().style('min-width: 600px; max-width: 800px'):
+
+                with ui.row().classes('w-full justify-between items-start mb-4'):
+                    with ui.column().classes(style.SECTION + ' mb-4'):
+                        ui.label("Reference:").classes(style.LABEL)
+                        ui.label(row_data.get('Reference', 'N/A')).classes('text-h5')
+                    with ui.column().classes(style.SECTION + ' items-end'):
+                        ui.label('Status').classes(style.LABEL)
+                        ui.label(row_data.get('Status', 'N/A')).classes('text-h5')
+                ui.separator()
+
+                with ui.column().classes('gap-1'):
+
+                    data_text = row_data.get('Data', '{}')
+                    if data_text and len(data_text) > 0:
+                        with ui.row().classes('w-full'):
+                            ui.label('Data').classes(style.LABEL)
+                            try:
+                                data = json.loads(data_text)
+                                formatted_data = json.dumps(data, indent=2, ensure_ascii=False)
+                                ui.code(formatted_data).style('max-height: 200px; overflow-y: auto; width: 100%;')
+                            except (json.JSONDecodeError, TypeError):
+                                ui.code(data_text).style('max-height: 200px; overflow-y: auto; width: 100%;')
+
+                    message_text = row_data.get('Message')
+                    if message_text and len(message_text) > 0:
+                        with ui.row().classes('w-full mt-4'):
+                            ui.label('Message').classes(style.LABEL)
+                            ui.label(message_text).classes(style.VALUE)
+
+                    with ui.row().classes('w-full mt-4'):
+                        with ui.column().classes('flex-1'):
+                            ui.label("Created Date:").classes(style.LABEL)
+                            ui.label(row_data.get('Created Date', 'N/A')).classes(style.VALUE)
+                        with ui.column().classes('flex-1'):
+                            ui.label("Start Date:").classes(style.LABEL)
+                            ui.label(row_data.get('Start Date', 'N/A')).classes(style.VALUE)
+                        with ui.column().classes('flex-1'):
+                            ui.label("End Date:").classes(style.LABEL)
+                            ui.label(row_data.get('End Date', 'N/A')).classes(style.VALUE)
+
+                    with ui.row().classes('w-full mt-4'):
+                        ui.label("Created By:").classes(style.LABEL)
+                        ui.label(row_data.get('Created By', 'N/A')).classes(style.VALUE)
+                    with ui.row().classes('w-full'):
+                        ui.label("ID:").classes(style.LABEL)
+                        ui.label(row_data.get('ID', 'N/A')).classes(style.VALUE)
+
+                ui.button('Close', on_click=dialog.close).classes('mt-4')
+        dialog.open()
