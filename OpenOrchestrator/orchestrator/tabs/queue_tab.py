@@ -135,7 +135,7 @@ class QueuePopup():
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
 
-        queue_elements = db_util.get_queue_elements(self.queue_name, reference=ref_search, status=status, limit=limit, from_date=from_date, to_date=to_date)
+        queue_elements = db_util.get_queue_elements(self.queue_name, status=status, limit=limit, from_date=from_date, to_date=to_date, search_term=ref_search)
         rows = [element.to_row_dict() for element in queue_elements]
         self.table.update_rows(rows)
 

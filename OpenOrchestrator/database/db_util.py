@@ -826,7 +826,7 @@ def get_next_queue_element(queue_name: str, reference: str | None = None, set_st
 
 
 def get_queue_elements(queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
-                       from_date: datetime | None = None, to_date: datetime | None = None,
+                       from_date: datetime | None = None, to_date: datetime | None = None, search_term: str | None = None,
                        offset: int = 0, limit: int = 100) -> tuple[QueueElement, ...]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
@@ -856,10 +856,13 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
             query = query.where(QueueElement.created_date <= to_date)
 
         if reference is not None:
-            query = query.where(QueueElement.reference.startswith(reference))
+            query = query.where(QueueElement.reference == reference)
 
         if status is not None:
             query = query.where(QueueElement.status == status)
+
+        if search_term is not None:
+            query = query.where(QueueElement.reference.startswith(search_term) | QueueElement.status.startswith(search_term) | QueueElement.data.like(f"%{search_term}%") | QueueElement.message.like(f"%{search_term}%"))
 
         result = session.scalars(query).all()
         return tuple(result)
