@@ -225,7 +225,7 @@ class TestTriggerTab(unittest.TestCase):
     def test_edit_trigger(self):
         """Test editing a trigger."""
         # Create a trigger
-        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, [], "")
+        db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, ["Scheduler 1"], "Branch1")
         ui_util.refresh_ui(self.browser)
 
         # Click trigger
@@ -237,9 +237,21 @@ class TestTriggerTab(unittest.TestCase):
         time.sleep(1)
 
         # Check result
-        trigger = db_util.get_all_triggers()[0]
+        trigger: QueueTrigger = db_util.get_all_triggers()[0]
         self.assertEqual(trigger.trigger_name, "Queue trigger Edit")
+        self.assertEqual(trigger.process_name, "Queue Process")
+        self.assertEqual(trigger.queue_name, "Queue Name")
+        self.assertEqual(trigger.process_path, "Queue path")
+        self.assertEqual(trigger.process_args, "Queue args")
+        self.assertEqual(trigger.is_git_repo, False)
+        self.assertEqual(trigger.is_blocking, False)
+        self.assertEqual(trigger.scheduler_whitelist, '["Scheduler 1"]')
+        self.assertEqual(trigger.git_branch, "Branch1")
 
 
 if __name__ == '__main__':
-    unittest.main(failfast=True)
+    # unittest.main(failfast=True)
+    t = TestTriggerTab()
+    t.setUp()
+    t.test_edit_trigger()
+    t.tearDown()
