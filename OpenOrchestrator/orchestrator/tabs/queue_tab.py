@@ -1,6 +1,5 @@
 """This module is responsible for the layout and functionality of the Queues tab
 in Orchestrator."""
-import json
 from datetime import datetime
 
 from nicegui import ui
@@ -9,7 +8,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.orchestrator import test_helper
-from OpenOrchestrator.orchestrator import styling_constants as style
+from OpenOrchestrator.orchestrator.popups.queue_popup import QueueElementPopup
 
 
 QUEUE_COLUMNS = [
@@ -81,14 +80,14 @@ class QueuePopup():
         self.order_by = "Created Date"
         self.order_descending = False
         self.page = 1
-        self.rows_per_page = 5
+        self.rows_per_page = 25
         self.queue_count = 100
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
                 self.ref_search = ui.input(label='Search', placeholder="Reference", on_change=self._update).style('margin-left: 1rem')
                 self.status_select = ui.select(
-                    options= ["All", *[e.value for e in QueueStatus]],
+                    options= {'All': 'All'} | {status.name: status.value for status in QueueStatus},
                     label="Status",
                     value="All",
                     on_change=self._update).classes("w-24")
@@ -102,8 +101,8 @@ class QueuePopup():
                 ui.button(icon='refresh', on_click=self._update)
                 self.close_button = ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
-                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': 5, 'rowsNumber': 100}).classes("w-full")
-                self.table.on('rowClick', lambda e: self._show_row_details(e.args[1]))
+                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': 5, 'rowsNumber': 100}).classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
+                self.table.on('rowClick', lambda e: QueueElementPopup(e.args[1]))
                 self.table.on('request', self._on_table_request)
 
         self._update()
@@ -133,9 +132,7 @@ class QueuePopup():
         ref_search = self.ref_search.value.strip()
         if len(ref_search) == 0:
             ref_search = None
-        status = self.status_select.value
-        if status == 'All':
-            status = None
+        status = None if self.status_select.value == "All" else self.status_select.value.strip()
 
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
@@ -166,61 +163,3 @@ class QueuePopup():
     def _update_pagination(self, queue_count):
         self.queue_count = queue_count
         self.table.pagination = {"rowsNumber": self.queue_count, "page": self.page, "rowsPerPage": self.rows_per_page, "sortBy": self.order_by, "descending": self.order_descending}
-
-    def _show_row_details(self, row_data):
-        """Show a dialogue with details of the row selected.
-
-        Args:
-            row_data: Data from the row selected.
-        """
-        with ui.dialog() as dialog:
-            with ui.card().style('min-width: 600px; max-width: 800px'):
-
-                with ui.row().classes('w-full justify-between items-start mb-4'):
-                    with ui.column().classes(style.SECTION + ' mb-4'):
-                        ui.label("Reference:").classes(style.LABEL)
-                        ui.label(row_data.get('Reference', 'N/A')).classes('text-h5')
-                    with ui.column().classes(style.SECTION + ' items-end'):
-                        ui.label('Status').classes(style.LABEL)
-                        ui.label(row_data.get('Status', 'N/A')).classes('text-h5')
-                ui.separator()
-
-                with ui.column().classes('gap-1'):
-
-                    data_text = row_data.get('Data', '{}')
-                    if data_text and len(data_text) > 0:
-                        with ui.row().classes('w-full'):
-                            ui.label('Data').classes(style.LABEL)
-                            try:
-                                data = json.loads(data_text)
-                                formatted_data = json.dumps(data, indent=2, ensure_ascii=False)
-                                ui.code(formatted_data).style('max-height: 200px; overflow-y: auto; width: 100%;')
-                            except (json.JSONDecodeError, TypeError):
-                                ui.code(data_text).style('max-height: 200px; overflow-y: auto; width: 100%;')
-
-                    message_text = row_data.get('Message')
-                    if message_text and len(message_text) > 0:
-                        with ui.row().classes('w-full mt-4'):
-                            ui.label('Message').classes(style.LABEL)
-                            ui.label(message_text).classes(style.VALUE)
-
-                    with ui.row().classes('w-full mt-4'):
-                        with ui.column().classes('flex-1'):
-                            ui.label("Created Date:").classes(style.LABEL)
-                            ui.label(row_data.get('Created Date', 'N/A')).classes(style.VALUE)
-                        with ui.column().classes('flex-1'):
-                            ui.label("Start Date:").classes(style.LABEL)
-                            ui.label(row_data.get('Start Date', 'N/A')).classes(style.VALUE)
-                        with ui.column().classes('flex-1'):
-                            ui.label("End Date:").classes(style.LABEL)
-                            ui.label(row_data.get('End Date', 'N/A')).classes(style.VALUE)
-
-                    with ui.row().classes('w-full mt-4'):
-                        ui.label("Created By:").classes(style.LABEL)
-                        ui.label(row_data.get('Created By', 'N/A')).classes(style.VALUE)
-                    with ui.row().classes('w-full'):
-                        ui.label("ID:").classes(style.LABEL)
-                        ui.label(row_data.get('ID', 'N/A')).classes(style.VALUE)
-
-                ui.button('Close', on_click=dialog.close).classes('mt-4')
-        dialog.open()
