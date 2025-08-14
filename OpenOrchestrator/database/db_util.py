@@ -837,12 +837,22 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
         status (optional): The status to filter by if any. If None the filter is disabled.
         offset: The number of queue elements to skip.
         limit: The number of queue elements to get.
+        order_by: Column to order the result by.
+        order_desc: Should result be in descending order, only used with order_by.
+        include_count: Return a tuple with results as well as the total count of elements without limit applied.
 
     Returns:
         tuple[QueueElement]: A tuple of queue elements.
     """
     def _apply_filters(query):
-        """Hjælpefunktion der tilføjer alle filters til en query"""
+        """Create filters for query, to allow for optional return of count.
+
+        Args:
+            query: The initial query on a queue name.
+
+        Returns:
+            The query object.
+        """
         query = query.where(QueueElement.queue_name == queue_name)
 
         if from_date:

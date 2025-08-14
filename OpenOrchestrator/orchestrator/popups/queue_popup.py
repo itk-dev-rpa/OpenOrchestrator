@@ -1,3 +1,4 @@
+"""Class for queue element popups."""
 import json
 from nicegui import ui
 
@@ -5,6 +6,8 @@ from OpenOrchestrator.orchestrator import styling_constants as style
 
 
 class QueueElementPopup():
+    """A popup to display queue element data.
+    """
     def __init__(self, row_data):
         """Show a dialogue with details of the row selected.
 
@@ -32,9 +35,9 @@ class QueueElementPopup():
                             try:
                                 data = json.loads(data_text)
                                 formatted_data = json.dumps(data, indent=2, ensure_ascii=False)
-                                ui.code(formatted_data).classes('h-200px w-full whitespace-pre-wrap')
+                                ui.code(formatted_data).classes('h-200px w-full').style('max-width: 750px;')
                             except (json.JSONDecodeError, TypeError):
-                                ui.code(data_text).classes('h-200px w-full whitespace-pre-wrap')
+                                ui.code(data_text).classes('h-200px w-full').style('max-width: 750px;')
 
                     message_text = row_data.get('Message')
                     if message_text and len(message_text) > 0:

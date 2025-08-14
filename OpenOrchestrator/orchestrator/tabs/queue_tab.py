@@ -153,6 +153,11 @@ class QueuePopup():
         dropdown.text = status.value
 
     def _on_table_request(self, e):
+        """Called when updating table pagination and sorting, to handle these manually and allow for server side pagination.
+
+        Args:
+            e: The event triggering the request.
+        """
         pagination = e.args['pagination']
         self.page = pagination.get('page')
         self.rows_per_page = pagination.get('rowsPerPage')
@@ -161,5 +166,10 @@ class QueuePopup():
         self._update()
 
     def _update_pagination(self, queue_count):
+        """Update pagination element.
+
+        Args:
+            queue_count: The element count of the current filtered table.
+        """
         self.queue_count = queue_count
         self.table.pagination = {"rowsNumber": self.queue_count, "page": self.page, "rowsPerPage": self.rows_per_page, "sortBy": self.order_by, "descending": self.order_descending}
