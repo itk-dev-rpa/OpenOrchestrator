@@ -78,6 +78,11 @@ class QueuePopup():
     """A popup that displays queue elements in a queue."""
     def __init__(self, queue_name) -> None:
         self.queue_name = queue_name
+        self.order_by = "Created Date"
+        self.order_descending = False
+        self.page = 1
+        self.rows_per_page = 5
+        self.queue_count = 100
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
@@ -97,8 +102,9 @@ class QueuePopup():
                 ui.button(icon='refresh', on_click=self._update)
                 self.close_button = ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
-                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination=100).classes("w-full")
+                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': 5, 'rowsNumber': 100}).classes("w-full")
                 self.table.on('rowClick', lambda e: self._show_row_details(e.args[1]))
+                self.table.on('request', self._on_table_request)
 
         self._update()
         test_helper.set_automation_ids(self, "queue_popup")
@@ -133,8 +139,11 @@ class QueuePopup():
 
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
+        offset = (self.page - 1) * self.rows_per_page
+        order_by = str(self.order_by).lower().replace(" ", "_")
 
-        queue_elements = db_util.get_queue_elements(self.queue_name, status=status, limit=None, from_date=from_date, to_date=to_date, search_term=ref_search)
+        queue_elements, queue_count = db_util.get_queue_elements(self.queue_name, status=status, limit=self.rows_per_page, offset=offset, from_date=from_date, to_date=to_date, order_by=order_by, order_desc=self.order_descending, search_term=ref_search, include_count=True)
+        self._update_pagination(queue_count)
         rows = [element.to_row_dict() for element in queue_elements]
         self.table.update_rows(rows)
 
@@ -145,6 +154,18 @@ class QueuePopup():
             status: QueueStatus to show.
         """
         dropdown.text = status.value
+
+    def _on_table_request(self, e):
+        pagination = e.args['pagination']
+        self.page = pagination.get('page')
+        self.rows_per_page = pagination.get('rowsPerPage')
+        self.order_by = pagination.get('sortBy')
+        self.order_descending = pagination.get('descending', False)
+        self._update()
+
+    def _update_pagination(self, queue_count):
+        self.queue_count = queue_count
+        self.table.pagination = {"rowsNumber": self.queue_count, "page": self.page, "rowsPerPage": self.rows_per_page, "sortBy": self.order_by, "descending": self.order_descending}
 
     def _show_row_details(self, row_data):
         """Show a dialogue with details of the row selected.

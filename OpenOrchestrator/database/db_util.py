@@ -827,7 +827,8 @@ def get_next_queue_element(queue_name: str, reference: str | None = None, set_st
 
 def get_queue_elements(queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
                        from_date: datetime | None = None, to_date: datetime | None = None, search_term: str | None = None,
-                       offset: int = 0, limit: int | None = 100) -> tuple[QueueElement, ...]:
+                       offset: int = 0, limit: int | None = 100,
+                       order_by: str | None = None, order_desc: bool = False, include_count: bool = False) -> tuple[QueueElement, ...]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
     Args:
@@ -840,34 +841,46 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
     Returns:
         tuple[QueueElement]: A tuple of queue elements.
     """
-    with _get_session() as session:
-        query = (
-            select(QueueElement)
-            .where(QueueElement.queue_name == queue_name)
-            .order_by(desc(QueueElement.created_date))
-            .offset(offset)
-        )
-
-        if limit:
-            query = query.limit(limit)
+    def _apply_filters(query):
+        """Hjælpefunktion der tilføjer alle filters til en query"""
+        query = query.where(QueueElement.queue_name == queue_name)
 
         if from_date:
             query = query.where(QueueElement.created_date >= from_date)
-
         if to_date:
             query = query.where(QueueElement.created_date <= to_date)
-
         if reference is not None:
             query = query.where(QueueElement.reference == reference)
-
         if status is not None:
             query = query.where(QueueElement.status == status)
-
         if search_term is not None:
-            query = query.where(QueueElement.reference.startswith(search_term) | QueueElement.status.startswith(search_term) | QueueElement.data.like(f"%{search_term}%") | QueueElement.message.like(f"%{search_term}%"))
+            query = query.where(QueueElement.reference.startswith(search_term) |
+                                QueueElement.data.like(f"%{search_term}%") |
+                                QueueElement.message.like(f"%{search_term}%"))
+        return query
+
+    with _get_session() as session:
+        # Main query
+        query = _apply_filters(select(QueueElement))
+
+        if order_by:
+            order_column = getattr(QueueElement, order_by, 'created_date')
+            if order_column:
+                query = query.order_by(desc(order_column) if order_desc else order_column)
+
+        query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
 
         result = session.scalars(query).all()
-        return tuple(result)
+        elements_tuple = tuple(result)
+
+        if include_count:
+            count_query = _apply_filters(select(alc_func.count()))  # pylint: disable=not-callable
+            total_count = session.scalar(count_query)
+            return elements_tuple, total_count
+
+        return elements_tuple
 
 
 def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
