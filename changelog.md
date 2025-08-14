@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added option to define Git branch/tag when creating a trigger.
+- Added option for robots to check if they are pausing.
 - Added argument to manually set Orchestrator port.
 - Added argument to prevent Orchestrator from opening in the browser automatically.
 - Commandline command to upgrade a database to the newest schema.
