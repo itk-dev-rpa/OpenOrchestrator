@@ -139,7 +139,7 @@ class QueuePopup():
         offset = (self.page - 1) * self.rows_per_page
         order_by = str(self.order_by).lower().replace(" ", "_")
 
-        queue_elements, queue_count = db_util.get_queue_elements(self.queue_name, status=status, limit=self.rows_per_page, offset=offset, from_date=from_date, to_date=to_date, order_by=order_by, order_desc=self.order_descending, search_term=ref_search, include_count=True)
+        queue_elements, queue_count = db_util.get_queue_elements(self.queue_name, status=status, limit=self.rows_per_page, from_date=from_date, to_date=to_date, order_by=order_by, order_desc=self.order_descending, offset=offset, search_term=ref_search, include_count=True)
         self._update_pagination(queue_count)
         rows = [element.to_row_dict() for element in queue_elements]
         self.table.update_rows(rows)
