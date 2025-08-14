@@ -35,6 +35,6 @@ def reset_triggers():
         raise RuntimeError("Not all triggers were deleted.")
 
     next_run = datetime.now() - timedelta(seconds=2)
-    db_util.create_single_trigger("Single", "Process1", next_run, "Path", "Args", False, False, 0, "")
-    db_util.create_scheduled_trigger("Scheduled", "Process1", "0 0 * * *", next_run, "Path", "Args", False, False, 0, "")
-    db_util.create_queue_trigger("Queue", "Process1", "Trigger Queue", "Path", "Args", False, False, 2, 0, "")
+    db_util.create_single_trigger("Single", "Process1", next_run, "Path", "Args", False, False, 0, [], "")
+    db_util.create_scheduled_trigger("Scheduled", "Process1", "0 0 * * *", next_run, "Path", "Args", False, False, 0, [], "")
+    db_util.create_queue_trigger("Queue", "Process1", "Trigger Queue", "Path", "Args", False, False, 2, 0, [], "")
