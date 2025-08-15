@@ -69,7 +69,7 @@ class TestQueuesTab(unittest.TestCase):
         for i, status in enumerate(QueueStatus):
             self._set_status_filter(status.value)
             table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
-            expected_count = (i + 1)
+            expected_count = i + 1
             self.assertEqual(len(table_data), expected_count)
 
         # Test clearing status filter
