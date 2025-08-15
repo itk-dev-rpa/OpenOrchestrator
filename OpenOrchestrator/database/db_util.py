@@ -1,4 +1,5 @@
 """This module handles the connection to the database in OpenOrchestrator."""
+# pylint: disable=too-many-lines
 
 from datetime import datetime
 from typing import TypeVar, ParamSpec
@@ -295,7 +296,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
         priority: The integer priority of the trigger.
-        cheduler_whitelist: A list of names of schedulers the trigger may run on.
+        scheduler_whitelist: A list of names of schedulers the trigger may run on.
 
     Returns:
         The id of the trigger that was created.
