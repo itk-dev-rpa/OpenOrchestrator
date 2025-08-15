@@ -8,7 +8,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.orchestrator import test_helper
-from OpenOrchestrator.orchestrator.popups.queue_popup import QueueElementPopup
+from OpenOrchestrator.orchestrator.popups.queue_element_popup import QueueElementPopup
 
 
 QUEUE_COLUMNS = [
@@ -85,7 +85,7 @@ class QueuePopup():
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
-                self.ref_search = ui.input(label='Search', placeholder="Reference", on_change=self._update).style('margin-left: 1rem')
+                self.ref_search = ui.input(label='Search', placeholder="Ref, message or data", on_change=self._update).style('margin-left: 1rem')
                 self.status_select = ui.select(
                     options= {'All': 'All'} | {status.name: status.value for status in QueueStatus},
                     label="Status",
