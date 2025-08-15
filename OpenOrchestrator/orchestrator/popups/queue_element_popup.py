@@ -10,7 +10,7 @@ VALUE = 'text-body1 gap-0'
 SECTION = 'gap-0'
 
 
-# pylint: disable-next=too-few-public-methods too-many-instance-attributes
+# pylint: disable-next=too-few-public-methods, too-many-instance-attributes
 class QueueElementPopup():
     """A popup to display queue element data.
     """
