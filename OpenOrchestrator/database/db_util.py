@@ -826,8 +826,8 @@ def get_next_queue_element(queue_name: str, reference: str | None = None, set_st
 
 
 def get_queue_elements(queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
-                       from_date: datetime | None = None, to_date: datetime | None = None, search_term: str | None = None,
-                       offset: int = 0, limit: int | None = 100,
+                       from_date: datetime | None = None, to_date: datetime | None = None,
+                       offset: int = 0, limit: int | None = 100, search_term: str | None = None,
                        order_by: str | None = None, order_desc: bool = False, include_count: bool = False) -> tuple[QueueElement, ...] | tuple[tuple[QueueElement, ...], int]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
