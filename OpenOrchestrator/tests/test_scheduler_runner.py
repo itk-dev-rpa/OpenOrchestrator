@@ -1,3 +1,4 @@
+"""This module tests the OpenOrchestrator.scheduler.runner module."""
 
 import unittest
 from unittest.mock import patch, MagicMock
@@ -15,6 +16,7 @@ TEST_MODULE = "OpenOrchestrator.scheduler.runner"
 
 
 class TestSchedulerRunner(unittest.TestCase):
+    """Test the runner functionality of the scheduler."""
     def setUp(self) -> None:
         db_test_util.establish_clean_database()
 
@@ -53,7 +55,7 @@ class TestSchedulerRunner(unittest.TestCase):
     @patch(f"{TEST_MODULE}.find_main_file", return_value="main.py")
     @patch(f"{TEST_MODULE}.clone_git_repo", return_value="folder_path")
     def test_run_trigger(self, mock_clone_git_repo: MagicMock, mock_find_main_file: MagicMock, mock_isfile: MagicMock,
-                         mock_Popen: MagicMock, mock_get_scheduler_name: MagicMock):
+                         mock_popen: MagicMock, mock_get_scheduler_name: MagicMock):
         """Test the run_trigger function in the runner module.
 
         Args:
@@ -87,7 +89,7 @@ class TestSchedulerRunner(unittest.TestCase):
         mock_clone_git_repo.assert_called_once_with(trigger.process_path, trigger.git_branch)
         mock_find_main_file.assert_called_once_with("folder_path")
         mock_isfile.assert_called_once_with("main.py")
-        mock_Popen.assert_called_once_with(['python', "main.py", trigger.process_name, db_util.get_conn_string(), crypto_util.get_key(), trigger.process_args],
+        mock_popen.assert_called_once_with(['python', "main.py", trigger.process_name, db_util.get_conn_string(), crypto_util.get_key(), trigger.process_args],
                                            stderr=subprocess.PIPE, text=True)
         mock_get_scheduler_name.assert_called_once()
 
