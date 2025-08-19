@@ -283,7 +283,7 @@ def get_unique_log_process_names() -> tuple[str, ...]:
 # pylint: disable=too-many-positional-arguments
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
                           process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool,
-                          priority: int, scheduler_whitelist: list[str], git_branch: str) -> None:
+                          priority: int, scheduler_whitelist: list[str], git_branch: str) -> UUID:
     """Create a new single trigger in the database.
 
     Args:
@@ -323,7 +323,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
                              is_blocking: bool, priority: int, scheduler_whitelist: list[str],
-                             git_branch: str) -> None:
+                             git_branch: str) -> UUID:
     """Create a new scheduled trigger in the database.
 
     Args:
@@ -365,7 +365,7 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
                          min_batch_size: int, priority: int, scheduler_whitelist: list[str],
-                         git_branch: str) -> None:
+                         git_branch: str) -> UUID:
     """Create a new queue trigger in the database.
 
     Args:
