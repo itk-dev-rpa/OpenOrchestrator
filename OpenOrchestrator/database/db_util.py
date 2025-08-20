@@ -1,7 +1,6 @@
 """This module handles the connection to the database in OpenOrchestrator."""
 
 from datetime import datetime
-from typing import TypeVar, ParamSpec
 from uuid import UUID
 import json
 
@@ -19,10 +18,6 @@ from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, Scheduled
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 from OpenOrchestrator.database.schedulers import Scheduler
 from OpenOrchestrator.database.truncated_string import truncate_message
-
-# Type hint helpers for decorators
-T = TypeVar("T")
-P = ParamSpec("P")
 
 _connection_engine: Engine | None = None
 
