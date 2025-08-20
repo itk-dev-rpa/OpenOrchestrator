@@ -23,6 +23,8 @@ class TriggerStatus(enum.Enum):
     DONE = "Done"
     PAUSED = "Paused"
     PAUSING = "Pausing"
+    KILLING = "Killing"
+    KILLED = "Killed"
 
 
 class TriggerType(enum.Enum):

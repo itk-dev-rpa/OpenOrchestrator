@@ -199,6 +199,19 @@ def fail_job(job: Job) -> None:
         clear_folder(job.process_folder)
 
 
+def kill_job(job: Job) -> None:
+    """Kill the job's process and mark is as killed in the database.
+
+    Args:
+        job: The job whose process to kill.
+    """
+    job.process.kill()
+    db_util.set_trigger_status(job.trigger.id, TriggerStatus.KILLED)
+
+    if job.process_folder:
+        clear_folder(job.process_folder)
+
+
 def run_process(trigger: Trigger) -> Job | None:
     """Runs the process of the given trigger with the necessary inputs:
     Process name
