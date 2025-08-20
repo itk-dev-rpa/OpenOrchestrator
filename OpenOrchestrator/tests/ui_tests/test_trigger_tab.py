@@ -260,8 +260,4 @@ class TestTriggerTab(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # unittest.main(failfast=True)
-    t = TestTriggerTab()
-    t.setUp()
-    t.test_kill_button()
-    t.tearDown()
+    unittest.main(failfast=True)
