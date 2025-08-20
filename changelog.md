@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added the possibility to kill a running robot from Orchestrator.
 - Added option for robots to check if they are pausing.
 - Added argument to manually set Orchestrator port.
 - Added argument to prevent Orchestrator from opening in the browser automatically.
