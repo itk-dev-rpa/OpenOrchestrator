@@ -217,6 +217,7 @@ class TestTriggerTab(unittest.TestCase):
 
     @ui_util.screenshot_on_error
     def test_kill_button(self):
+        """Test the kill button in the trigger popup."""
         trigger_id = db_util.create_single_trigger("Trigger Name", "Process Name", datetime.now(), "Path", "", False, False, 0, None)
         ui_util.refresh_ui(self.browser)
 
