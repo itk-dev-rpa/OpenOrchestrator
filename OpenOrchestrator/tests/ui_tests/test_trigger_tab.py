@@ -58,7 +58,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, True)
         self.assertEqual(trigger.priority, 5)
-        self.assertEqual(trigger.scheduler_whitelist, '["Scheduler1", "Scheduler2"]')
+        self.assertEqual(trigger.scheduler_whitelist, ["Scheduler1", "Scheduler2"])
 
     @ui_util.screenshot_on_error
     def test_scheduled_trigger_creation(self):
@@ -94,7 +94,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.process_args, "Process args")
         self.assertEqual(trigger.is_blocking, False)
         self.assertEqual(trigger.priority, 5)
-        self.assertEqual(trigger.scheduler_whitelist, '["Scheduler1", "Scheduler2"]')
+        self.assertEqual(trigger.scheduler_whitelist, ["Scheduler1", "Scheduler2"])
 
     @ui_util.screenshot_on_error
     def test_queue_trigger_creation(self):
@@ -262,8 +262,4 @@ class TestTriggerTab(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # unittest.main(failfast=True)
-    t = TestTriggerTab()
-    t.setUp()
-    t.test_edit_trigger()
-    t.tearDown()
+    unittest.main(failfast=True)
