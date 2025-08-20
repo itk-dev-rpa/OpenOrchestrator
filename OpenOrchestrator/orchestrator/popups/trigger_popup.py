@@ -3,7 +3,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime
-import json
 
 from nicegui import ui
 from cronsim import CronSim, CronSimError
@@ -102,7 +101,7 @@ class TriggerPopup():
         self.branch_input.value = self.trigger.git_branch
         self.blocking_check.value = self.trigger.is_blocking
         self.priority_input.value = self.trigger.priority
-        self.whitelist_input.value = json.loads(self.trigger.scheduler_whitelist)
+        self.whitelist_input.value = self.trigger.scheduler_whitelist
 
         if isinstance(self.trigger, ScheduledTrigger):
             self.cron_input.value = self.trigger.cron_expr
@@ -196,7 +195,7 @@ class TriggerPopup():
             self.trigger.is_git_repo = is_git
             self.trigger.is_blocking = is_blocking
             self.trigger.priority = priority
-            self.trigger.scheduler_whitelist = json.dumps(whitelist)
+            self.trigger.scheduler_whitelist = whitelist
             self.trigger.git_branch = git_branch
 
             if isinstance(self.trigger, SingleTrigger):
