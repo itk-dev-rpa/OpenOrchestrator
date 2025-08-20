@@ -216,6 +216,29 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_cancel_button]").click()
 
     @ui_util.screenshot_on_error
+    def test_kill_button(self):
+        trigger_id = db_util.create_single_trigger("Trigger Name", "Process Name", datetime.now(), "Path", "", False, False, 0, None)
+        ui_util.refresh_ui(self.browser)
+
+        # Check that kill button isn't there when idle
+        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
+        buttons = self.browser.find_elements(By.CSS_SELECTOR, "[auto-id=trigger_popup_kill_button]")
+        self.assertEqual(len(buttons), 0)
+
+        # Close popup
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_cancel_button]").click()
+
+        # Now when running
+        db_util.set_trigger_status(trigger_id, TriggerStatus.RUNNING)
+        ui_util.refresh_ui(self.browser)
+        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_kill_button]").click()
+        time.sleep(1)
+
+        trigger = db_util.get_trigger(trigger_id)
+        self.assertEqual(trigger.process_status, TriggerStatus.KILLING)
+
+    @ui_util.screenshot_on_error
     def test_edit_trigger(self):
         """Test editing a trigger."""
         # Create a trigger
@@ -239,5 +262,5 @@ if __name__ == '__main__':
     # unittest.main(failfast=True)
     t = TestTriggerTab()
     t.setUp()
-    t.test_single_trigger_creation()
+    t.test_kill_button()
     t.tearDown()
