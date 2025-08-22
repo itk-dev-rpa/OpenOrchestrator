@@ -3,7 +3,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime
-import json
 
 from nicegui import ui
 from cronsim import CronSim, CronSimError
@@ -48,7 +47,9 @@ class TriggerPopup():
             self.queue_input = ui.input("Queue Name").classes("w-full")  # For queue triggers
             self.batch_input = ui.number("Min Batch Size", value=1, min=1, precision=0, format="%.0f")  # For queue triggers
             self.path_input = ui.input("Process Path").classes("w-full")
+            self.branch_input = ui.input("Git Branch/Tag (Optional)")
             self.git_check = ui.checkbox("Is path a Git Repo?")
+            self.branch_input.bind_visibility_from(self.git_check, "value")
             self.args_input = ui.input("Process Arguments").classes("w-full")
             self.blocking_check = ui.checkbox(text="Is process blocking?", value=True)
             self.priority_input = ui.number("Priority", value=0, precision=0, format="%.0f")
@@ -99,9 +100,10 @@ class TriggerPopup():
         self.path_input.value = self.trigger.process_path
         self.args_input.value = self.trigger.process_args
         self.git_check.value = self.trigger.is_git_repo
+        self.branch_input.value = self.trigger.git_branch
         self.blocking_check.value = self.trigger.is_blocking
         self.priority_input.value = self.trigger.priority
-        self.whitelist_input.value = json.loads(self.trigger.scheduler_whitelist)
+        self.whitelist_input.value = self.trigger.scheduler_whitelist
 
         if isinstance(self.trigger, ScheduledTrigger):
             self.cron_input.value = self.trigger.cron_expr
@@ -169,6 +171,7 @@ class TriggerPopup():
         queue_name = self.queue_input.value
         min_batch_size = self.batch_input.value
         path = self.path_input.value
+        git_branch = self.branch_input.value
         args = self.args_input.value
         is_git = self.git_check.value
         is_blocking = self.blocking_check.value
@@ -178,11 +181,11 @@ class TriggerPopup():
         if self.trigger is None:
             # Create new trigger in database
             if self.trigger_type == TriggerType.SINGLE:
-                db_util.create_single_trigger(trigger_name, process_name, next_run, path, args, is_git, is_blocking, priority, whitelist)
+                db_util.create_single_trigger(trigger_name, process_name, next_run, path, args, is_git, is_blocking, priority, whitelist, git_branch)
             elif self.trigger_type == TriggerType.SCHEDULED:
-                db_util.create_scheduled_trigger(trigger_name, process_name, cron_expr, next_run, path, args, is_git, is_blocking, priority, whitelist)
+                db_util.create_scheduled_trigger(trigger_name, process_name, cron_expr, next_run, path, args, is_git, is_blocking, priority, whitelist, git_branch)
             elif self.trigger_type == TriggerType.QUEUE:
-                db_util.create_queue_trigger(trigger_name, process_name, queue_name, path, args, is_git, is_blocking, min_batch_size, priority, whitelist)
+                db_util.create_queue_trigger(trigger_name, process_name, queue_name, path, args, is_git, is_blocking, min_batch_size, priority, whitelist, git_branch)
 
             ui.notify("Trigger created", type='positive')
         else:
@@ -194,7 +197,8 @@ class TriggerPopup():
             self.trigger.is_git_repo = is_git
             self.trigger.is_blocking = is_blocking
             self.trigger.priority = priority
-            self.trigger.scheduler_whitelist = json.dumps(whitelist)
+            self.trigger.scheduler_whitelist = whitelist
+            self.trigger.git_branch = git_branch
 
             if isinstance(self.trigger, SingleTrigger):
                 self.trigger.next_run = next_run
