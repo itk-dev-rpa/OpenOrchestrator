@@ -58,15 +58,17 @@ class TriggerTab():
     def add_column_colors(self):
         """Add custom coloring to the trigger table."""
         # Add coloring to the status column
+        color_dict = "{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red', Killing: 'orange', Killed: 'red'}"
+
         self.trigger_table.add_slot(
             "body-cell-Status",
-            '''
+            f'''
             <q-td key="Status" :props="props">
-                <q-badge v-if="{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red'}[props.value]" :color="{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red'}[props.value]">
-                    {{props.value}}
+                <q-badge v-if="{color_dict}[props.value]" :color="{color_dict}[props.value]">
+                    {{{{props.value}}}}
                 </q-badge>
                 <p v-else>
-                    {{props.value}}
+                    {{{{props.value}}}}
                 </p>
             </q-td>
             '''

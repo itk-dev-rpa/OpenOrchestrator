@@ -59,6 +59,8 @@ class TriggerPopup():
                 with ui.row():
                     self.enable_button = ui.button("Enable", on_click=self._enable_trigger)
                     self.disable_button = ui.button("Disable", on_click=self._disable_trigger)
+                    if trigger.process_status == TriggerStatus.RUNNING:
+                        self.kill_button = ui.button("Kill", on_click=self._kill_trigger, color='red')
                     self.delete_button = ui.button("Delete", on_click=self._delete_trigger, color='red')
             else:
                 # Dialog should only be persistent when a new trigger is being created
@@ -232,6 +234,11 @@ class TriggerPopup():
         else:
             db_util.set_trigger_status(self.trigger.id, TriggerStatus.PAUSED)
         ui.notify("Trigger status set to 'Paused'.", type='positive')
+        self.trigger_tab.update()
+
+    def _kill_trigger(self):
+        db_util.set_trigger_status(self.trigger.id, TriggerStatus.KILLING)
+        ui.notify("Killing trigger", type='warning')
         self.trigger_tab.update()
 
     def _enable_trigger(self):
