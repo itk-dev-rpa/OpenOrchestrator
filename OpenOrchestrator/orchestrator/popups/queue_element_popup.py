@@ -21,7 +21,7 @@ class QueueElementPopup():
             row_data: Data from the row selected.
         """
         with ui.dialog() as dialog:
-            with ui.card().style('min-width: 600px; max-width: 800px'):
+            with ui.card().style('min-width:  37.5rem; max-width: 50rem'):
 
                 with ui.row().classes('w-full justify-between items-start mb-4'):
                     with ui.column().classes(SECTION + ' mb-4'):
@@ -41,9 +41,9 @@ class QueueElementPopup():
                             try:
                                 data = json.loads(data_text)
                                 formatted_data = json.dumps(data, indent=2, ensure_ascii=False)
-                                self.data_text = ui.code(formatted_data).classes('h-200px w-full').style('max-width: 600px;')
+                                self.data_text = ui.code(formatted_data).classes('h-12.5rem w-full').style('max-width: 37.5rem;')
                             except (json.JSONDecodeError, TypeError):
-                                self.data_text = ui.code(data_text).classes('h-200px w-full').style('max-width: 600px;')
+                                self.data_text = ui.code(data_text).classes('h-12.5rem w-full').style('max-width: 37.5rem;')
 
                     message_text = row_data.get('Message')
                     if message_text and len(message_text) > 0:
