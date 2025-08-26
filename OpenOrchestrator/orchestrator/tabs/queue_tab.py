@@ -59,11 +59,6 @@ class QueueTab():
             }
             rows.append(row)
 
-        for row in rows:
-            for date_field in ['Created Date', 'Start Date', 'End Date']:
-                if row.get(date_field):
-                    row[date_field] = datetime.strptime(row[date_field], '%d-%m-%Y %H:%M:%S')
-
         self.queue_table.update_rows(rows)
 
     def _row_click(self, event):
@@ -85,7 +80,7 @@ class QueuePopup():
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
-                self.ref_search = ui.input(label='Search', placeholder="Ref, message or data", on_change=self._update).style('margin-left: 1rem')
+                self.search_input = ui.input(label='Search', placeholder="Ref, message or data", on_change=self._update).style('margin-left: 1rem')
                 self.status_select = ui.select(
                     options= {'All': 'All'} | {status.name: status.value for status in QueueStatus},
                     label="Status",
@@ -101,7 +96,7 @@ class QueuePopup():
                 ui.button(icon='refresh', on_click=self._update)
                 self.close_button = ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
-                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': 5, 'rowsNumber': 100}).classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
+                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count}).classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
                 self.table.on('rowClick', lambda e: QueueElementPopup(e.args[1]))
                 self.table.on('request', self._on_table_request)
 
@@ -129,9 +124,9 @@ class QueuePopup():
 
     def _update(self):
         """Update the table with values from the database."""
-        ref_search = self.ref_search.value.strip()
-        if len(ref_search) == 0:
-            ref_search = None
+        search_input = self.search_input.value.strip()
+        if len(search_input) == 0:
+            search_input = None
         status = None if self.status_select.value == "All" else self.status_select.value.strip()
 
         from_date = self.from_input.get_datetime()
@@ -139,18 +134,10 @@ class QueuePopup():
         offset = (self.page - 1) * self.rows_per_page
         order_by = str(self.order_by).lower().replace(" ", "_")
 
-        queue_elements, queue_count = db_util.get_queue_elements(self.queue_name, status=status, limit=self.rows_per_page, from_date=from_date, to_date=to_date, order_by=order_by, order_desc=self.order_descending, offset=offset, search_term=ref_search, include_count=True)
+        queue_elements, queue_count = db_util.get_queue_elements(self.queue_name, status=status, limit=self.rows_per_page, from_date=from_date, to_date=to_date, order_by=order_by, order_desc=self.order_descending, offset=offset, search_term=search_input, include_count=True)
         self._update_pagination(queue_count)
         rows = [element.to_row_dict() for element in queue_elements]
         self.table.update_rows(rows)
-
-    def _filter_status(self, status: QueueStatus, dropdown: ui.dropdown_button):
-        """Show only elements of the selected status, and update the status dropdown.
-
-        Args:
-            status: QueueStatus to show.
-        """
-        dropdown.text = status.value
 
     def _on_table_request(self, e):
         """Called when updating table pagination and sorting, to handle these manually and allow for server side pagination.

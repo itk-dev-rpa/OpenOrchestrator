@@ -14,7 +14,7 @@ SECTION = 'gap-0'
 class QueueElementPopup():
     """A popup to display queue element data.
     """
-    def __init__(self, row_data):
+    def __init__(self, row_data: ui.row):
         """Show a dialogue with details of the row selected.
 
         Args:
@@ -34,7 +34,7 @@ class QueueElementPopup():
 
                 with ui.column().classes('gap-1'):
 
-                    data_text = row_data.get('Data', '{}')
+                    data_text = row_data.get('Data', None)
                     if data_text and len(data_text) > 0:
                         with ui.row().classes('w-full'):
                             ui.label('Data').classes(LABEL)

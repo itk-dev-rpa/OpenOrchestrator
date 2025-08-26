@@ -836,14 +836,14 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
         queue_name: The queue to get elements from.
         reference (optional): The reference to filter by. If None the filter is disabled.
         status (optional): The status to filter by if any. If None the filter is disabled.
-        offset: The number of queue elements to skip.
-        limit: The number of queue elements to get.
-        order_by: Column to order the result by.
-        order_desc: Should result be in descending order, only used with order_by.
-        include_count: Return a tuple with results as well as the total count of elements without limit applied.
+        offset (optional): The number of queue elements to skip.
+        limit (optional): The number of queue elements to get.
+        order_by (optional): Column to order the result by. If None, will use created_date.
+        order_desc (optional): Should result be in descending order, only used with order_by.
+        include_count (optional): Return a tuple with results as well as the total count of elements without limit applied.
 
     Returns:
-        tuple[QueueElement]: A tuple of queue elements.
+        tuple[QueueElement] | tuple[tuple[QueueElement], int]: A tuple of queue elements or a tuple with a tuple of queue elements and an element count.
     """
     def _apply_filters(query):
         """Create filters for query, to allow for optional return of count.
@@ -856,9 +856,9 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
         """
         query = query.where(QueueElement.queue_name == queue_name)
 
-        if from_date:
+        if from_date is not None:
             query = query.where(QueueElement.created_date >= from_date)
-        if to_date:
+        if to_date is not None:
             query = query.where(QueueElement.created_date <= to_date)
         if reference is not None:
             query = query.where(QueueElement.reference == reference)
