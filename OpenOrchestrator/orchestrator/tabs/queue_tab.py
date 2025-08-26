@@ -85,7 +85,7 @@ class QueuePopup():
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
-                self.ref_search = ui.input(label='Search', placeholder="Ref, message or data", on_change=self._update).style('margin-left: 1rem')
+                self.search_input = ui.input(label='Search', placeholder="Ref, message or data", on_change=self._update).style('margin-left: 1rem')
                 self.status_select = ui.select(
                     options= {'All': 'All'} | {status.name: status.value for status in QueueStatus},
                     label="Status",
