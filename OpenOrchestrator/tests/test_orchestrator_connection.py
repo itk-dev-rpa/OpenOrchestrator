@@ -27,8 +27,7 @@ class TestOrchestratorConnection(unittest.TestCase):
                                                        process_args="",
                                                        is_git_repo=False,
                                                        is_blocking=False,
-                                                       priority=0,
-                                                       scheduler_whitelist=""
+                                                       priority=0
                                                        )
         cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args", cls.trigger_id)
 

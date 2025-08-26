@@ -207,7 +207,7 @@ class TestDBUtil(unittest.TestCase):
 
         trigger = db_util.get_trigger(triggers[0].id)
         self.assertIsNotNone(trigger)
-        self.assertIsNotNone(trigger.id)
+        self.assertEqual(trigger.id, triggers[0].id)
 
         # Update trigger
         trigger.process_path = "New path"
@@ -236,7 +236,7 @@ class TestDBUtil(unittest.TestCase):
         has_begun = db_util.begin_single_trigger(trigger.id)
         self.assertFalse(has_begun)
 
-        # Check is running- and next run
+        # Check is running and next run
         trigger = db_util.get_trigger(trigger.id)
         self.assertEqual(trigger.process_status, TriggerStatus.RUNNING)
         self.assertIsNotNone(trigger.last_run)

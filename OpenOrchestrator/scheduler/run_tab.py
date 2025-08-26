@@ -13,6 +13,7 @@ from sqlalchemy import exc as alc_exc
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.scheduler import runner, util
+from OpenOrchestrator.database.triggers import TriggerStatus
 
 if TYPE_CHECKING:
     from OpenOrchestrator.scheduler.application import Application
@@ -150,6 +151,12 @@ def check_heartbeats(app: Application) -> None:
                 runner.fail_job(job)
 
             app.running_jobs.remove(job)
+
+        elif db_util.get_trigger(job.trigger.id).process_status == TriggerStatus.KILLING:
+            runner.kill_job(job)
+            print(f"Process '{job.trigger.process_name}' has been killed.")
+            app.running_jobs.remove(job)
+
         else:
             print(f"Process '{job.trigger.process_name}' is still running")
 

@@ -2,9 +2,7 @@
 # pylint: disable=too-many-lines
 
 from datetime import datetime
-from typing import TypeVar, ParamSpec
 from uuid import UUID
-import json
 
 from cronsim import CronSim
 from sqlalchemy import Engine, create_engine, select, insert, desc, text
@@ -20,10 +18,6 @@ from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, Scheduled
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 from OpenOrchestrator.database.schedulers import Scheduler
 from OpenOrchestrator.database.truncated_string import truncate_message
-
-# Type hint helpers for decorators
-T = TypeVar("T")
-P = ParamSpec("P")
 
 _connection_engine: Engine | None = None
 
@@ -68,7 +62,7 @@ def check_database_revision() -> bool:
     except alc_exc.ProgrammingError:
         return False
 
-    return version == "90d46abd44a3"
+    return version == "9698388a0709"
 
 
 def _get_session() -> Session:
@@ -284,7 +278,7 @@ def get_unique_log_process_names() -> tuple[str, ...]:
 # pylint: disable=too-many-positional-arguments
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
                           process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool,
-                          priority: int, scheduler_whitelist: list[str]) -> str:
+                          priority: int, scheduler_whitelist: list[str] | None = None, git_branch: str | None = None) -> UUID:
     """Create a new single trigger in the database.
 
     Args:
@@ -297,6 +291,7 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         is_blocking: If the process should be blocking.
         priority: The integer priority of the trigger.
         scheduler_whitelist: A list of names of schedulers the trigger may run on.
+        git_branch: The specific git branch of the trigger.
 
     Returns:
         The id of the trigger that was created.
@@ -311,7 +306,8 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
             is_blocking = is_blocking,
             next_run = next_run,
             priority=priority,
-            scheduler_whitelist=json.dumps(scheduler_whitelist)
+            scheduler_whitelist=scheduler_whitelist,
+            git_branch=git_branch
         )
         session.add(trigger)
         session.commit()
@@ -321,7 +317,8 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
 # pylint: disable=too-many-positional-arguments
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
-                             is_blocking: bool, priority: int, scheduler_whitelist: list[str]) -> str:
+                             is_blocking: bool, priority: int, scheduler_whitelist: list[str] | None = None,
+                             git_branch: str | None = None) -> UUID:
     """Create a new scheduled trigger in the database.
 
     Args:
@@ -335,6 +332,8 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         is_blocking: If the process should be blocking.
         priority: The integer priority of the trigger.
         scheduler_whitelist: A list of names of schedulers the trigger may run on.
+        git_branch: The specific git branch of the trigger.
+
     Returns:
         The id of the trigger that was created.
     """
@@ -349,7 +348,8 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
             next_run = next_run,
             cron_expr = cron_expr,
             priority=priority,
-            scheduler_whitelist=json.dumps(scheduler_whitelist)
+            scheduler_whitelist=scheduler_whitelist,
+            git_branch=git_branch
         )
         session.add(trigger)
         session.commit()
@@ -359,7 +359,8 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
 # pylint: disable=too-many-positional-arguments
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int, priority: int, scheduler_whitelist: list[str]) -> str:
+                         min_batch_size: int, priority: int, scheduler_whitelist: list[str] | None = None,
+                         git_branch: str | None = None) -> UUID:
     """Create a new queue trigger in the database.
 
     Args:
@@ -373,6 +374,7 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         min_batch_size: The minimum number of queue elements before triggering.
         priority: The integer priority of the trigger.
         scheduler_whitelist: A list of names of schedulers the trigger may run on.
+        git_branch: The specific git branch of the trigger.
 
     Returns:
         The id of the trigger that was created.
@@ -388,7 +390,8 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
             queue_name = queue_name,
             min_batch_size = min_batch_size,
             priority=priority,
-            scheduler_whitelist=json.dumps(scheduler_whitelist)
+            scheduler_whitelist=scheduler_whitelist,
+            git_branch=git_branch
         )
         session.add(trigger)
         session.commit()
