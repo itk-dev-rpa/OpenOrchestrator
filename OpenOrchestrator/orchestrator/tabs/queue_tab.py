@@ -70,7 +70,7 @@ class QueueTab():
 # pylint: disable-next=too-few-public-methods
 class QueuePopup():
     """A popup that displays queue elements in a queue."""
-    def __init__(self, queue_name) -> None:
+    def __init__(self, queue_name: str):
         self.queue_name = queue_name
         self.order_by = "Created Date"
         self.order_descending = False
