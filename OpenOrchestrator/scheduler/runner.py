@@ -7,7 +7,6 @@ import shutil
 import subprocess
 from dataclasses import dataclass
 import uuid
-import json
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
@@ -55,9 +54,8 @@ def poll_triggers(app: Application) -> Trigger | None:
     is_exclusive = app.settings_tab_.whitelist_value.get()
 
     for trigger in trigger_list:
-        trigger_whitelist = json.loads(trigger.scheduler_whitelist)
-        whitelisted = scheduler_name in trigger_whitelist  # Is the Scheduler in the whitelist
-        unlisted_allowed = not is_exclusive and not trigger_whitelist  # Is the scheduler allowed to run non-designated triggers
+        whitelisted = trigger.scheduler_whitelist and scheduler_name in trigger.scheduler_whitelist  # Is the Scheduler in the whitelist
+        unlisted_allowed = not is_exclusive and not trigger.scheduler_whitelist  # Is the scheduler allowed to run non-designated triggers
 
         if whitelisted or unlisted_allowed:
             if not (trigger.is_blocking and other_jobs_running):
@@ -90,11 +88,12 @@ def run_trigger(trigger: Trigger) -> Job | None:
     return None
 
 
-def clone_git_repo(repo_url: str) -> str:
+def clone_git_repo(repo_url: str, branch: str) -> str:
     """Clone the git repo at the path to %USER%\\desktop\\Scheduler_Repos\\%UUID%.
 
     Args:
         repo_url: URL to the git repo to clone.
+        branch: The specific git branch to clone.
 
     Returns:
         str: The path to the cloned repo on the desktop.
@@ -108,10 +107,15 @@ def clone_git_repo(repo_url: str) -> str:
     if shutil.which('git') is None:
         raise RuntimeError('git is not installed or not found in the system PATH.')
 
+    args = ['git', 'clone']
+    if branch.strip():
+        args.extend(["-b", branch.strip()])
+    args.extend([repo_url, repo_path])
+
     try:
-        subprocess.run(['git', 'clone', repo_url, repo_path], check=True)
+        subprocess.run(args, check=True)
     except subprocess.CalledProcessError as exc:
-        raise ValueError(f"Failed to clone git repo at {repo_url}.") from exc
+        raise ValueError(f"Failed to clone git branch '{branch if branch else 'DEFAULT'}' at '{repo_url}'.") from exc
 
     return repo_path
 
@@ -199,6 +203,19 @@ def fail_job(job: Job) -> None:
         clear_folder(job.process_folder)
 
 
+def kill_job(job: Job) -> None:
+    """Kill the job's process and mark is as killed in the database.
+
+    Args:
+        job: The job whose process to kill.
+    """
+    job.process.kill()
+    db_util.set_trigger_status(job.trigger.id, TriggerStatus.KILLED)
+
+    if job.process_folder:
+        clear_folder(job.process_folder)
+
+
 def run_process(trigger: Trigger) -> Job | None:
     """Runs the process of the given trigger with the necessary inputs:
     Process name
@@ -224,7 +241,7 @@ def run_process(trigger: Trigger) -> Job | None:
 
     try:
         if trigger.is_git_repo:
-            folder_path = clone_git_repo(process_path)
+            folder_path = clone_git_repo(process_path, trigger.git_branch)
             process_path = find_main_file(folder_path)
 
         if not os.path.isfile(process_path):
