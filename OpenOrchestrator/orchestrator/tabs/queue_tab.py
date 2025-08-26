@@ -1,7 +1,5 @@
 """This module is responsible for the layout and functionality of the Queues tab
 in Orchestrator."""
-from datetime import datetime
-
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
