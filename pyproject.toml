@@ -2,8 +2,8 @@
 requires = ["setuptools>=65.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["OpenOrchestrator"]
+[tool.setuptools.packages.find]
+include = ["OpenOrchestrator*"]
 
 [project]
 name = "OpenOrchestrator"
