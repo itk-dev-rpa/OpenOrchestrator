@@ -3,6 +3,7 @@ import json
 from nicegui import ui
 
 from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.database import db_util
 
 # Styling constants
 LABEL = 'text-subtitle2 text-grey-7'
@@ -14,13 +15,14 @@ SECTION = 'gap-0'
 class QueueElementPopup():
     """A popup to display queue element data.
     """
-    def __init__(self, row_data: ui.row):
+    def __init__(self, row_data: ui.row, on_dialog_close_callback):
         """Show a dialogue with details of the row selected.
 
         Args:
             row_data: Data from the row selected.
         """
-        with ui.dialog() as dialog:
+        self.on_dialog_close_callback = on_dialog_close_callback
+        with ui.dialog() as self.dialog:
             with ui.card().style('min-width:  37.5rem; max-width: 50rem'):
 
                 with ui.row().classes('w-full justify-between items-start mb-4'):
@@ -69,6 +71,31 @@ class QueueElementPopup():
                         ui.label("ID:").classes(LABEL)
                         self.id_text = ui.label(row_data.get('ID', 'N/A')).classes(VALUE)
 
-                ui.button('Close', on_click=dialog.close).classes('mt-4')
+                with ui.row().classes('w-full mt-4'):
+                    ui.button(
+                            icon='delete',
+                            on_click=lambda e, id=row_data.get('ID', 'N/A'): self._confirm_delete(id)
+                        )
+                    ui.button('Close', on_click=self._close_dialog).classes('mt-4')
         test_helper.set_automation_ids(self, "queue_element_popup")
-        dialog.open()
+        self.dialog.open()
+
+    def _close_dialog(self):
+        self.on_dialog_close_callback()
+        self.dialog.close()
+
+    def _delete_element(self, element_id):
+        db_util.delete_queue_element(element_id)
+
+    def _confirm_delete(self, element_id):
+        with ui.dialog() as dialog, ui.card():
+            ui.label('Are you sure you want to delete this element?')
+            with ui.row():
+                ui.button('Cancel', on_click=dialog.close)
+                ui.button('Delete', on_click=lambda: self._delete_and_close(element_id, dialog))
+            dialog.open()
+
+    def _delete_and_close(self, element_id, dialog):
+        self._delete_element(element_id)
+        dialog.close()
+        self._close_dialog()
