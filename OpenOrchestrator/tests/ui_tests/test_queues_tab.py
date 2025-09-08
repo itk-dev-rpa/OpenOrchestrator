@@ -249,7 +249,7 @@ class TestQueuesTab(unittest.TestCase):
 
     def _set_search_filter(self, search_term=""):
         """Set reference search filter in queue popup."""
-        search_field = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_ref_search]")
+        search_field = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_search_input]")
         search_field.send_keys(Keys.CONTROL, "a", Keys.DELETE)
         if search_term:
             search_field.send_keys(search_term)
