@@ -62,19 +62,20 @@ class QueueTab():
     def _row_click(self, event):
         row = event.args[1]
         queue_name = row["Queue Name"]
-        QueuePopup(queue_name)
+        QueuePopup(queue_name, self.update)
 
 
 # pylint: disable-next=too-few-public-methods
 class QueuePopup():
     """A popup that displays queue elements in a queue."""
-    def __init__(self, queue_name: str):
+    def __init__(self, queue_name: str, update_callback):
         self.queue_name = queue_name
         self.order_by = "Created Date"
         self.order_descending = False
         self.page = 1
         self.rows_per_page = 25
         self.queue_count = 100
+        self.update_callback = update_callback  # To make sure the main table updates changes to queue elements.
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
@@ -92,6 +93,7 @@ class QueuePopup():
                 ui.switch("Dense", on_change=lambda e: self._dense_table(e.value))
                 self._create_column_filter()
                 ui.button(icon='refresh', on_click=self._update)
+                ui.button(icon='add', on_click=self._open_create_dialog)
                 self.close_button = ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
                 self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count}).classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
@@ -99,6 +101,7 @@ class QueuePopup():
                 self.table.on('request', self._on_table_request)
 
         self._update()
+        self.update_callback()
         test_helper.set_automation_ids(self, "queue_popup")
 
     def _dense_table(self, value: bool):
@@ -158,3 +161,6 @@ class QueuePopup():
         """
         self.queue_count = queue_count
         self.table.pagination = {"rowsNumber": self.queue_count, "page": self.page, "rowsPerPage": self.rows_per_page, "sortBy": self.order_by, "descending": self.order_descending}
+
+    def _open_create_dialog(self):
+        print("create things!")

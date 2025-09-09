@@ -4,6 +4,7 @@ from nicegui import ui
 
 from OpenOrchestrator.orchestrator import test_helper
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.orchestrator.popups import generic_popups
 
 # Styling constants
 LABEL = 'text-subtitle2 text-grey-7'
@@ -22,6 +23,7 @@ class QueueElementPopup():
             row_data: Data from the row selected.
         """
         self.on_dialog_close_callback = on_dialog_close_callback
+        self.row_data = row_data
         with ui.dialog() as self.dialog:
             with ui.card().style('min-width:  37.5rem; max-width: 50rem'):
 
@@ -74,8 +76,9 @@ class QueueElementPopup():
                 with ui.row().classes('w-full mt-4'):
                     ui.button(
                             icon='delete',
-                            on_click=lambda e, id=row_data.get('ID', 'N/A'): self._confirm_delete(id)
-                        )
+                            on_click=self._delete_element,
+                            color="red"
+                        ).classes('mt-4')
                     ui.button('Close', on_click=self._close_dialog).classes('mt-4')
         test_helper.set_automation_ids(self, "queue_element_popup")
         self.dialog.open()
@@ -84,18 +87,12 @@ class QueueElementPopup():
         self.on_dialog_close_callback()
         self.dialog.close()
 
-    def _delete_element(self, element_id):
-        db_util.delete_queue_element(element_id)
+    async def _delete_element(self):
+        if not self.row_data:
+            return
 
-    def _confirm_delete(self, element_id):
-        with ui.dialog() as dialog, ui.card():
-            ui.label('Are you sure you want to delete this element?')
-            with ui.row():
-                ui.button('Cancel', on_click=dialog.close)
-                ui.button('Delete', on_click=lambda: self._delete_and_close(element_id, dialog))
-            dialog.open()
-
-    def _delete_and_close(self, element_id, dialog):
-        self._delete_element(element_id)
-        dialog.close()
-        self._close_dialog()
+        if await generic_popups.question_popup(f"Delete element '{self.row_data.get('ID')}'?", "Delete", "Cancel", color1='red'):
+            db_util.delete_queue_element(self.row_data.get('ID'))
+            ui.notify("Queue element deleted", type='positive')
+            self.dialog.close()
+            self.on_dialog_close_callback()
