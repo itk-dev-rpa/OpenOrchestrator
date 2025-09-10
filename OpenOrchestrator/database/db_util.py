@@ -899,6 +899,31 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
         return elements_tuple
 
 
+def update_queue_element(element_id: str, reference: str | None = None, status: QueueStatus | None = None, data: str | None = None, message: str | None = None,
+                         created_date: datetime | None = None, start_date: datetime | None = None, end_date: datetime | None = None):
+    with _get_session() as session:
+        query = select(QueueElement).where(QueueElement.id == element_id)
+        q_element: QueueElement = session.scalar(query)
+
+        if q_element:
+            if reference:
+                q_element.reference = reference
+            if status:
+                q_element.status = status
+            if data:
+                q_element.data = data
+            if message:
+                q_element.message = message
+            if created_date:
+                q_element.created_date = created_date
+            if start_date:
+                q_element.start_date = start_date
+            if end_date:
+                q_element.end_date = end_date
+            session.commit()
+            session.refresh(q_element)
+
+
 def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
     """Count the number of queue elements of each status for every queue.
 
