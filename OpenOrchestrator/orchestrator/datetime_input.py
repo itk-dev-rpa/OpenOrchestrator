@@ -75,6 +75,8 @@ class DatetimeInput(ui.input):
         Args:
             value: The new datetime value.
         """
+        if not value:
+            return
         self.value = value.strftime(self.PY_FORMAT)
 
     def _on_change(self, func: Optional[Callable[..., Any]]) -> None:

@@ -900,7 +900,7 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
 
 
 def update_queue_element(element_id: str, reference: str | None = None, status: QueueStatus | None = None, data: str | None = None, message: str | None = None,
-                         created_date: datetime | None = None, start_date: datetime | None = None, end_date: datetime | None = None):
+                         created_by: str | None = None, created_date: datetime | None = None, start_date: datetime | None = None, end_date: datetime | None = None):
     with _get_session() as session:
         query = select(QueueElement).where(QueueElement.id == element_id)
         q_element: QueueElement = session.scalar(query)
@@ -920,6 +920,8 @@ def update_queue_element(element_id: str, reference: str | None = None, status: 
                 q_element.start_date = start_date
             if end_date:
                 q_element.end_date = end_date
+            if created_by:
+                q_element.created_by = created_by
             session.commit()
             session.refresh(q_element)
 
