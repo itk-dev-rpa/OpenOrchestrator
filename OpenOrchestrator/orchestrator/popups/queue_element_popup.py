@@ -1,10 +1,14 @@
 """Class for queue element popups."""
 import json
 from nicegui import ui
+from typing import Callable
+from datetime import datetime
 
 from OpenOrchestrator.orchestrator import test_helper
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator.popups import generic_popups
+from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
+from OpenOrchestrator.database.queues import QueueStatus
 
 # Styling constants
 LABEL = 'text-subtitle2 text-grey-7'
@@ -16,7 +20,7 @@ SECTION = 'gap-0'
 class QueueElementPopup():
     """A popup to display queue element data.
     """
-    def __init__(self, row_data: ui.row, on_dialog_close_callback):
+    def __init__(self, row_data: ui.row | None, on_dialog_close_callback: Callable):
         """Show a dialogue with details of the row selected.
 
         Args:
@@ -29,12 +33,9 @@ class QueueElementPopup():
 
                 with ui.row().classes('w-full justify-between items-start mb-4'):
                     with ui.column().classes(SECTION + ' mb-4'):
-                        ui.label("Reference:").classes(LABEL)
-                        self.reference_text = ui.label(row_data.get('Reference', 'N/A')).classes('text-h5')
+                        self.reference = ui.input("Reference")
                     with ui.column().classes(SECTION + ' items-end'):
-                        ui.label('Status').classes(LABEL)
-                        self.status_text = ui.label(row_data.get('Status', 'N/A')).classes('text-h5')
-                ui.separator()
+                        self.status = ui.select(options={status.name: status.value for status in QueueStatus}, label="Status")
 
                 with ui.column().classes('gap-1'):
 
@@ -43,32 +44,23 @@ class QueueElementPopup():
                         with ui.row().classes('w-full'):
                             ui.label('Data').classes(LABEL)
                             try:
-                                data = json.loads(data_text)
-                                formatted_data = json.dumps(data, indent=2, ensure_ascii=False)
-                                self.data_text = ui.code(formatted_data).classes('h-12.5rem w-full').style('max-width: 37.5rem;')
+                                self.data_field = ui.json_editor({'content': {'json': ""}})
                             except (json.JSONDecodeError, TypeError):
-                                self.data_text = ui.code(data_text).classes('h-12.5rem w-full').style('max-width: 37.5rem;')
+                                self.data_field = ui.json_editor({'content': {'text': ""}})
 
-                    message_text = row_data.get('Message')
-                    if message_text and len(message_text) > 0:
-                        with ui.row().classes('w-full mt-4'):
-                            ui.label('Message').classes(LABEL)
-                            self.message_text = ui.label(message_text).classes(VALUE)
+                    with ui.row().classes('w-full mt-4'):
+                        self.message = ui.input('Message')
 
                     with ui.row().classes('w-full mt-4'):
                         with ui.column().classes('flex-1'):
-                            ui.label("Created Date:").classes(LABEL)
-                            self.created_date = ui.label(row_data.get('Created Date', 'N/A')).classes(VALUE)
+                            self.created_date = DatetimeInput("Created Date", allow_empty=True)
                         with ui.column().classes('flex-1'):
-                            ui.label("Start Date:").classes(LABEL)
-                            self.start_date = ui.label(row_data.get('Start Date', 'N/A')).classes(VALUE)
+                            self.start_date = DatetimeInput("Start Date", allow_empty=True)
                         with ui.column().classes('flex-1'):
-                            ui.label("End Date:").classes(LABEL)
-                            self.end_date = ui.label(row_data.get('End Date', 'N/A')).classes(VALUE)
+                            self.end_date = DatetimeInput("End Date", allow_empty=True)
 
                     with ui.row().classes('w-full mt-4'):
-                        ui.label("Created By:").classes(LABEL)
-                        self.created_by = ui.label(row_data.get('Created By', 'N/A')).classes(VALUE)
+                        self.created_by = ui.input("Created By")
                     with ui.row().classes('w-full'):
                         ui.label("ID:").classes(LABEL)
                         self.id_text = ui.label(row_data.get('ID', 'N/A')).classes(VALUE)
@@ -82,6 +74,37 @@ class QueueElementPopup():
                     ui.button('Close', on_click=self._close_dialog).classes('mt-4')
         test_helper.set_automation_ids(self, "queue_element_popup")
         self.dialog.open()
+        self._pre_populate()
+
+    def _pre_populate(self):
+        """Pre populate the inputs with an existing credential."""
+        if self.row_data:
+            self.reference.value = self.row_data.get('Reference', 'N/A')
+            self.status.value = self.row_data.get('Status', 'New').upper().replace(" ", "_")  # Hackiddy hack
+            self.message.value = self.row_data.get('Message', 'N/A')
+            self._set_data(self.row_data.get('Data', ""))
+            self.created_date.value = self._convert_datetime(self.row_data.get('Created Date', None))
+            self.start_date.value = self._convert_datetime(self.row_data.get('Start Date', None))
+            self.end_date.value = self._convert_datetime(self.row_data.get('End Date', None))
+            self.created_by.value = self.row_data.get('Created By', 'N/A')
+
+    async def _get_data(self) -> None:
+        data = await self.data_field.run_editor_method('get')
+        ui.notify(data)
+
+    async def _set_data(self, data) -> None:
+        try:
+            data = json.loads(data)
+        except ValueError:
+            pass
+        await self.data_field.run_editor_method('update', data)
+        ui.notify(f"Set data: {data}")
+
+    def _convert_datetime(self, date_string):
+        try:
+            return datetime.strptime(date_string, "%d-%m-%Y %H:%M:%S").strftime("%d-%m-%Y %H:%M")
+        except ValueError:
+            return None
 
     def _close_dialog(self):
         self.on_dialog_close_callback()
@@ -90,9 +113,8 @@ class QueueElementPopup():
     async def _delete_element(self):
         if not self.row_data:
             return
-
         if await generic_popups.question_popup(f"Delete element '{self.row_data.get('ID')}'?", "Delete", "Cancel", color1='red'):
             db_util.delete_queue_element(self.row_data.get('ID'))
             ui.notify("Queue element deleted", type='positive')
-            self.dialog.close()
             self.on_dialog_close_callback()
+            self.dialog.close()
