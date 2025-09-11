@@ -25,23 +25,23 @@ class QueueElementPopup():
         self.queue_element = queue_element
         self.queue_name = queue_name
         with ui.dialog() as self.dialog:
-            with ui.card().style('min-width:  37.5rem; max-width: 50rem'):
+            with ui.card().style('min-width:  37.5rem; max-width: 50rem').classes('gap-0'):
 
-                with ui.row().classes('w-full justify-between items-start mb-4'):
-                    with ui.column().classes('gap-0 mb-4'):
+                with ui.row().classes('w-full justify-between items-start'):
+                    with ui.column().classes('gap-0'):
                         ui.label("ID:").classes('text-subtitle2 text-grey-7')
                         self.id_text = ui.label()
                         self.reference = ui.input("Reference")
                     with ui.column().classes('gap-0 items-end'):
-                        ui.label("Created by:").classes('text-subtitle2 text-grey-7')
+                        self.created_by_label = ui.label("Created by:").classes('text-subtitle2 text-grey-7')
                         self.created_by = ui.label()
                         self.status = ui.select(options={status.name: status.value for status in QueueStatus}, label="Status").classes("w-32")
 
-                with ui.column():
+                with ui.column().classes('gap-0'):
                     with ui.row().classes('w-full'):
-                        self.data_field = ui.textarea("Data").classes('w-full mt-4')
-                    with ui.row().classes('w-full mt-4').classes('w-full mt-4'):
-                        self.message = ui.input('Message')
+                        self.data_field = ui.textarea("Data").classes('w-full')
+                    with ui.row().classes('w-full mt-4'):
+                        self.message = ui.input('Message').classes('w-full')
                     with ui.row().classes('w-full mt-4'):
                         with ui.column().classes('flex-1'):
                             self.created_date = DatetimeInput("Created Date", allow_empty=True)
@@ -62,7 +62,10 @@ class QueueElementPopup():
     def _pre_populate(self):
         """Pre populate the inputs with an existing credential."""
         if self.queue_element:
-            self.created_by.text = self.queue_element.created_by
+            if not self.queue_element.created_by:
+                self.created_by_label.visible = False
+            else:
+                self.created_by.text = self.queue_element.created_by
             self.id_text.text = self.queue_element.id
             self.reference.value = self.queue_element.reference
             self.status.value = self.queue_element.status.name
