@@ -234,7 +234,6 @@ class TestQueuesTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_save_button]").click()
 
         # Verify the new element appears in the queue popup table
-        ui_util.refresh_ui(self.browser)
         table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
         self.assertTrue(any("New Reference" in row[0] for row in table_data))
 
@@ -260,14 +259,19 @@ class TestQueuesTab(unittest.TestCase):
         status_select.click()
         status_select.find_element(By.XPATH, "//div[contains(@class,'q-item')]//span[text()='Done']").click()
 
+        # Edit the date field
+        reference_input = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_start_date]")
+        reference_input.clear()
+        reference_input.send_keys("01-01-2000 12:34:56")
+
         # Save the changes
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_save_button]").click()
 
         # Verify the changes in the queue popup table
-        ui_util.refresh_ui(self.browser)
         table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
         self.assertTrue(any("Edited Reference" in row[0] for row in table_data))
         self.assertTrue(any("Done" in row[1] for row in table_data))
+        self.assertTrue(any("01-01-2000 12:34:56" in row[5] for row in table_data))
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
@@ -289,7 +293,6 @@ class TestQueuesTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button").click()
 
         # Verify the element was deleted
-        ui_util.refresh_ui(self.browser)
         table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), initial_count - 1)
 
@@ -315,8 +318,6 @@ class TestQueuesTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_save_button]").click()
 
         # Verify the element was created
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_close_button]").click()
-        ui_util.refresh_ui(self.browser)
         table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
         self.assertTrue(any("Valid Reference" in row[0] for row in table_data))
 
