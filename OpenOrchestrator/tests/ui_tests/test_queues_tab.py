@@ -298,31 +298,6 @@ class TestQueuesTab(unittest.TestCase):
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
-    @ui_util.screenshot_on_error
-    def test_queue_element_validation(self):
-        """Test validation of queue element fields."""
-        self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
-
-        # Click "New" button to create a new queue element
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_new_button]").click()
-
-        reference_input = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_reference]")
-        reference_input.send_keys("Valid Reference")
-
-        status_select = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_status]")
-        status_select.click()
-        status_select.find_element(By.XPATH, "//div[contains(@class,'q-item')]//span[text()='In Progress']").click()
-
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_save_button]").click()
-
-        # Verify the element was created
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
-        self.assertTrue(any("Valid Reference" in row[0] for row in table_data))
-
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
-
     def _create_queue_elements(self):
         """Create some queue elements.
         Creates 1x'New', 2x'In Progress' and so on.

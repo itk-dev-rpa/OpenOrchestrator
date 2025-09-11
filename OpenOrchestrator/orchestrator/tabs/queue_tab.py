@@ -173,6 +173,8 @@ class QueuePopup():
             row_data: Row data from row clicked.
         """
         queue_element = db_util.get_queue_element(row_data.get("ID"))
+        print("Queue element:", vars(queue_element))
+        print("Queue element __dict__:", queue_element.__dict__)
         QueueElementPopup(queue_element=queue_element, on_dialog_close_callback=self._update, queue_name=self.queue_name)
 
     def _open_create_dialog(self):
