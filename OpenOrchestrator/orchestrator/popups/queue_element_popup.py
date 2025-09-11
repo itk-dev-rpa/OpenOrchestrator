@@ -1,7 +1,6 @@
 """Class for queue element popups."""
 import json
 from typing import Callable
-from datetime import datetime
 
 from nicegui import ui
 
@@ -80,12 +79,6 @@ class QueueElementPopup():
             self.created_by.text = "Orchestrator UI"
             self.status.value = "NEW"
             self.delete_button.visible = False
-
-    def _convert_datetime(self, date_string):
-        try:
-            return datetime.strptime(date_string, "%d-%m-%Y %H:%M:%S")
-        except ValueError:
-            return None
 
     def _prettify_json(self, json_string: str) -> str:
         if not json_string:
