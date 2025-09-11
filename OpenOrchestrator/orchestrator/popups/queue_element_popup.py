@@ -1,8 +1,9 @@
 """Class for queue element popups."""
 import json
-from nicegui import ui
 from typing import Callable
 from datetime import datetime
+
+from nicegui import ui
 
 from OpenOrchestrator.orchestrator import test_helper
 from OpenOrchestrator.database import db_util
