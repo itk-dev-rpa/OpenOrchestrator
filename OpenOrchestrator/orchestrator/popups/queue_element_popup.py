@@ -10,11 +10,6 @@ from OpenOrchestrator.orchestrator.popups import generic_popups
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.database.queues import QueueStatus
 
-# Styling constants
-LABEL = 'text-subtitle2 text-grey-7'
-VALUE = 'text-body1 gap-0'
-SECTION = 'gap-0'
-
 
 # pylint: disable-next=too-few-public-methods, too-many-instance-attributes
 class QueueElementPopup():
@@ -33,14 +28,14 @@ class QueueElementPopup():
             with ui.card().style('min-width:  37.5rem; max-width: 50rem'):
 
                 with ui.row().classes('w-full justify-between items-start mb-4'):
-                    with ui.column().classes(SECTION + ' mb-4'):
-                        ui.label("ID:").classes(LABEL)
+                    with ui.column().classes('gap-0 mb-4'):
+                        ui.label("ID:").classes('text-subtitle2 text-grey-7')
                         self.id_text = ui.label()
                         self.reference = ui.input("Reference")
-                    with ui.column().classes(SECTION + ' items-end'):
-                        ui.label("Created by:").classes(LABEL)
+                    with ui.column().classes('gap-0 items-end'):
+                        ui.label("Created by:").classes('text-subtitle2 text-grey-7')
                         self.created_by = ui.label()
-                        self.status = ui.select(options={status.name: status.value for status in QueueStatus}, label="Status").classes("w-24")
+                        self.status = ui.select(options={status.name: status.value for status in QueueStatus}, label="Status").classes("w-32")
 
                 with ui.column():
                     with ui.row().classes('w-full'):
@@ -56,9 +51,9 @@ class QueueElementPopup():
                             self.end_date = DatetimeInput("End Date", allow_empty=True)
 
                 with ui.row().classes('w-full mt-4'):
-                    self.delete_button = ui.button(icon='delete', on_click=self._delete_element, color="red").classes('mt-4')
-                    self.save_button = ui.button(icon='save', on_click=self._save_and_close).classes('mt-4')
+                    self.save_button = ui.button(text='Save', on_click=self._save_and_close).classes('mt-4')
                     self.close_button = ui.button('Close', on_click=self._close_dialog).classes('mt-4')
+                    self.delete_button = ui.button(text='Delete', on_click=self._delete_element, color="negative").classes('mt-4')
 
         test_helper.set_automation_ids(self, "queue_element_popup")
         self.dialog.open()
@@ -69,13 +64,13 @@ class QueueElementPopup():
         if self.row_data:
             self.created_by.text = self.row_data.get('Created By')
             self.id_text.text = self.row_data.get('ID')
-            self.reference.value = self.row_data.get('Reference', 'N/A')
-            self.status.value = self.row_data.get('Status').upper().replace(" ", "_")  # Hackiddy hack
-            self.message.value = self.row_data.get('Message', '')
-            self.data_field.value = self._prettify_json(self.row_data.get('Data', ''))
-            self.created_date.set_datetime(self._convert_datetime(self.row_data.get('Created Date', None)))
-            self.start_date.set_datetime(self._convert_datetime(self.row_data.get('Start Date', None)))
-            self.end_date.set_datetime(self._convert_datetime(self.row_data.get('End Date', None)))
+            self.reference.value = self.row_data.get('Reference')
+            self.status.value = self.row_data.get('Status').upper().replace(" ", "_")
+            self.message.value = self.row_data.get('Message')
+            self.data_field.value = self._prettify_json(self.row_data.get('Data'))
+            self.created_date.set_datetime(self._convert_datetime(self.row_data.get('Created Date')))
+            self.start_date.set_datetime(self._convert_datetime(self.row_data.get('Start Date')))
+            self.end_date.set_datetime(self._convert_datetime(self.row_data.get('End Date')))
         else:
             new_element = db_util.create_queue_element(self.queue_name)
             self.id_text.text = new_element.id
@@ -107,7 +102,7 @@ class QueueElementPopup():
     async def _delete_element(self):
         if not self.row_data:
             return
-        if await generic_popups.question_popup(f"Delete element '{self.row_data.get('ID')}'?", "Delete", "Cancel", color1='red'):
+        if await generic_popups.question_popup(f"Delete element '{self.row_data.get('ID')}'?", "Delete", "Cancel", color1='negative'):
             db_util.delete_queue_element(self.row_data.get('ID'))
             ui.notify("Queue element deleted", type='positive')
             self._close_dialog()

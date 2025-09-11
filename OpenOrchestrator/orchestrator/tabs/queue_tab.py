@@ -93,12 +93,16 @@ class QueuePopup():
                 ui.switch("Dense", on_change=lambda e: self._dense_table(e.value))
                 self._create_column_filter()
                 ui.button(icon='refresh', on_click=self._update)
-                self.new_button = ui.button(icon='add', on_click=self._open_create_dialog)
                 self.close_button = ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
                 self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count}).classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
                 self.table.on('rowClick', lambda e: QueueElementPopup(e.args[1], on_dialog_close_callback=self._update, queue_name=self.queue_name))
                 self.table.on('request', self._on_table_request)
+
+                with self.table.add_slot("top"):
+                    ui.label(self.queue_name).classes("text-xl")
+                    ui.space()
+                    self.new_button = ui.button(icon='playlist_add', on_click=self._open_create_dialog)
 
         self._update()
         self.update_callback()
