@@ -43,7 +43,7 @@ class Application():
 
         app.on_connect(self.update_loop)
         app.on_exception(lambda exc: ui.notify(exc, type='negative'))
-        ui.run(title="Orchestrator", favicon='🤖', native=False, port=port or get_free_port(), reload=True, show=show)
+        ui.run(title="Orchestrator", favicon='🤖', native=False, port=port or get_free_port(), reload=False, show=show)
 
     def update_tab(self):
         """Update the date in the currently selected tab."""

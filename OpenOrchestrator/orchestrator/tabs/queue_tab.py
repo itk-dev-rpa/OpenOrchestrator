@@ -96,7 +96,7 @@ class QueuePopup():
                 self.close_button = ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
                 self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count}).classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
-                self.table.on('rowClick', lambda e: QueueElementPopup(e.args[1], on_dialog_close_callback=self._update, queue_name=self.queue_name))
+                self.table.on('rowClick', lambda e: self._open_queue_element_popup(e.args[1]))
                 self.table.on('request', self._on_table_request)
 
                 with self.table.add_slot("top"):
@@ -165,6 +165,15 @@ class QueuePopup():
         """
         self.queue_count = queue_count
         self.table.pagination = {"rowsNumber": self.queue_count, "page": self.page, "rowsPerPage": self.rows_per_page, "sortBy": self.order_by, "descending": self.order_descending}
+
+    def _open_queue_element_popup(self, row_data: ui.row):
+        """Open editable popup for specified row.
+
+        Args:
+            row_data: Row data from row clicked.
+        """
+        queue_element = db_util.get_queue_element(row_data.get("ID"))
+        QueueElementPopup(queue_element=queue_element, on_dialog_close_callback=self._update, queue_name=self.queue_name)
 
     def _open_create_dialog(self):
         QueueElementPopup(None, on_dialog_close_callback=self._update, queue_name=self.queue_name)

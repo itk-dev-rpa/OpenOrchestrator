@@ -8,21 +8,21 @@ from OpenOrchestrator.orchestrator import test_helper
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator.popups import generic_popups
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
-from OpenOrchestrator.database.queues import QueueStatus
+from OpenOrchestrator.database.queues import QueueStatus, QueueElement
 
 
 # pylint: disable-next=too-few-public-methods, too-many-instance-attributes
 class QueueElementPopup():
     """A popup to display queue element data.
     """
-    def __init__(self, row_data: ui.row | None, on_dialog_close_callback: Callable, queue_name: str):
+    def __init__(self, queue_element: QueueElement | None, on_dialog_close_callback: Callable, queue_name: str):
         """Show a dialogue with details of the row selected.
 
         Args:
             row_data: Data from the row selected.
         """
         self.on_dialog_close_callback = on_dialog_close_callback
-        self.row_data = row_data
+        self.queue_element = queue_element
         self.queue_name = queue_name
         with ui.dialog() as self.dialog:
             with ui.card().style('min-width:  37.5rem; max-width: 50rem'):
@@ -61,24 +61,21 @@ class QueueElementPopup():
 
     def _pre_populate(self):
         """Pre populate the inputs with an existing credential."""
-        if self.row_data:
-            self.created_by.text = self.row_data.get('Created By')
-            self.id_text.text = self.row_data.get('ID')
-            self.reference.value = self.row_data.get('Reference')
-            self.status.value = self.row_data.get('Status').upper().replace(" ", "_")
-            self.message.value = self.row_data.get('Message')
-            self.data_field.value = self._prettify_json(self.row_data.get('Data'))
-            self.created_date.set_datetime(self._convert_datetime(self.row_data.get('Created Date')))
-            self.start_date.set_datetime(self._convert_datetime(self.row_data.get('Start Date')))
-            self.end_date.set_datetime(self._convert_datetime(self.row_data.get('End Date')))
+        if self.queue_element:
+            self.created_by.text = self.queue_element.created_by
+            self.id_text.text = self.queue_element.id
+            self.reference.value = self.queue_element.reference
+            self.status.value = self.queue_element.status.name
+            self.message.value = self.queue_element.message
+            self.data_field.value = self._prettify_json(self.queue_element.data)
+            self.created_date.set_datetime(self.queue_element.created_date)
+            self.start_date.set_datetime(self.queue_element.start_date)
+            self.end_date.set_datetime(self.queue_element.end_date)
         else:
-            new_element = db_util.create_queue_element(self.queue_name)
-            self.id_text.text = new_element.id
-            self.created_by.text = "Debug"
+            self.id_text.text = "NOT SAVED"
+            self.created_by.text = "Orchestrator UI"
             self.status.value = "NEW"
-            self.created_date.set_datetime(new_element.created_date)
-            self._save_element()
-            ui.notify("New queue element created", type="positive")
+            self.delete_button.visible = False
 
     def _convert_datetime(self, date_string):
         try:
@@ -100,15 +97,19 @@ class QueueElementPopup():
         self.dialog.close()
 
     async def _delete_element(self):
-        if not self.row_data:
+        if not self.queue_element:
             return
-        if await generic_popups.question_popup(f"Delete element '{self.row_data.get('ID')}'?", "Delete", "Cancel", color1='negative'):
-            db_util.delete_queue_element(self.row_data.get('ID'))
+        if await generic_popups.question_popup(f"Delete element '{self.queue_element.id}'?", "Delete", "Cancel", color1='negative'):
+            db_util.delete_queue_element(self.queue_element.id)
             ui.notify("Queue element deleted", type='positive')
             self._close_dialog()
 
     def _save_element(self):
-        db_util.update_queue_element(self.id_text.text,
+        if not self.queue_element:
+            self.queue_element = db_util.create_queue_element(self.queue_name)
+            self.id_text.text = self.queue_element.id
+            ui.notify("New queue element created", type="positive")
+        db_util.update_queue_element(self.queue_element.id,
                                      reference=self.reference.value,
                                      status=self.status.value,
                                      data=self.data_field.value,
