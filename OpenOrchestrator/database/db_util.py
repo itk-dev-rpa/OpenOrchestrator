@@ -1,4 +1,5 @@
 """This module handles the connection to the database in OpenOrchestrator."""
+# pylint: disable=too-many-lines
 
 from datetime import datetime
 from uuid import UUID
@@ -830,42 +831,72 @@ def get_next_queue_element(queue_name: str, reference: str | None = None, set_st
 
 def get_queue_elements(queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
                        from_date: datetime | None = None, to_date: datetime | None = None,
-                       offset: int = 0, limit: int = 100) -> tuple[QueueElement, ...]:
+                       offset: int = 0, limit: int | None = 100, search_term: str | None = None,
+                       order_by: str | None = None, order_desc: bool = False, include_count: bool = False) -> tuple[QueueElement, ...] | tuple[tuple[QueueElement, ...], int]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
     Args:
         queue_name: The queue to get elements from.
         reference (optional): The reference to filter by. If None the filter is disabled.
         status (optional): The status to filter by if any. If None the filter is disabled.
-        offset: The number of queue elements to skip.
-        limit: The number of queue elements to get.
+        offset (optional): The number of queue elements to skip.
+        limit (optional): The number of queue elements to get.
+        order_by (optional): Column to order the result by. If None, will use created_date.
+        order_desc (optional): Should result be in descending order, only used with order_by.
+        include_count (optional): Return a tuple with results as well as the total count of elements without limit applied.
 
     Returns:
-        tuple[QueueElement]: A tuple of queue elements.
+        tuple[QueueElement] | tuple[tuple[QueueElement], int]: A tuple of queue elements or a tuple with a tuple of queue elements and an element count.
     """
-    with _get_session() as session:
-        query = (
-            select(QueueElement)
-            .where(QueueElement.queue_name == queue_name)
-            .order_by(desc(QueueElement.created_date))
-            .offset(offset)
-            .limit(limit)
-        )
+    def _apply_filters(query):
+        """Create filters for query, to allow for optional return of count.
 
-        if from_date:
+        Args:
+            query: The initial query on a queue name.
+
+        Returns:
+            The query object.
+        """
+        query = query.where(QueueElement.queue_name == queue_name)
+
+        if from_date is not None:
             query = query.where(QueueElement.created_date >= from_date)
-
-        if to_date:
+        if to_date is not None:
             query = query.where(QueueElement.created_date <= to_date)
-
         if reference is not None:
             query = query.where(QueueElement.reference == reference)
-
         if status is not None:
             query = query.where(QueueElement.status == status)
+        if search_term is not None:
+            query = query.where(QueueElement.reference.startswith(search_term) |
+                                QueueElement.data.like(f"%{search_term}%") |
+                                QueueElement.message.like(f"%{search_term}%"))
+        return query
+
+    with _get_session() as session:
+        # Main query
+        query = _apply_filters(select(QueueElement))
+
+        if order_by:
+            order_column = getattr(QueueElement, order_by, 'created_date')
+        else:
+            order_column = 'created_date'
+        query = query.order_by(desc(order_column) if order_desc else order_column)
+
+        if offset:
+            query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
 
         result = session.scalars(query).all()
-        return tuple(result)
+        elements_tuple = tuple(result)
+
+        if include_count:
+            count_query = _apply_filters(select(alc_func.count()))  # pylint: disable=not-callable
+            total_count = session.scalar(count_query)
+            return elements_tuple, total_count
+
+        return elements_tuple
 
 
 def get_queue_count() -> dict[str, dict[QueueStatus, int]]:

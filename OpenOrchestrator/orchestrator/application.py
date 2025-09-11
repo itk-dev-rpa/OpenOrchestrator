@@ -42,7 +42,6 @@ class Application():
         self._define_on_close()
 
         app.on_connect(self.update_loop)
-        app.on_disconnect(app.shutdown)
         app.on_exception(lambda exc: ui.notify(exc, type='negative'))
         ui.run(title="Orchestrator", favicon='🤖', native=False, port=port or get_free_port(), reload=False, show=show)
 

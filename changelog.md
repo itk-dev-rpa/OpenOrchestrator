@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commandline command to upgrade a database to the newest schema.
 - Added 'Scheduler' tab with overview of running schedulers.
 - Added priority and scheduler whitelist to triggers.
+- Added search and status filter to queue element list.
+- Added overview of queue element.
 
 ### Changed
 
@@ -27,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scheduler no longer auto-connects.
 - Removed 'Initialize database' button from Orchestrator. Use upgrade command instead.
 - Updated all dependenices to newest version.
+- Removed Orchestrator exit on connection loss.
+- Queue element list pagination moved to server side.
 
 ### Fixed
 
