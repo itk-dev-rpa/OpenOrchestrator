@@ -899,7 +899,7 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
         return elements_tuple
 
 
-def get_queue_element(element_id: str) -> QueueElement:
+def get_queue_element(element_id: UUID | str) -> QueueElement:
     """Get a specific QueueElement from id.
 
     Args:
@@ -908,6 +908,8 @@ def get_queue_element(element_id: str) -> QueueElement:
     Returns:
         QueueElement with the requested ID.
     """
+    if isinstance(element_id, str):
+        element_id = UUID(element_id)
     with _get_session() as session:
         query = select(QueueElement).where(QueueElement.id == element_id)
         return session.scalar(query)
