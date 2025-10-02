@@ -25,7 +25,8 @@ def main():
     s_parser.set_defaults(func=scheduler_command)
 
     u_parser = subparsers.add_parser("upgrade", aliases=["u"], help="Upgrade the database to the newest revision or create a new database from scratch.")
-    u_parser.add_argument("connection_string", type=str, help="The connection string to the database")
+    u_parser.add_argument("connection_string", type=str, help="The connection string to the database.")
+    u_parser.add_argument("-n", "--new", action="store_true", help="Set if you're creating a new database from scratch.")
     u_parser.set_defaults(func=upgrade_command)
 
     args = parser.parse_args()
@@ -52,7 +53,15 @@ def upgrade_command(args: argparse.Namespace):
     Args:
         args: The arguments Namespace object.
     """
+    upgrade_args = ["alembic", "-x", args.connection_string, "upgrade", "head"]
+
+    if args.new:
+        subprocess.run(upgrade_args, check=True)
+        print("Database upgraded to the newest revision!")
+        return
+
     confirmation = input("Are you sure you want to upgrade the database to the newest revision? This cannot be undone. (y/n)").strip()
+
     if confirmation == "y":
         # Check if database is already stamped
         result = subprocess.run(["alembic", "-x", args.connection_string, "current"], check=True, capture_output=True)
@@ -64,7 +73,7 @@ def upgrade_command(args: argparse.Namespace):
                 print("Upgrade canceled")
                 return
 
-        subprocess.run(["alembic", "-x", args.connection_string, "upgrade", "head"], check=True)
+        subprocess.run(upgrade_args, check=True)
         print("Database upgraded to the newest revision!")
     else:
         print("Upgrade canceled")

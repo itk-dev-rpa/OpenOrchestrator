@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Dev
+
+- Added automated tests for Alembic.
+
 ### Added
 
 - Added option to define Git branch/tag when creating a trigger.

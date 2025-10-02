@@ -1,4 +1,5 @@
 error_screenshots/
+*.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
