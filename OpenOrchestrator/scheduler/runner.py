@@ -236,7 +236,7 @@ def run_process(trigger: Trigger) -> Job | None:
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
-        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, trigger.id]
+        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, str(trigger.id)]
 
         process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
 
