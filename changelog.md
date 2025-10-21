@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Server no longer stops after disconnects.
 - Ui no longer checks if the page is in focus before updating.
 - Changed cli to use argparser.
 - Arguments to start Scheduler and Orchestrator are now subcommands (no '-' before 'o' and 's').
