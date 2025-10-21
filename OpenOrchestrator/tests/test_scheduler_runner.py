@@ -89,7 +89,7 @@ class TestSchedulerRunner(unittest.TestCase):
         mock_clone_git_repo.assert_called_once_with(trigger.process_path, trigger.git_branch)
         mock_find_main_file.assert_called_once_with("folder_path")
         mock_isfile.assert_called_once_with("main.py")
-        mock_popen.assert_called_once_with(['python', "main.py", trigger.process_name, db_util.get_conn_string(), crypto_util.get_key(), trigger.process_args],
+        mock_popen.assert_called_once_with(['python', "main.py", trigger.process_name, db_util.get_conn_string(), crypto_util.get_key(), trigger.process_args, str(trigger.id)],
                                            stderr=subprocess.PIPE, text=True)
         mock_get_scheduler_name.assert_called_once()
 
