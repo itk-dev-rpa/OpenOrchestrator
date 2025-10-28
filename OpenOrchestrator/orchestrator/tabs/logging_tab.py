@@ -11,8 +11,9 @@ from OpenOrchestrator.orchestrator import test_helper
 
 COLUMNS = [
     {'name': "Log Time", 'label': "Log Time", 'field': "Log Time", 'align': 'left', 'sortable': True},
-    {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left'},
+    {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left', 'sortable': True},
     {'name': "Level", 'label': "Level", 'field': "Level", 'align': 'left'},
+    {'name': "Job", 'label': "Job", 'field': "Job", 'align': 'left', 'sortable': True},
     {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left', ':format': 'value => value.length < 100 ? value : value.substring(0, 100)+"..."'},
     {'name': "ID", 'label': "ID", 'field': "ID", 'headerClasses': 'hidden', 'classes': 'hidden'}
 ]
@@ -27,6 +28,7 @@ class LoggingTab():
                 self.from_input = DatetimeInput("From Date", on_change=self.update, allow_empty=True)
                 self.to_input = DatetimeInput("To Date", on_change=self.update, allow_empty=True)
                 self.process_input = ui.select(["All"], label="Process Name", value="All", on_change=self.update).classes("w-48")
+                self.job_input = ui.select(["All"], label="Job ID", value="All", on_change=self.update).classes("w-48")
                 self.level_input = ui.select(["All", "Trace", "Info", "Error"], value="All", label="Level", on_change=self.update).classes("w-48")
                 self.limit_input = ui.select([100, 200, 500, 1000], value=100, label="Limit", on_change=self.update).classes("w-24")
 
@@ -39,16 +41,18 @@ class LoggingTab():
         """Update the logs table and Process input list"""
         self._update_table()
         self._update_process_input()
+        #self._update_job_input()
 
     def _update_table(self):
         """Update the table with logs from the database applying the filters."""
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
         process_name = self.process_input.value if self.process_input.value != 'All' else None
+        job_id = self.job_input if self.job_input != 'All' else None
         level = LogLevel(self.level_input.value) if self.level_input.value != "All" else None
         limit = self.limit_input.value
 
-        logs = db_util.get_logs(0, limit=limit, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name)
+        logs = db_util.get_logs(0, limit=limit, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name, job_id=job_id)
         self.logs_table.rows = [log.to_row_dict() for log in logs]
 
     def _update_process_input(self):
@@ -57,6 +61,13 @@ class LoggingTab():
         process_names.insert(0, "All")
         self.process_input.options = process_names
         self.process_input.update()
+
+    # def _update_job_input(self):
+    #     """Update the job input with IDs from the database."""
+    #     job_ids = list(db_util.get_jobs(process_name=self.process_input.value))
+    #     job_ids.insert(0, "All")
+    #     self.job_input.options = job_ids
+    #     self.job_input.update()
 
     def _row_click(self, event):
         """Display a dialog with info on the clicked log."""

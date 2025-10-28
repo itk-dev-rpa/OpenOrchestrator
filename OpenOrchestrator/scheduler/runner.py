@@ -13,16 +13,18 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.scheduler import util
+from OpenOrchestrator.database.jobs import Job, JobStatus
 
 if TYPE_CHECKING:
     from OpenOrchestrator.scheduler.application import Application
 
 
 @dataclass
-class Job():
+class SchedulerJob():
     """An object that holds information about a running job."""
     process: subprocess.Popen
     trigger: Trigger
+    job: Job
     process_folder: str | None
 
 
@@ -64,7 +66,7 @@ def poll_triggers(app: Application) -> Trigger | None:
     return None
 
 
-def run_trigger(trigger: Trigger) -> Job | None:
+def run_trigger(trigger: Trigger) -> SchedulerJob | None:
     """Mark a trigger as running in the database
     and start the process.
 
@@ -165,7 +167,7 @@ def find_main_file(folder_path: str) -> str:
     raise ValueError("No 'main.py' file found in the folder or its subfolders.")
 
 
-def end_job(job: Job) -> None:
+def end_job(job: SchedulerJob) -> None:
     """Mark a job as ended in the triggers table
     in the database.
     If it's a single trigger it's marked as 'Done'
@@ -183,12 +185,13 @@ def end_job(job: Job) -> None:
             db_util.set_trigger_status(job.trigger.id, TriggerStatus.PAUSED)
         elif current_status == TriggerStatus.RUNNING:
             db_util.set_trigger_status(job.trigger.id, TriggerStatus.IDLE)
+    db_util.set_job_status(job.job, JobStatus.DONE)
 
     if job.process_folder:
         clear_folder(job.process_folder)
 
 
-def fail_job(job: Job) -> None:
+def fail_job(job: SchedulerJob) -> None:
     """Mark a job as failed in the triggers table in the database.
 
     Args:
@@ -197,13 +200,14 @@ def fail_job(job: Job) -> None:
     db_util.set_trigger_status(job.trigger.id, TriggerStatus.FAILED)
     _, error = job.process.communicate()
     error_msg = f"An uncaught error ocurred during the process:\n{error}"
-    db_util.create_log(job.trigger.process_name, LogLevel.ERROR, error_msg)
+    db_util.create_log(job.trigger.process_name, LogLevel.ERROR, job.job, error_msg)
+    db_util.set_job_status(job.job, JobStatus.FAILED)
 
     if job.process_folder:
         clear_folder(job.process_folder)
 
 
-def kill_job(job: Job) -> None:
+def kill_job(job: SchedulerJob) -> None:
     """Kill the job's process and mark is as killed in the database.
 
     Args:
@@ -211,12 +215,13 @@ def kill_job(job: Job) -> None:
     """
     job.process.kill()
     db_util.set_trigger_status(job.trigger.id, TriggerStatus.KILLED)
+    db_util.set_job_status(job.job, JobStatus.ABORTED)
 
     if job.process_folder:
         clear_folder(job.process_folder)
 
 
-def run_process(trigger: Trigger) -> Job | None:
+def run_process(trigger: Trigger) -> SchedulerJob | None:
     """Runs the process of the given trigger with the necessary inputs:
     Process name
     Connection string
@@ -239,6 +244,9 @@ def run_process(trigger: Trigger) -> Job | None:
     process_path = trigger.process_path
     folder_path = None
 
+    machine_name = util.get_scheduler_name()
+    job = db_util.start_job(trigger.process_name, machine_name)
+
     try:
         if trigger.is_git_repo:
             folder_path = clone_git_repo(process_path, trigger.git_branch)
@@ -253,21 +261,21 @@ def run_process(trigger: Trigger) -> Job | None:
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
-        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, str(trigger.id)]
+        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, str(trigger.id), str(job)]
 
         process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
 
-        machine_name = util.get_scheduler_name()
         db_util.start_trigger_from_machine(machine_name, str(trigger.trigger_name))
 
-        return Job(process, trigger, folder_path)
+        return SchedulerJob(process, trigger, job, folder_path)
 
     # We actually want to catch any exception here
     # pylint: disable=broad-exception-caught
     except Exception as exc:
         db_util.set_trigger_status(trigger.id, TriggerStatus.FAILED)
         error_msg = f"Scheduler couldn't launch the process:\n{exc.__class__.__name__}:\n{exc}"
-        db_util.create_log(trigger.process_name, LogLevel.ERROR, error_msg)
+        db_util.create_log(trigger.process_name, LogLevel.ERROR, None, error_msg)
+        db_util.set_job_status(job, JobStatus.FAILED)
         print(error_msg)
 
     return None

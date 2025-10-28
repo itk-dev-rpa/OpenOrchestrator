@@ -8,6 +8,7 @@ from nicegui import ui, app
 from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
 from OpenOrchestrator.orchestrator.tabs.settings_tab import SettingsTab
 from OpenOrchestrator.orchestrator.tabs.logging_tab import LoggingTab
+from OpenOrchestrator.orchestrator.tabs.jobs_tab import JobsTab
 from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
 from OpenOrchestrator.orchestrator.tabs.queue_tab import QueueTab
 from OpenOrchestrator.orchestrator.tabs.schedulers_tab import SchedulerTab
@@ -21,10 +22,11 @@ class Application():
         with ui.header():
             with ui.tabs() as self.tabs:
                 ui.tab('Triggers').props("auto-id=trigger_tab")
+                ui.tab('Queues').props("auto-id=queues_tab")
+                ui.tab('Schedulers').props("auto-id=schedulers_tab")
+                ui.tab('Jobs').props("auto-id=jobs_tab")
                 ui.tab('Logs').props("auto-id=logs_tab")
                 ui.tab('Constants').props("auto-id=constants_tab")
-                ui.tab('Schedulers').props("auto-id=schedulers_tab")
-                ui.tab('Queues').props("auto-id=queues_tab")
                 ui.tab('Settings').props("auto-id=settings_tab")
 
             ui.space()
@@ -33,10 +35,12 @@ class Application():
 
         with ui.tab_panels(self.tabs, value='Settings', on_change=self.update_tab).classes('w-full') as self.tab_panels:
             self.t_tab = TriggerTab('Triggers')
-            self.l_tab = LoggingTab("Logs")
-            self.c_tab = ConstantTab("Constants")
-            self.s_tab = SchedulerTab("Schedulers")
             self.q_tab = QueueTab("Queues")
+            self.j_tab = JobsTab("Jobs")
+            self.l_tab = LoggingTab("Logs")
+            self.s_tab = SchedulerTab("Schedulers")
+            self.c_tab = ConstantTab("Constants")
+            self.j_tab.set_log_tab(self.l_tab)
             SettingsTab('Settings')
 
         self._define_on_close()
@@ -50,14 +54,16 @@ class Application():
         match self.tab_panels.value:
             case 'Triggers':
                 self.t_tab.update()
-            case 'Logs':
-                self.l_tab.update()
-            case 'Constants':
-                self.c_tab.update()
-            case 'Schedulers':
-                self.s_tab.update()
             case 'Queues':
                 self.q_tab.update()
+            case 'Jobs':
+                self.j_tab.update()
+            case 'Logs':
+                self.l_tab.update()
+            case 'Schedulers':
+                self.s_tab.update()
+            case 'Constants':
+                self.c_tab.update()
 
     async def update_loop(self):
         """Update the selected tab on a timer but only if the page is in focus."""
