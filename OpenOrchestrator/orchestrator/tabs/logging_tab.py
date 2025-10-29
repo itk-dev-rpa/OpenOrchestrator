@@ -11,10 +11,11 @@ from OpenOrchestrator.orchestrator import test_helper
 
 COLUMNS = [
     {'name': "Log Time", 'label': "Log Time", 'field': "Log Time", 'align': 'left', 'sortable': True},
-    {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left', 'sortable': True},
     {'name': "Level", 'label': "Level", 'field': "Level", 'align': 'left'},
-    {'name': "Job", 'label': "Job", 'field': "Job", 'align': 'left', 'sortable': True},
+    {'name': "Short Job ID", 'label': "Job ID", 'field': "Short Job ID", 'align': 'left', 'sortable': True},
+    {'name': "Process Name", 'label': "Process Name", 'field': "Process Name", 'align': 'left', 'sortable': True},
     {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left', ':format': 'value => value.length < 100 ? value : value.substring(0, 100)+"..."'},
+    {'name': "Full Job ID", 'label': "Full Job ID", 'field': "Full Job ID", 'headerClasses': 'hidden', 'classes': 'hidden'},
     {'name': "ID", 'label': "ID", 'field': "ID", 'headerClasses': 'hidden', 'classes': 'hidden'}
 ]
 
@@ -23,14 +24,16 @@ COLUMNS = [
 class LoggingTab():
     """The 'Logs' tab object."""
     def __init__(self, tab_name: str) -> None:
+        self.current_job_id: str | None = None
         with ui.tab_panel(tab_name):
-            with ui.row():
-                self.from_input = DatetimeInput("From Date", on_change=self.update, allow_empty=True)
-                self.to_input = DatetimeInput("To Date", on_change=self.update, allow_empty=True)
-                self.process_input = ui.select(["All"], label="Process Name", value="All", on_change=self.update).classes("w-48")
-                self.job_input = ui.select(["All"], label="Job ID", value="All", on_change=self.update).classes("w-48")
-                self.level_input = ui.select(["All", "Trace", "Info", "Error"], value="All", label="Level", on_change=self.update).classes("w-48")
-                self.limit_input = ui.select([100, 200, 500, 1000], value=100, label="Limit", on_change=self.update).classes("w-24")
+            with ui.row().classes("w-full justify-between"):
+                with ui.row():
+                    self.from_input = DatetimeInput("From Date", on_change=self.update, allow_empty=True)
+                    self.to_input = DatetimeInput("To Date", on_change=self.update, allow_empty=True)
+                    self.level_input = ui.select(["All", "Trace", "Info", "Error"], value="All", label="Level", on_change=self.update).classes("w-48")
+                    self.process_input = ui.select(["All"], label="Process Name", value="All", on_change=self.update).classes("w-48")
+                    self.limit_input = ui.select([100, 200, 500, 1000], value=100, label="Limit", on_change=self.update).classes("w-24")
+                self.all_jobs_button = ui.button("Show all jobs", on_click=self._show_all_jobs)
 
             self.logs_table = ui.table(title="Logs", columns=COLUMNS, rows=[], row_key='ID', pagination=50).classes("w-full")
             self.logs_table.on("rowClick", self._row_click)
@@ -41,18 +44,17 @@ class LoggingTab():
         """Update the logs table and Process input list"""
         self._update_table()
         self._update_process_input()
-        #self._update_job_input()
+        self.all_jobs_button.set_visibility(self.current_job_id is not None)
 
     def _update_table(self):
         """Update the table with logs from the database applying the filters."""
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
-        process_name = self.process_input.value if self.process_input.value != 'All' else None
-        job_id = self.job_input if self.job_input != 'All' else None
         level = LogLevel(self.level_input.value) if self.level_input.value != "All" else None
+        process_name = self.process_input.value if self.process_input.value != 'All' else None
         limit = self.limit_input.value
 
-        logs = db_util.get_logs(0, limit=limit, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name, job_id=job_id)
+        logs = db_util.get_logs(0, limit=limit, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name, job_id=self.current_job_id)
         self.logs_table.rows = [log.to_row_dict() for log in logs]
 
     def _update_process_input(self):
@@ -62,17 +64,18 @@ class LoggingTab():
         self.process_input.options = process_names
         self.process_input.update()
 
-    # def _update_job_input(self):
-    #     """Update the job input with IDs from the database."""
-    #     job_ids = list(db_util.get_jobs(process_name=self.process_input.value))
-    #     job_ids.insert(0, "All")
-    #     self.job_input.options = job_ids
-    #     self.job_input.update()
+    def set_job_filter(self, job_id: str | None):
+        """Set filter to specific job."""
+        self.current_job_id = job_id
+        self.update()
+
+    def _show_all_jobs(self):
+        self.set_job_filter(None)
 
     def _row_click(self, event):
         """Display a dialog with info on the clicked log."""
         row = event.args[1]
-        with ui.dialog(value=True), ui.card():
+        with ui.dialog(value=True) as dialog, ui.card():
             ui.label("Log ID:").classes("font-bold")
             ui.label(row['ID'])
             ui.label("Log Time:").classes("font-bold")
@@ -83,3 +86,8 @@ class LoggingTab():
             ui.label(row['Level'])
             ui.label("Message:").classes("font-bold")
             ui.html(f"<pre>{row['Message']}</pre>")
+            ui.label("Job ID:").classes("font-bold")
+            ui.label(row['Full Job ID'])
+            with ui.row():
+                ui.button("Show job logs", on_click=lambda: [self.set_job_filter(row['Full Job ID']), dialog.close()])
+                ui.button("Close", on_click=dialog.close)

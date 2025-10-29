@@ -308,7 +308,7 @@ def start_job(process_name: str, scheduler_name: str) -> str:
         job = Job(
             process_name=process_name,
             scheduler_name=scheduler_name,
-            status=JobStatus.IN_PROGRESS
+            status=JobStatus.RUNNING
         )
         session.add(job)
         session.commit()
@@ -336,7 +336,7 @@ def set_job_status(job_id: str | UUID, status: JobStatus):
             raise ValueError("No job with the given id was found.")
 
         job.status = status
-        if status == JobStatus.IN_PROGRESS:
+        if status == JobStatus.RUNNING:
             job.end_time = None
         else:
             job.end_time = datetime.now()

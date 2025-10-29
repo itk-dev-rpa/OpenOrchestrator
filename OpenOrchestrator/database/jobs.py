@@ -16,7 +16,7 @@ from OpenOrchestrator.database.base import Base
 
 class JobStatus(enum.Enum):
     """An enum representing the level of logs."""
-    IN_PROGRESS = "In Progress"
+    RUNNING = "Running"
     DONE = "Done"
     FAILED = "Failed"
     KILLED = "Killed"
@@ -30,9 +30,9 @@ class Job(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     process_name: Mapped[str] = mapped_column(String(100))
     scheduler_name: Mapped[str] = mapped_column(String(100))
+    status: Mapped[JobStatus] = mapped_column(default=JobStatus.RUNNING)
     start_time: Mapped[datetime] = mapped_column(default=datetime.now)
     end_time: Mapped[datetime] = mapped_column(default=None, nullable=True)
-    status: Mapped[JobStatus] = mapped_column(default=JobStatus.IN_PROGRESS)
 
     def to_row_dict(self) -> dict[str, str]:
         """Convert log to a row dictionary for display in a table."""
@@ -40,7 +40,7 @@ class Job(Base):
             "ID": self.id,
             "Process Name": self.process_name,
             "Scheduler": self.scheduler_name,
-            "Started":  datetime_util.format_datetime(self.start_time),
-            "Ended":  datetime_util.format_datetime(self.end_time) if self.end_time else "N/A",
+            "Start Time":  datetime_util.format_datetime(self.start_time),
+            "End Time":  datetime_util.format_datetime(self.end_time),
             "Status": self.status.value
         }

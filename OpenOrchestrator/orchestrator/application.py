@@ -36,11 +36,10 @@ class Application():
         with ui.tab_panels(self.tabs, value='Settings', on_change=self.update_tab).classes('w-full') as self.tab_panels:
             self.t_tab = TriggerTab('Triggers')
             self.q_tab = QueueTab("Queues")
-            self.j_tab = JobsTab("Jobs")
+            self.j_tab = JobsTab("Jobs", self.on_job_click)
             self.l_tab = LoggingTab("Logs")
             self.s_tab = SchedulerTab("Schedulers")
             self.c_tab = ConstantTab("Constants")
-            self.j_tab.set_log_tab(self.l_tab)
             SettingsTab('Settings')
 
         self._define_on_close()
@@ -67,13 +66,6 @@ class Application():
 
     async def update_loop(self):
         """Update the selected tab on a timer but only if the page is in focus."""
-        try:
-            in_focus = await ui.run_javascript("document.hasFocus()")
-            if in_focus:
-                self.update_tab()
-        except TimeoutError:
-            pass
-
         ui.timer(10, self.update_loop, once=True)
 
     def _define_on_close(self) -> None:
@@ -83,6 +75,16 @@ class Application():
                 window.addEventListener("beforeunload", (event) => event.preventDefault());
             </script>
             ''')
+
+    def on_job_click(self, job_id: str):
+        """Used by JobTab to update and switch to logging tab.
+
+        Args:
+            event: _description_
+        """
+        self.l_tab.current_job_id = job_id
+        self.l_tab.update()
+        self.tabs.set_value('Logs')
 
 
 def get_free_port():
