@@ -20,7 +20,7 @@ def upgrade() -> None:
                     sa.Column('scheduler_name', sa.String(length=100), nullable=False),
                     sa.Column('start_time', sa.DateTime(), nullable=False),
                     sa.Column('end_time', sa.DateTime(), nullable=True),
-                    sa.Column('status', sa.Enum('IN_PROGRESS', 'DONE', 'FAILED', name='jobstatus'), nullable=False),
+                    sa.Column('status', sa.Enum('RUNNING', 'DONE', 'FAILED', 'KILLED', name='jobstatus'), nullable=False),
                     sa.PrimaryKeyConstraint('id')
                     )
     op.add_column('Logs', sa.Column('job_id', sa.Uuid(), nullable=True))
@@ -29,15 +29,3 @@ def upgrade() -> None:
                     existing_type=sa.VARCHAR(length=250, collation='Danish_Norwegian_CI_AS'),
                     nullable=True,
                     existing_server_default=sa.text("('[]')"))
-    # ### end Alembic commands ###
-
-
-def downgrade() -> None:
-    """Downgrade the database."""
-    op.alter_column('Triggers', 'scheduler_whitelist',
-                    existing_type=sa.VARCHAR(length=250, collation='Danish_Norwegian_CI_AS'),
-                    nullable=False,
-                    existing_server_default=sa.text("('[]')"))
-    op.drop_constraint("FK__Logs__job_id__2D1E61BF", 'Logs', type_='foreignkey')
-    op.drop_column('Logs', 'job_id')
-    op.drop_table('Jobs')

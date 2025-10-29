@@ -273,7 +273,7 @@ def get_jobs(status: JobStatus | None = None, process_name: str | None = None) -
     """Get jobs matching the requested status or process name.
 
     Args:
-        status: Status of jobs, IN_PROGRESS, COMPLETED or FAILED. Defaults to None.
+        status: Status of jobs, RUNNING, DONE, FAILED or KILLED. Defaults to None.
         process_name: Process name matching the jobs. Defaults to None.
 
     Returns:
@@ -285,17 +285,17 @@ def get_jobs(status: JobStatus | None = None, process_name: str | None = None) -
         )
 
     if status:
-        query.where(Job.status == status)
+        query = query.where(Job.status == status)
 
     if process_name:
-        query.where(Job.process_name == process_name)
+        query = query.where(Job.process_name == process_name)
 
     with _get_session() as session:
         result = session.scalars(query).all()
         return tuple(result)
 
 
-def start_job(process_name: str, scheduler_name: str) -> str:
+def start_job(process_name: str, scheduler_name: str) -> Job:
     """Create a new job, using count of previous jobs and process name as ID.
 
     Args:
@@ -312,23 +312,22 @@ def start_job(process_name: str, scheduler_name: str) -> str:
         )
         session.add(job)
         session.commit()
-        return str(job.id)
+        session.refresh(job)
+        session.expunge(job)
+        return job
 
 
-def set_job_status(job_id: str | UUID, status: JobStatus):
+def set_job_status(job_id: str, status: JobStatus):
     """Set status of job and update end_time, based on status.
 
     Args:
         job_id: Job ID to set status on.
-        status: Status to set. Either IN_PROGRESS, COMPLETED or FAILED.
-        Will set end_time to null if IN_PROGRESS or current time.
+        status: Status to set. Either RUNNING, DONE, FAILED or KILLED.
+        Will set end_time to null if RUNNING or current time if not.
 
     Raises:
-        ValueError: _description_
+        ValueError: If no job is found, will raise error.
     """
-    if isinstance(job_id, UUID):
-        job_id = str(job_id)
-
     with _get_session() as session:
         job = session.get(Job, job_id)
 
@@ -343,15 +342,34 @@ def set_job_status(job_id: str | UUID, status: JobStatus):
         session.commit()
 
 
-def get_unique_log_process_names(job_id: str | UUID | None = None) -> tuple[str, ...]:
+def get_job(job_id: str) -> Job:
+    """Get a job by ID.
+
+    Args:
+        job_id: The ID of the job to get.
+
+    Returns:
+        The Job object.
+
+    Raises:
+        ValueError: If no job is found.
+    """
+    with _get_session() as session:
+        job = session.get(Job, job_id)
+
+        if not job:
+            raise ValueError("No job with the given id was found.")
+
+        session.expunge(job)
+        return job
+
+
+def get_unique_log_process_names(job_id: str | None = None) -> tuple[str, ...]:
     """Get a list of unique process names in the logs database.
 
     Returns:
         A list of unique process names.
     """
-    if isinstance(job_id, UUID):
-        job_id = str(job_id)
-
     query = (
         select(Log.process_name)
         .distinct()
