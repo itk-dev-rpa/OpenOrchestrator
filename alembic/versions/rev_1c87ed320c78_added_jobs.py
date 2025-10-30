@@ -25,10 +25,3 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id')
     )
     op.add_column('Logs', sa.Column('job_id', sa.Uuid(), nullable=True))
-    op.alter_column(
-        'Triggers',
-        'scheduler_whitelist',
-        existing_type=sa.VARCHAR(length=250, collation='Danish_Norwegian_CI_AS'),
-        nullable=True,
-        existing_server_default=sa.text("('[]')")
-    )
