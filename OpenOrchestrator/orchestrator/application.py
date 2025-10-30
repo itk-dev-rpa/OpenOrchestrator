@@ -14,6 +14,7 @@ from OpenOrchestrator.orchestrator.tabs.queue_tab import QueueTab
 from OpenOrchestrator.orchestrator.tabs.schedulers_tab import SchedulerTab
 
 
+# pylint: disable=too-many-instance-attributes
 class Application():
     """The main application of Orchestrator.
     It contains a header and the four tabs of the application.
