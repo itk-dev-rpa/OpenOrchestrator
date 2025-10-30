@@ -2,11 +2,11 @@
 
 from datetime import datetime, timedelta
 import os
+from sqlalchemy import MetaData
 
 from OpenOrchestrator.database import db_util, base
 
 from OpenOrchestrator.common import crypto_util
-from sqlalchemy import MetaData
 
 
 def establish_clean_database():
