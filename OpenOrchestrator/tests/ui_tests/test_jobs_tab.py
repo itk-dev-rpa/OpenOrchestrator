@@ -39,20 +39,20 @@ class TestJobsTab(unittest.TestCase):
         self.assertEqual(len(table_data), 3)
 
         # Check first job (most recent - Failed)
-        self.assertEqual(table_data[0][0], "Process3")
-        self.assertEqual(table_data[0][1], "Scheduler1")
-        self.assertRegex(table_data[0][2], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")  # Start time
-        self.assertRegex(table_data[0][3], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")  # End time
-        self.assertEqual(table_data[0][4], "Failed")
+        self.assertEqual(table_data[0][1], "Process3")
+        self.assertEqual(table_data[0][2], "Scheduler1")
+        self.assertRegex(table_data[0][3], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")  # Start time
+        self.assertRegex(table_data[0][4], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")  # End time
+        self.assertEqual(table_data[0][5], "Failed")
 
         # Check second job (Done)
-        self.assertEqual(table_data[1][0], "Process2")
-        self.assertEqual(table_data[1][4], "Done")
+        self.assertEqual(table_data[1][1], "Process2")
+        self.assertEqual(table_data[1][5], "Done")
 
         # Check third job (Running - no end time)
-        self.assertEqual(table_data[2][0], "Process1")
-        self.assertEqual(table_data[2][3], "")  # No end time for running job
-        self.assertEqual(table_data[2][4], "Running")
+        self.assertEqual(table_data[2][1], "Process1")
+        self.assertEqual(table_data[2][4], "N/A")  # No end time for running job
+        self.assertEqual(table_data[2][5], "Running")
 
     @ui_util.screenshot_on_error
     def test_job_click_navigates_to_logs(self):
@@ -71,10 +71,8 @@ class TestJobsTab(unittest.TestCase):
         active_tab = self.browser.find_element(By.CSS_SELECTOR, ".q-tab.q-tab--active")
         self.assertEqual(active_tab.text, "LOGS")
 
-        # Job filter should be set (you might need to adjust selector)
-        # This assumes you have an auto-id on the job select in logs tab
-        job_select = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=job_filter_label]")
-        selected_value = job_select.get_attribute("value")
+        job_select = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=logs_tab_job_filter_label]")
+        selected_value = job_select.text
         self.assertIn(str(job.id), selected_value)
 
     @ui_util.screenshot_on_error
@@ -132,9 +130,9 @@ class TestJobsTab(unittest.TestCase):
         table_data = ui_util.get_table_data(self.browser, "jobs_tab_jobs_table")
 
         # Newest should be first
-        self.assertEqual(table_data[0][0], "Third")
-        self.assertEqual(table_data[1][0], "Second")
-        self.assertEqual(table_data[2][0], "First")
+        self.assertEqual(table_data[0][1], "Third")
+        self.assertEqual(table_data[1][1], "Second")
+        self.assertEqual(table_data[2][1], "First")
 
     def _create_test_jobs(self):
         """Create test jobs with different statuses."""
@@ -155,5 +153,4 @@ class TestJobsTab(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    browser = ui_util.open_orchestrator()
-    input("...")
+    unittest.main()

@@ -99,5 +99,5 @@ class LoggingTab():
             ui.label("Job ID:").classes("font-bold")
             ui.label(row['Full Job ID'])
             with ui.row():
-                ui.button("Show job logs", on_click=lambda: [self.set_job_filter(row['Full Job ID']), dialog.close()])
+                ui.button("Show job logs", on_click=lambda: [self.set_job_filter(row['Full Job ID']), dialog.close()]).set_enabled(row['Full Job ID'] is not None)
                 ui.button("Close", on_click=dialog.close)

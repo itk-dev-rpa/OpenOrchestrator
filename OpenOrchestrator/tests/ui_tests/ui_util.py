@@ -35,7 +35,14 @@ def open_orchestrator() -> webdriver.Chrome:
     subprocess.Popen([sys.executable, "-m", "OpenOrchestrator", "o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
 
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--disable-search-engine-choice-screen")
+    custom_browser_options = [
+        '--disable-search-engine-choice-screen',
+        '--disable-dev-shm-usage',
+        '--log-level=3',
+        '--disable-logging'
+        ]
+    for option in custom_browser_options:
+        chrome_options.add_argument(option)
     browser = webdriver.Chrome(options=chrome_options)
     browser.implicitly_wait(2)
     browser.maximize_window()
