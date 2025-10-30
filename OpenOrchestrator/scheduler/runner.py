@@ -185,7 +185,7 @@ def end_job(job: SchedulerJob) -> None:
             db_util.set_trigger_status(job.trigger.id, TriggerStatus.PAUSED)
         elif current_status == TriggerStatus.RUNNING:
             db_util.set_trigger_status(job.trigger.id, TriggerStatus.IDLE)
-    db_util.set_job_status(str(job.job.id), JobStatus.DONE)
+    db_util.set_job_status(job.job.id, JobStatus.DONE)
 
     if job.process_folder:
         clear_folder(job.process_folder)
@@ -200,8 +200,8 @@ def fail_job(job: SchedulerJob) -> None:
     db_util.set_trigger_status(job.trigger.id, TriggerStatus.FAILED)
     _, error = job.process.communicate()
     error_msg = f"An uncaught error ocurred during the process:\n{error}"
-    db_util.create_log(job.trigger.process_name, LogLevel.ERROR, str(job.job.id), error_msg)
-    db_util.set_job_status(str(job.job.id), JobStatus.FAILED)
+    db_util.create_log(job.trigger.process_name, LogLevel.ERROR, job.job.id, error_msg)
+    db_util.set_job_status(job.job.id, JobStatus.FAILED)
 
     if job.process_folder:
         clear_folder(job.process_folder)
@@ -215,7 +215,7 @@ def kill_job(job: SchedulerJob) -> None:
     """
     job.process.kill()
     db_util.set_trigger_status(job.trigger.id, TriggerStatus.KILLED)
-    db_util.set_job_status(str(job.job.id), JobStatus.KILLED)
+    db_util.set_job_status(job.job.id, JobStatus.KILLED)
 
     if job.process_folder:
         clear_folder(job.process_folder)
@@ -261,7 +261,7 @@ def run_process(trigger: Trigger) -> SchedulerJob | None:
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
-        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, str(trigger.id), str(job.id)]
+        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, str(trigger.id), job.id]
 
         process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
 

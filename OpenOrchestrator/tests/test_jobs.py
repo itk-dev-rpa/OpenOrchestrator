@@ -127,7 +127,7 @@ class TestJobORM(unittest.TestCase):
 
         row_dict = job.to_row_dict()
 
-        self.assertEqual(row_dict["ID"], job.id)
+        self.assertEqual(row_dict["ID"], str(job.id))
         self.assertEqual(row_dict["Process Name"], "Test Process")
         self.assertEqual(row_dict["Scheduler"], "Test Scheduler")
         self.assertRegex(row_dict["Start Time"], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")

@@ -317,7 +317,7 @@ def start_job(process_name: str, scheduler_name: str) -> Job:
         return job
 
 
-def set_job_status(job_id: str, status: JobStatus):
+def set_job_status(job_id: UUID | str, status: JobStatus):
     """Set status of job and update end_time, based on status.
 
     Args:
@@ -328,6 +328,9 @@ def set_job_status(job_id: str, status: JobStatus):
     Raises:
         ValueError: If no job is found, will raise error.
     """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
+
     with _get_session() as session:
         job = session.get(Job, job_id)
 
@@ -342,7 +345,7 @@ def set_job_status(job_id: str, status: JobStatus):
         session.commit()
 
 
-def get_job(job_id: str) -> Job:
+def get_job(job_id: UUID | str) -> Job:
     """Get a job by ID.
 
     Args:
@@ -354,6 +357,8 @@ def get_job(job_id: str) -> Job:
     Raises:
         ValueError: If no job is found.
     """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
     with _get_session() as session:
         job = session.get(Job, job_id)
 
@@ -364,12 +369,14 @@ def get_job(job_id: str) -> Job:
         return job
 
 
-def get_unique_log_process_names(job_id: str | None = None) -> tuple[str, ...]:
+def get_unique_log_process_names(job_id: UUID | str | None = None) -> tuple[str, ...]:
     """Get a list of unique process names in the logs database.
 
     Returns:
         A list of unique process names.
     """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
     query = (
         select(Log.process_name)
         .distinct()

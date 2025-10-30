@@ -110,14 +110,14 @@ class TestSchedulerRunner(unittest.TestCase):
         mock_clone_git_repo.assert_called_once_with(trigger.process_path, trigger.git_branch)
         mock_find_main_file.assert_called_once_with("folder_path")
         mock_isfile.assert_called_once_with("main.py")
-        mock_popen.assert_called_once_with(['python', "main.py", trigger.process_name, db_util.get_conn_string(), crypto_util.get_key(), trigger.process_args, str(trigger.id), str(scheduler_job.job.id)],
+        mock_popen.assert_called_once_with(['python', "main.py", trigger.process_name, db_util.get_conn_string(), crypto_util.get_key(), trigger.process_args, str(trigger.id), scheduler_job.job.id],
                                            stderr=subprocess.PIPE, text=True)
         mock_get_scheduler_name.assert_called_once()
 
         # Check Popen was called with job ID as last argument
         call_args = mock_popen.call_args[0][0]
         job_id_arg = call_args[-1]
-        self.assertEqual(str(scheduler_job.job.id), job_id_arg)
+        self.assertEqual(scheduler_job.job.id, job_id_arg)
 
         # Check that trigger status was set
         trigger = db_util.get_trigger(trigger_id)
