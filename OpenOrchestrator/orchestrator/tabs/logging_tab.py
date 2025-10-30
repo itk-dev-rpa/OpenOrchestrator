@@ -33,7 +33,9 @@ class LoggingTab():
                     self.level_input = ui.select(["All", "Trace", "Info", "Error"], value="All", label="Level", on_change=self.update).classes("w-48")
                     self.process_input = ui.select(["All"], label="Process Name", value="All", on_change=self.update).classes("w-48")
                     self.limit_input = ui.select([100, 200, 500, 1000], value=100, label="Limit", on_change=self.update).classes("w-24")
-                self.all_jobs_button = ui.button("Show all jobs", on_click=self._show_all_jobs)
+                with ui.column().classes("items-end") as self.job_filter_container:
+                    self.job_filter_label = ui.label("")
+                    self.all_jobs_button = ui.button("Show all jobs", on_click=self._show_all_jobs)
 
             self.logs_table = ui.table(title="Logs", columns=COLUMNS, rows=[], row_key='ID', pagination=50).classes("w-full")
             self.logs_table.on("rowClick", self._row_click)
@@ -44,7 +46,15 @@ class LoggingTab():
         """Update the logs table and Process input list"""
         self._update_table()
         self._update_process_input()
-        self.all_jobs_button.set_visibility(self.current_job_id is not None)
+        self._update_job_filter_display()
+
+    def _update_job_filter_display(self):
+        """Update visibility and text of job filter."""
+        if self.current_job_id:
+            self.job_filter_label.set_text(f"Filtering by Job: {self.current_job_id}...")
+            self.job_filter_container.set_visibility(True)
+        else:
+            self.job_filter_container.set_visibility(False)
 
     def _update_table(self):
         """Update the table with logs from the database applying the filters."""
