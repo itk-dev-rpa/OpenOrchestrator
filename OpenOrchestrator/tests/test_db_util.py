@@ -23,9 +23,9 @@ class TestDBUtil(unittest.TestCase):
         creation_time = datetime.now() - timedelta(seconds=2)
 
         for i in range(3):
-            db_util.create_log(f"Test {i}", LogLevel.TRACE, "Message")
-            db_util.create_log(f"Test {i}", LogLevel.INFO, "Message")
-            db_util.create_log(f"Test {i}", LogLevel.ERROR, "Message")
+            db_util.create_log(f"Test {i}", LogLevel.TRACE, None, "Message")
+            db_util.create_log(f"Test {i}", LogLevel.INFO, None, "Message")
+            db_util.create_log(f"Test {i}", LogLevel.ERROR, None, "Message")
 
         # Get all logs
         logs = db_util.get_logs(0, 100)
@@ -319,9 +319,9 @@ class TestDBUtil(unittest.TestCase):
         medium_message = "a"*8000
         short_message = "HelloWorld"
 
-        db_util.create_log("TruncateTest", LogLevel.TRACE, long_message)
-        db_util.create_log("TruncateTest", LogLevel.INFO, medium_message)
-        db_util.create_log("TruncateTest", LogLevel.ERROR, short_message)
+        db_util.create_log("TruncateTest", LogLevel.TRACE, None, long_message)
+        db_util.create_log("TruncateTest", LogLevel.INFO, None, medium_message)
+        db_util.create_log("TruncateTest", LogLevel.ERROR, None, short_message)
 
         # Test long message
         logs = db_util.get_logs(0, 100, log_level=LogLevel.TRACE)

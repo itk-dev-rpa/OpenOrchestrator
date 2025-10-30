@@ -29,7 +29,7 @@ class TestOrchestratorConnection(unittest.TestCase):
                                                        is_blocking=False,
                                                        priority=0
                                                        )
-        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args", cls.trigger_id)
+        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args", cls.trigger_id, None)
 
     def test_trigger_pause(self):
         """Test pausing triggers."""

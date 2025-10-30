@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Dev
 
 - Added automated tests for Alembic.
+- Automated tests of the Orchestrator ui.
 
 ### Added
 
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added priority and scheduler whitelist to triggers.
 - Added search and status filter to queue element list.
 - Added overview of queue element.
+- Added Job objects, job tabs and linked logs to jobs.
 
 ### Changed
 
@@ -35,14 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated all dependenices to newest version.
 - Removed Orchestrator exit on connection loss.
 - Queue element list pagination moved to server side.
+- Reordered columns in Orchestrator app.
+- Reordered columns in logs.
 
 ### Fixed
 
 - Raise error if git is not installed when trying to clone a git repo.
-
-### Dev
-
-- Automated tests of the Orchestrator ui.
+- Removed warnings from tests.
 
 ## [1.3.1] - 2025-03-12
 

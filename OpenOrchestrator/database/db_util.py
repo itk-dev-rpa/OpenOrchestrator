@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database.logs import Log, LogLevel
+from OpenOrchestrator.database.jobs import Job, JobStatus
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
@@ -62,7 +63,7 @@ def check_database_revision() -> bool:
     except alc_exc.ProgrammingError:
         return False
 
-    return version == "9698388a0709"
+    return version == "1c87ed320c78"
 
 
 def _get_session() -> Session:
@@ -201,7 +202,7 @@ def delete_trigger(trigger_id: UUID | str) -> None:
 
 def get_logs(offset: int, limit: int,
              from_date: datetime | None = None, to_date: datetime | None = None,
-             process_name: str | None = None, log_level: LogLevel | None = None) -> tuple[Log, ...]:
+             process_name: str | None = None, log_level: LogLevel | None = None, job_id: str | UUID | None = None) -> tuple[Log, ...]:
     """Get the logs from the database using filters and pagination.
 
     Args:
@@ -211,10 +212,14 @@ def get_logs(offset: int, limit: int,
         to_date: The datetime where the log time must be at or earlier. If none the filter is disabled.
         process_name: The process name to filter on. If none the filter is disabled.
         log_level: The log level to filter on. If none the filter is disabled.
+        job_id: The job ID to filter on. If none the filter is disabled.
 
     Returns:
         A list of logs matching the given filters.
     """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
+
     query = (
             select(Log)
             .order_by(desc(Log.log_time))
@@ -234,12 +239,15 @@ def get_logs(offset: int, limit: int,
     if log_level:
         query = query.where(Log.log_level == log_level)
 
+    if job_id:
+        query = query.where(Log.job_id == job_id)
+
     with _get_session() as session:
         result = session.scalars(query).all()
         return tuple(result)
 
 
-def create_log(process_name: str, level: LogLevel, message: str) -> None:
+def create_log(process_name: str, level: LogLevel, job_id: str | UUID | None, message: str) -> None:
     """Create a log in the logs table in the database.
 
     Args:
@@ -247,28 +255,136 @@ def create_log(process_name: str, level: LogLevel, message: str) -> None:
         level: The level of the log.
         message: The message of the log.
     """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
+
     with _get_session() as session:
         log = Log(
             log_level = level,
             process_name = process_name,
+            job_id = job_id,
             log_message = truncate_message(message)
         )
         session.add(log)
         session.commit()
 
 
-def get_unique_log_process_names() -> tuple[str, ...]:
+def get_jobs(status: JobStatus | None = None, process_name: str | None = None) -> tuple[Job]:
+    """Get jobs matching the requested status or process name.
+
+    Args:
+        status: Status of jobs, RUNNING, DONE, FAILED or KILLED. Defaults to None.
+        process_name: Process name matching the jobs. Defaults to None.
+
+    Returns:
+        Tuple containing jobs matching the filters.
+    """
+    query = (
+            select(Job)
+            .order_by(desc(Job.start_time))
+        )
+
+    if status:
+        query = query.where(Job.status == status)
+
+    if process_name:
+        query = query.where(Job.process_name == process_name)
+
+    with _get_session() as session:
+        result = session.scalars(query).all()
+        return tuple(result)
+
+
+def start_job(process_name: str, scheduler_name: str) -> Job:
+    """Create a new job, using count of previous jobs and process name as ID.
+
+    Args:
+        process_name: Process name starting this job.
+
+    Returns:
+        Job id of newly created job.
+    """
+    with _get_session() as session:
+        job = Job(
+            process_name=process_name,
+            scheduler_name=scheduler_name,
+            status=JobStatus.RUNNING
+        )
+        session.add(job)
+        session.commit()
+        session.refresh(job)
+        session.expunge(job)
+        return job
+
+
+def set_job_status(job_id: UUID | str, status: JobStatus):
+    """Set status of job and update end_time, based on status.
+
+    Args:
+        job_id: Job ID to set status on.
+        status: Status to set. Either RUNNING, DONE, FAILED or KILLED.
+        Will set end_time to null if RUNNING or current time if not.
+
+    Raises:
+        ValueError: If no job is found, will raise error.
+    """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
+
+    with _get_session() as session:
+        job = session.get(Job, job_id)
+
+        if not job:
+            raise ValueError("No job with the given id was found.")
+
+        job.status = status
+        if status == JobStatus.RUNNING:
+            job.end_time = None
+        else:
+            job.end_time = datetime.now()
+        session.commit()
+
+
+def get_job(job_id: UUID | str) -> Job:
+    """Get a job by ID.
+
+    Args:
+        job_id: The ID of the job to get.
+
+    Returns:
+        The Job object.
+
+    Raises:
+        ValueError: If no job is found.
+    """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
+    with _get_session() as session:
+        job = session.get(Job, job_id)
+
+        if not job:
+            raise ValueError("No job with the given id was found.")
+
+        session.expunge(job)
+        return job
+
+
+def get_unique_log_process_names(job_id: UUID | str | None = None) -> tuple[str, ...]:
     """Get a list of unique process names in the logs database.
 
     Returns:
         A list of unique process names.
     """
-
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
     query = (
         select(Log.process_name)
         .distinct()
         .order_by(Log.process_name)
     )
+
+    if job_id:
+        query.where(job_id=job_id)
 
     with _get_session() as session:
         result = session.scalars(query).all()

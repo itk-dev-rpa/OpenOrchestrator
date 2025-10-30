@@ -29,6 +29,7 @@ class Log(Base):
     log_time: Mapped[datetime] = mapped_column(default=datetime.now)
     log_level: Mapped[LogLevel]
     process_name: Mapped[str] = mapped_column(String(100))
+    job_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     log_message: Mapped[str] = mapped_column(String(8000))
 
     def to_row_dict(self) -> dict[str, str]:
@@ -38,5 +39,7 @@ class Log(Base):
             "Level": self.log_level.value,
             "Process Name": self.process_name,
             "Message": self.log_message,
+            "Short Job ID": str(self.job_id)[:8],
+            "Full Job ID": self.job_id,
             "ID": str(self.id)
         }
