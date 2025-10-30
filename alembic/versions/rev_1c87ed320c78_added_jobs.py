@@ -25,7 +25,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id')
     )
     op.add_column('Logs', sa.Column('job_id', sa.Uuid(), nullable=True))
-    op.create_foreign_key(None, 'Logs', 'Jobs', ['job_id'], ['id'])
     op.alter_column(
         'Triggers',
         'scheduler_whitelist',
