@@ -217,8 +217,8 @@ def get_logs(offset: int, limit: int,
     Returns:
         A list of logs matching the given filters.
     """
-    if isinstance(job_id, UUID):
-        job_id = str(job_id)
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
 
     query = (
             select(Log)
@@ -247,7 +247,7 @@ def get_logs(offset: int, limit: int,
         return tuple(result)
 
 
-def create_log(process_name: str, level: LogLevel, job_id: str | UUID, message: str) -> None:
+def create_log(process_name: str, level: LogLevel, job_id: str | UUID | None, message: str) -> None:
     """Create a log in the logs table in the database.
 
     Args:
@@ -255,8 +255,8 @@ def create_log(process_name: str, level: LogLevel, job_id: str | UUID, message: 
         level: The level of the log.
         message: The message of the log.
     """
-    if isinstance(job_id, UUID):
-        job_id = str(job_id)
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
 
     with _get_session() as session:
         log = Log(

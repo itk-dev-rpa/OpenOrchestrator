@@ -37,7 +37,7 @@ class Job(Base):
     def to_row_dict(self) -> dict[str, str]:
         """Convert log to a row dictionary for display in a table."""
         return {
-            "ID": self.id,
+            "ID": str(self.id),
             "Process Name": self.process_name,
             "Scheduler": self.scheduler_name,
             "Start Time":  datetime_util.format_datetime(self.start_time),
