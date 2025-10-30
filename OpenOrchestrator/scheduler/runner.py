@@ -215,7 +215,7 @@ def kill_job(job: SchedulerJob) -> None:
     """
     job.process.kill()
     db_util.set_trigger_status(job.trigger.id, TriggerStatus.KILLED)
-    db_util.set_job_status(str(job.job.id), JobStatus.ABORTED)
+    db_util.set_job_status(str(job.job.id), JobStatus.KILLED)
 
     if job.process_folder:
         clear_folder(job.process_folder)
