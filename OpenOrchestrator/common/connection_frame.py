@@ -6,6 +6,8 @@ from nicegui import ui
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
+from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator.popups import generic_popups
 
 
 # pylint: disable-next=too-few-public-methods
@@ -21,12 +23,13 @@ class ConnectionFrame():
             self.disconn_button.disable()
 
         self._initial_connect()
+        test_helper.set_automation_ids(self, "connection_frame")
 
     def _define_validation(self):
-        self.conn_input.validation = {"Please enter a connection string": bool}
-        self.key_input.validation = {"Invalid AES key": crypto_util.validate_key}
+        self.conn_input._validation = {"Please enter a connection string": bool}  # pylint: disable=protected-access
+        self.key_input._validation = {"Invalid AES key": crypto_util.validate_key}  # pylint: disable=protected-access
 
-    def _connect(self) -> None:
+    async def _connect(self) -> None:
         """Validate the connection string and encryption key
         and connect to the database.
         """
@@ -40,7 +43,10 @@ class ConnectionFrame():
         if db_util.connect(conn_string):
             crypto_util.set_key(crypto_key)
             self._set_state(True)
-            ui.notify("Connected!", type='positive')
+            ui.notify("Connected!", type='positive', timeout=1000)
+
+            if not os.getenv("ORCHESTRATOR_TEST") and not db_util.check_database_revision():
+                await generic_popups.info_popup("This version of Orchestrator doesn't match the version of the connected database. Unexpected errors might occur.")
 
     def _disconnect(self) -> None:
         db_util.disconnect()

@@ -7,11 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added option for robots to check if they are pausing.
+- Added argument to manually set Orchestrator port.
+- Added argument to prevent Orchestrator from opening in the browser automatically.
+- Commandline command to upgrade a database to the newest schema.
+- Added 'Scheduler' tab with overview of running schedulers.
+- Added priority and scheduler whitelist to triggers.
+
+### Changed
+
+- Server no longer stops after disconnects.
+- Ui no longer checks if the page is in focus before updating.
+- Changed cli to use argparser.
+- Arguments to start Scheduler and Orchestrator are now subcommands (no '-' before 'o' and 's').
+- Trigger status 'Paused' is now colored orange in the trigger tab.
+- When creating a new trigger, blocking process is now default.
+- Scheduler no longer auto-connects.
+- Removed 'Initialize database' button from Orchestrator. Use upgrade command instead.
+- Updated all dependenices to newest version.
+
+### Fixed
+
+- Raise error if git is not installed when trying to clone a git repo.
+
+### Dev
+
+- Automated tests of the Orchestrator ui.
+
 ## [1.3.1] - 2025-03-12
 
 ### Fixed
 
 - Switched croniter with cronsim
+
+### Fixed
+
+- A database shutdown shouldn't cause Scheduler to crash anymore.
 
 ## [1.3.0] - 2024-06-19
 
@@ -101,7 +134,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.3.0...HEAD
+[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.3.1...HEAD
+[1.3.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.3.1
 [1.3.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.3.0
 [1.2.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.2.0
 [1.1.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.1.0

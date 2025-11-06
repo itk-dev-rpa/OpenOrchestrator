@@ -3,7 +3,8 @@
 from datetime import datetime, timedelta
 import os
 
-from OpenOrchestrator.database import db_util, logs, triggers, constants, queues
+from OpenOrchestrator.database import db_util, base
+
 from OpenOrchestrator.common import crypto_util
 
 
@@ -13,7 +14,7 @@ def establish_clean_database():
     crypto_util.set_key(crypto_util.generate_key().decode())
 
     drop_all_tables()
-    db_util.initialize_database()
+    base.Base.metadata.create_all(db_util._connection_engine)  # pylint: disable=protected-access
 
 
 def drop_all_tables():
@@ -21,10 +22,8 @@ def drop_all_tables():
     engine = db_util._connection_engine  # pylint: disable=protected-access
     if not engine:
         raise RuntimeError("Not connected to a database.")
-    logs.Base.metadata.drop_all(engine)
-    triggers.Base.metadata.drop_all(engine)
-    constants.Base.metadata.drop_all(engine)
-    queues.Base.metadata.drop_all(engine)
+
+    base.Base.metadata.drop_all(engine)
 
 
 def reset_triggers():
@@ -36,6 +35,6 @@ def reset_triggers():
         raise RuntimeError("Not all triggers were deleted.")
 
     next_run = datetime.now() - timedelta(seconds=2)
-    db_util.create_single_trigger("Single", "Process1", next_run, "Path", "Args", False, False)
-    db_util.create_scheduled_trigger("Scheduled", "Process1", "0 0 * * *", next_run, "Path", "Args", False, False)
-    db_util.create_queue_trigger("Queue", "Process1", "Trigger Queue", "Path", "Args", False, False, 2)
+    db_util.create_single_trigger("Single", "Process1", next_run, "Path", "Args", False, False, 0, "")
+    db_util.create_scheduled_trigger("Scheduled", "Process1", "0 0 * * *", next_run, "Path", "Args", False, False, 0, "")
+    db_util.create_queue_trigger("Queue", "Process1", "Trigger Queue", "Path", "Args", False, False, 2, 0, "")

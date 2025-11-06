@@ -12,7 +12,7 @@ from sqlalchemy import exc as alc_exc
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
-from OpenOrchestrator.scheduler import runner
+from OpenOrchestrator.scheduler import runner, util
 
 if TYPE_CHECKING:
     from OpenOrchestrator.scheduler.application import Application
@@ -111,13 +111,15 @@ def loop(app: Application) -> None:
         app: The Scheduler Application object.
     """
     try:
+        send_ping_to_orchestrator()
+
         check_heartbeats(app)
 
         if app.running:
             check_triggers(app)
 
-    except alc_exc.OperationalError:
-        print("Couldn't connect to database.")
+    except (alc_exc.OperationalError, alc_exc.ProgrammingError) as e:
+        print(f"Couldn't connect to database. {e}")
 
     if len(app.running_jobs) == 0:
         print("Doing cleanup...")
@@ -169,7 +171,15 @@ def check_triggers(app: Application) -> None:
     # Check triggers
     if not blocking:
         print('Checking triggers...')
-        job = runner.poll_triggers(app)
+        trigger = runner.poll_triggers(app)
 
-        if job is not None:
-            app.running_jobs.append(job)
+        if trigger:
+            job = runner.run_trigger(trigger)
+
+            if job:
+                app.running_jobs.append(job)
+
+
+def send_ping_to_orchestrator():
+    """Send a ping to the connected Orchestrator with the Scheduler application's name."""
+    db_util.send_ping_from_scheduler(util.get_scheduler_name())

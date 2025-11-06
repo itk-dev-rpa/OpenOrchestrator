@@ -9,7 +9,7 @@ from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.database.triggers import TriggerStatus
 
-from tests import db_test_util
+from OpenOrchestrator.tests import db_test_util
 
 
 class TestDBUtil(unittest.TestCase):
@@ -225,7 +225,7 @@ class TestDBUtil(unittest.TestCase):
         db_test_util.reset_triggers()
 
         # Get next single trigger
-        trigger = db_util.get_next_single_trigger()
+        trigger = db_util.get_pending_single_triggers()[0]
         self.assertIsNotNone(trigger)
 
         # Begin trigger
@@ -242,8 +242,8 @@ class TestDBUtil(unittest.TestCase):
         self.assertIsNotNone(trigger.last_run)
 
         # No new trigger when the other is running
-        none_trigger = db_util.get_next_single_trigger()
-        self.assertIsNone(none_trigger)
+        none_trigger = db_util.get_pending_single_triggers()
+        self.assertEqual(len(none_trigger), 0)
 
         # Set status
         db_util.set_trigger_status(trigger.id, TriggerStatus.DONE)
@@ -255,7 +255,7 @@ class TestDBUtil(unittest.TestCase):
         db_test_util.reset_triggers()
 
         # Get next trigger
-        trigger = db_util.get_next_scheduled_trigger()
+        trigger = db_util.get_pending_scheduled_triggers()[0]
         self.assertIsNotNone(trigger)
 
         # Begin trigger
@@ -274,25 +274,25 @@ class TestDBUtil(unittest.TestCase):
         self.assertIsNotNone(trigger.last_run)
 
         # No new trigger when other is running
-        trigger = db_util.get_next_scheduled_trigger()
-        self.assertIsNone(trigger)
+        trigger_list = db_util.get_pending_scheduled_triggers()
+        self.assertEqual(len(trigger_list), 0)
 
     def test_queue_triggers(self):
         """Test running and updating queue triggers."""
         db_test_util.reset_triggers()
 
         # Test with empty queue
-        trigger = db_util.get_next_queue_trigger()
-        self.assertIsNone(trigger)
+        trigger_list = db_util.get_pending_queue_triggers()
+        self.assertEqual(len(trigger_list), 0)
 
         # Test with 1 item in queue (triggers on 2)
         db_util.create_queue_element("Trigger Queue")
-        trigger = db_util.get_next_queue_trigger()
-        self.assertIsNone(trigger)
+        trigger_list = db_util.get_pending_queue_triggers()
+        self.assertEqual(len(trigger_list), 0)
 
         # Test with 2 items in queue
         db_util.create_queue_element("Trigger Queue")
-        trigger = db_util.get_next_queue_trigger()
+        trigger = db_util.get_pending_queue_triggers()[0]
         self.assertIsNotNone(trigger)
 
         # Begin trigger
@@ -309,8 +309,8 @@ class TestDBUtil(unittest.TestCase):
         self.assertIsNotNone(trigger.last_run)
 
         # No new trigger when other is running
-        trigger = db_util.get_next_queue_trigger()
-        self.assertIsNone(trigger)
+        trigger_list = db_util.get_pending_queue_triggers()
+        self.assertEqual(len(trigger_list), 0)
 
     def test_log_truncation(self):
         """Create logs with various lengths and test if their length is as expected"""
@@ -334,6 +334,38 @@ class TestDBUtil(unittest.TestCase):
         # Test short message
         logs = db_util.get_logs(0, 100, log_level=LogLevel.ERROR)
         self.assertEqual(len(logs[0].log_message), len(short_message))
+
+    def test_schedulers(self):
+        """Make pings from imitated machines and verify that they are registered."""
+
+        db_util.send_ping_from_scheduler("Machine1")
+
+        # Test one ping
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 1)
+
+        # Test multiple pings
+        db_util.send_ping_from_scheduler("Machine2")
+        db_util.send_ping_from_scheduler("Machine3")
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 3)
+
+        # Test that a ping from a machine that pinged earlier doesn't change the amount of schedulers
+        db_util.send_ping_from_scheduler("Machine1")
+        schedulers = db_util.get_schedulers()
+        self.assertEqual(len(schedulers), 3)
+
+        # Test types in Scheduler
+        test_scheduler = schedulers[0]
+        self.assertIsInstance(test_scheduler.machine_name, str)
+        self.assertIsInstance(test_scheduler.last_update, datetime)
+
+        # Test trigger
+        db_util.start_trigger_from_machine("Machine1", "Test Trigger")
+        schedulers = db_util.get_schedulers()
+        test_scheduler = schedulers[0]
+        self.assertIsInstance(test_scheduler.latest_trigger, str)
+        self.assertIsInstance(test_scheduler.latest_trigger_time, datetime)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime
+import json
 
 from nicegui import ui
 from cronsim import CronSim, CronSimError
@@ -11,6 +12,7 @@ from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, TriggerStatus, TriggerType, ScheduledTrigger, SingleTrigger, QueueTrigger
 from OpenOrchestrator.orchestrator.popups import generic_popups
+from OpenOrchestrator.orchestrator import test_helper
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
@@ -48,30 +50,33 @@ class TriggerPopup():
             self.path_input = ui.input("Process Path").classes("w-full")
             self.git_check = ui.checkbox("Is path a Git Repo?")
             self.args_input = ui.input("Process Arguments").classes("w-full")
-            self.blocking_check = ui.checkbox("Is process blocking?")
+            self.blocking_check = ui.checkbox(text="Is process blocking?", value=True)
+            self.priority_input = ui.number("Priority", value=0, precision=0, format="%.0f")
+            self.whitelist_input = ui.input_chips("Scheduler whitelist").classes("w-full")
 
             if trigger:
                 with ui.row():
-                    ui.button("Enable", on_click=self._enable_trigger)
-                    ui.button("Disable", on_click=self._disable_trigger)
-                    ui.button("Delete", on_click=self._delete_trigger, color='red')
+                    self.enable_button = ui.button("Enable", on_click=self._enable_trigger)
+                    self.disable_button = ui.button("Disable", on_click=self._disable_trigger)
+                    self.delete_button = ui.button("Delete", on_click=self._delete_trigger, color='red')
             else:
                 # Dialog should only be persistent when a new trigger is being created
                 self.dialog.props('persistent')
 
             with ui.row():
-                ui.button("Save", on_click=self._create_trigger)
-                ui.button("Cancel", on_click=self.dialog.close)
+                self.save_button = ui.button("Save", on_click=self._create_trigger)
+                self.cancel_button = ui.button("Cancel", on_click=self.dialog.close)
 
         self._disable_unused()
         self._define_validation()
         self._pre_populate()
+        test_helper.set_automation_ids(self, "trigger_popup")
 
     def _define_validation(self):
-        self.trigger_input.validation = {"Please enter a trigger name": bool}
-        self.name_input.validation = {"Please enter a process name": bool}
-        self.path_input.validation = {"Please enter a process path": bool}
-        self.queue_input.validation = {"Please enter a queue name": bool}
+        self.trigger_input._validation = {"Please enter a trigger name": bool}  # pylint: disable=protected-access
+        self.name_input._validation = {"Please enter a process name": bool}  # pylint: disable=protected-access
+        self.path_input._validation = {"Please enter a process path": bool}  # pylint: disable=protected-access
+        self.queue_input._validation = {"Please enter a queue name": bool}  # pylint: disable=protected-access
 
         def validate_cron(value: str):
             try:
@@ -80,7 +85,7 @@ class TriggerPopup():
             except CronSimError:
                 return False
 
-        self.cron_input.validation = {"Invalid cron expression": validate_cron}
+        self.cron_input._validation = {"Invalid cron expression": validate_cron}  # pylint: disable=protected-access
 
     def _pre_populate(self):
         """Populate the form with values from an existing trigger"""
@@ -93,6 +98,8 @@ class TriggerPopup():
         self.args_input.value = self.trigger.process_args
         self.git_check.value = self.trigger.is_git_repo
         self.blocking_check.value = self.trigger.is_blocking
+        self.priority_input.value = self.trigger.priority
+        self.whitelist_input.value = json.loads(self.trigger.scheduler_whitelist)
 
         if isinstance(self.trigger, ScheduledTrigger):
             self.cron_input.value = self.trigger.cron_expr
@@ -163,15 +170,17 @@ class TriggerPopup():
         args = self.args_input.value
         is_git = self.git_check.value
         is_blocking = self.blocking_check.value
+        priority = self.priority_input.value
+        whitelist = self.whitelist_input.value
 
         if self.trigger is None:
             # Create new trigger in database
             if self.trigger_type == TriggerType.SINGLE:
-                db_util.create_single_trigger(trigger_name, process_name, next_run, path, args, is_git, is_blocking)
+                db_util.create_single_trigger(trigger_name, process_name, next_run, path, args, is_git, is_blocking, priority, whitelist)
             elif self.trigger_type == TriggerType.SCHEDULED:
-                db_util.create_scheduled_trigger(trigger_name, process_name, cron_expr, next_run, path, args, is_git, is_blocking)
+                db_util.create_scheduled_trigger(trigger_name, process_name, cron_expr, next_run, path, args, is_git, is_blocking, priority, whitelist)
             elif self.trigger_type == TriggerType.QUEUE:
-                db_util.create_queue_trigger(trigger_name, process_name, queue_name, path, args, is_git, is_blocking, min_batch_size)
+                db_util.create_queue_trigger(trigger_name, process_name, queue_name, path, args, is_git, is_blocking, min_batch_size, priority, whitelist)
 
             ui.notify("Trigger created", type='positive')
         else:
@@ -182,6 +191,8 @@ class TriggerPopup():
             self.trigger.process_args = args
             self.trigger.is_git_repo = is_git
             self.trigger.is_blocking = is_blocking
+            self.trigger.priority = priority
+            self.trigger.scheduler_whitelist = json.dumps(whitelist)
 
             if isinstance(self.trigger, SingleTrigger):
                 self.trigger.next_run = next_run

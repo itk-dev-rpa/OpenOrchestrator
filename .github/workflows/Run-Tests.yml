@@ -1,0 +1,38 @@
+name: Run-Tests
+
+on: [pull_request]
+
+jobs:
+  Run-tests:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set screen resolution
+      run: |
+        Set-DisplayResolution -Width 1920 -Height 1080 -Force
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .[dev]
+
+    - name: Run tests
+      run: |
+        python -m unittest discover
+      env:
+        CONN_STRING: sqlite+pysqlite:///test_db.db
+
+    - name: Upload screenshots if tests fail
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: error_screenshots
+        path: error_screenshots/

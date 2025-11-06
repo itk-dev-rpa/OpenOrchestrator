@@ -1,14 +1,22 @@
 """This module is responsible for checking triggers and running processes."""
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import os
+import shutil
 import subprocess
 from dataclasses import dataclass
 import uuid
+import json
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.logs import LogLevel
+from OpenOrchestrator.scheduler import util
+
+if TYPE_CHECKING:
+    from OpenOrchestrator.scheduler.application import Application
 
 
 @dataclass
@@ -19,91 +27,64 @@ class Job():
     process_folder: str | None
 
 
-def poll_triggers(app) -> Job | None:
-    """Checks if any triggers are waiting to run. If any the first will be run and a
-    corresponding job object will be returned.
+def poll_triggers(app: Application) -> Trigger | None:
+    """Checks for pending triggers and returns the first viable one.
+    This takes priority and whitelist of the triggers into account.
 
     Args:
         app: The Application object of the Scheduler app.
 
     Returns:
-        Job: A job object describing the job that has been launched, if any else None.
+        The first viable trigger to run if any.
     """
+    # Get all pending triggers
+    trigger_list = (
+        db_util.get_pending_single_triggers() +
+        db_util.get_pending_scheduled_triggers() +
+        db_util.get_pending_queue_triggers()
+    )
 
-    other_processes_running = len(app.running_jobs) != 0
+    # Sort by priority and type
+    # Single > Scheduled > Queue
+    trigger_order = {SingleTrigger: 0, ScheduledTrigger: 1, QueueTrigger: 2}
+    trigger_list.sort(key=lambda t: (-t.priority, trigger_order[type(t)]))
 
-    # Single triggers
-    next_single_trigger = db_util.get_next_single_trigger()
+    # Run the first eligible trigger
+    other_jobs_running = len(app.running_jobs) > 0
+    scheduler_name = util.get_scheduler_name()
+    is_exclusive = app.settings_tab_.whitelist_value.get()
 
-    if next_single_trigger and not (next_single_trigger.is_blocking and other_processes_running):
-        return run_single_trigger(next_single_trigger)
+    for trigger in trigger_list:
+        trigger_whitelist = json.loads(trigger.scheduler_whitelist)
+        whitelisted = scheduler_name in trigger_whitelist  # Is the Scheduler in the whitelist
+        unlisted_allowed = not is_exclusive and not trigger_whitelist  # Is the scheduler allowed to run non-designated triggers
 
-    # Scheduled triggers
-    next_scheduled_trigger = db_util.get_next_scheduled_trigger()
-
-    if next_scheduled_trigger and not (next_scheduled_trigger.is_blocking and other_processes_running):
-        return run_scheduled_trigger(next_scheduled_trigger)
-
-    # Queue triggers
-    next_queue_trigger = db_util.get_next_queue_trigger()
-
-    if next_queue_trigger and not (next_queue_trigger.is_blocking and other_processes_running):
-        return run_queue_trigger(next_queue_trigger)
+        if whitelisted or unlisted_allowed:
+            if not (trigger.is_blocking and other_jobs_running):
+                return trigger
 
     return None
 
 
-def run_single_trigger(trigger: SingleTrigger) -> Job | None:
-    """Mark a single trigger as running in the database
+def run_trigger(trigger: Trigger) -> Job | None:
+    """Mark a trigger as running in the database
     and start the process.
 
     Args:
         trigger: The trigger to run.
 
     Returns:
-        Job: A Job object describing the process if successful.
+        A Job object describing the process if successful.
     """
-
     print('Running trigger: ', trigger.trigger_name)
 
-    if db_util.begin_single_trigger(trigger.id):
+    if isinstance(trigger, SingleTrigger) and db_util.begin_single_trigger(trigger.id):
         return run_process(trigger)
 
-    return None
-
-
-def run_scheduled_trigger(trigger: ScheduledTrigger) -> Job | None:
-    """Mark a scheduled trigger as running in the database,
-    calculate the next run datetime,
-    and start the process.
-
-    Args:
-        trigger: The trigger to run.
-
-    Returns:
-        Job: A Job object describing the process if successful.
-    """
-    print('Running trigger: ', trigger.trigger_name)
-
-    if db_util.begin_scheduled_trigger(trigger.id):
+    if isinstance(trigger, ScheduledTrigger) and db_util.begin_scheduled_trigger(trigger.id):
         return run_process(trigger)
 
-    return None
-
-
-def run_queue_trigger(trigger: QueueTrigger) -> Job | None:
-    """Mark a queue trigger as running in the database
-    and start the process.
-
-    Args:
-        trigger: The trigger to run.
-
-    Returns:
-        Job: A Job object describing the process if successful.
-    """
-    print('Running trigger: ', trigger.trigger_name)
-
-    if db_util.begin_queue_trigger(trigger.id):
+    if isinstance(trigger, QueueTrigger) and db_util.begin_queue_trigger(trigger.id):
         return run_process(trigger)
 
     return None
@@ -123,6 +104,10 @@ def clone_git_repo(repo_url: str) -> str:
     repo_path = os.path.join(repo_folder, unique_id)
 
     os.makedirs(repo_path)
+
+    if shutil.which('git') is None:
+        raise RuntimeError('git is not installed or not found in the system PATH.')
+
     try:
         subprocess.run(['git', 'clone', repo_url, repo_path], check=True)
     except subprocess.CalledProcessError as exc:
@@ -232,7 +217,7 @@ def run_process(trigger: Trigger) -> Job | None:
         trigger: The trigger whose process to run.
 
     Returns:
-        Job: A Job object referencing the process if succesful.
+        Job: A Job object referencing the process if successful.
     """
     process_path = trigger.process_path
     folder_path = None
@@ -251,9 +236,12 @@ def run_process(trigger: Trigger) -> Job | None:
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
-        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args]
+        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, str(trigger.id)]
 
         process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
+
+        machine_name = util.get_scheduler_name()
+        db_util.start_trigger_from_machine(machine_name, str(trigger.trigger_name))
 
         return Job(process, trigger, folder_path)
 

@@ -43,7 +43,7 @@ class DatetimeInput(ui.input):
 
     def _define_validation(self, allow_empty: bool):
         if not allow_empty:
-            self.validation = {
+            self._validation = {  # pylint: disable=protected-access
                 "Please enter a datetime": bool,
                 f"Invalid datetime: {self.PY_FORMAT}": lambda v: self.get_datetime() is not None
             }
@@ -55,7 +55,7 @@ class DatetimeInput(ui.input):
 
                 return self.get_datetime() is not None
 
-            self.validation = {f"Invalid datetime: {self.PY_FORMAT}": validate}
+            self._validation = {f"Invalid datetime: {self.PY_FORMAT}": validate}  # pylint: disable=protected-access
 
     def get_datetime(self) -> datetime | None:
         """Get the text from the input as a datetime object, if

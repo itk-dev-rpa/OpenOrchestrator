@@ -11,7 +11,7 @@ from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.database.queues import QueueStatus
 
-from tests import db_test_util
+from OpenOrchestrator.tests import db_test_util
 
 
 class TestOrchestratorConnection(unittest.TestCase):
@@ -19,7 +19,24 @@ class TestOrchestratorConnection(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         db_test_util.establish_clean_database()
-        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args")
+        process_name = "Process"
+        cls.trigger_id = db_util.create_single_trigger(trigger_name=process_name,
+                                                       process_name=process_name,
+                                                       next_run=datetime.now(),
+                                                       process_path="",
+                                                       process_args="",
+                                                       is_git_repo=False,
+                                                       is_blocking=False,
+                                                       priority=0,
+                                                       scheduler_whitelist=""
+                                                       )
+        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args", cls.trigger_id)
+
+    def test_trigger_pause(self):
+        """Test pausing triggers."""
+        self.assertFalse(self.connection.is_trigger_pausing())
+        self.connection.pause_my_trigger()
+        self.assertTrue(self.connection.is_trigger_pausing())
 
     def test_logging(self):
         """Test all three logging functions."""
@@ -119,3 +136,7 @@ class TestOrchestratorConnection(unittest.TestCase):
         self.connection.delete_queue_element(element.id)
         elements = self.connection.get_queue_elements("Bulk Queue")
         self.assertEqual(len(elements), 9)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -5,10 +5,11 @@ import enum
 from typing import Optional
 import uuid
 
-from sqlalchemy import String, ForeignKey, Engine
-from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
+from sqlalchemy import String, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
 
 from OpenOrchestrator.common import datetime_util
+from OpenOrchestrator.database.base import Base
 
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
@@ -31,10 +32,6 @@ class TriggerType(enum.Enum):
     QUEUE = "Queue"
 
 
-class Base(DeclarativeBase):
-    """SqlAlchemy base class for all ORM classes in this module."""
-
-
 class Trigger(Base):
     """A base class for all triggers in the ORM."""
     __tablename__ = "Triggers"
@@ -48,6 +45,8 @@ class Trigger(Base):
     process_status: Mapped[TriggerStatus] = mapped_column(default=TriggerStatus.IDLE)
     is_git_repo: Mapped[bool]
     is_blocking: Mapped[bool]
+    scheduler_whitelist: Mapped[str] = mapped_column(String(250))
+    priority: Mapped[int] = mapped_column(default=0)
     type: Mapped[TriggerType]
 
     __mapper_args__ = {
@@ -66,7 +65,8 @@ class Trigger(Base):
             "Status": self.process_status.value,
             "Process Name": self.process_name,
             "Last Run": datetime_util.format_datetime(self.last_run, "Never"),
-            "ID": str(self.id)
+            "ID": str(self.id),
+            "Priority": str(self.priority)
         }
 
 
@@ -115,12 +115,3 @@ class QueueTrigger(Trigger):
         row_dict = super().to_row_dict()
         row_dict["Next Run"] = "N/A"
         return row_dict
-
-
-def create_tables(engine: Engine):
-    """Create all SQL tables related to ORM classes in this module.
-
-    Args:
-        engine: The SqlAlchemy connection engine used to create the tables.
-    """
-    Base.metadata.create_all(engine)
