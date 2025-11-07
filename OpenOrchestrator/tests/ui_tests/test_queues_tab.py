@@ -205,11 +205,98 @@ class TestQueuesTab(unittest.TestCase):
         ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
         table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
         ui_util.click_table_row(self.browser, "queue_popup_table", 0)
-        for i, field in enumerate(['reference_text', 'status_text', 'data_text', 'message_text', 'created_date', 'start_date', 'end_date', 'created_by', 'id_text']):
-            field_content = self.browser.find_element(By.CSS_SELECTOR, f"[auto-id=queue_element_popup_{field}]").text
-            if field == 'data_text':
-                field_content = field_content.rsplit('\n')[0]  # Fix for data field adding newline
+        for i, field in enumerate(['reference', 'status', 'data_field', 'message', 'created_date', 'start_date', 'end_date', 'created_by', 'id_text']):
+            field_content = self.browser.find_element(By.CSS_SELECTOR, f"[auto-id=queue_element_popup_{field}]").get_attribute('value')
+            if field in ['status', 'id_text', 'created_by']:
+                field_content = self.browser.find_element(By.CSS_SELECTOR, f"[auto-id=queue_element_popup_{field}]").text
+            if not field_content:
+                field_content = "N/A"
             self.assertEqual(table_data[0][i], field_content)
+
+    @ui_util.screenshot_on_error
+    def test_create_new_queue_element(self):
+        """Test creating a new queue element through the popup."""
+        self._create_queue_elements()
+        ui_util.refresh_ui(self.browser)
+        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+
+        # Click "New" button to create a new queue element
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_new_button]").click()
+
+        # Fill in the form and save
+        reference_input = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_reference]")
+        reference_input.send_keys("New Reference")
+
+        status_select = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_status]")
+        status_select.click()
+        status_select.find_element(By.XPATH, "//div[contains(@class,'q-item')]//span[text()='In Progress']").click()
+
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_save_button]").click()
+
+        # Verify the new element appears in the queue popup table
+        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        self.assertTrue(any("New Reference" in row[0] for row in table_data))
+
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
+
+    @ui_util.screenshot_on_error
+    def test_edit_queue_element(self):
+        """Test editing an existing queue element through the popup."""
+        self._create_queue_elements()
+        ui_util.refresh_ui(self.browser)
+        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+
+        # Open the first queue element in the popup
+        ui_util.click_table_row(self.browser, "queue_popup_table", 0)
+
+        # Edit the reference field
+        reference_input = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_reference]")
+        reference_input.clear()
+        reference_input.send_keys("Edited Reference")
+
+        # Change the status
+        status_select = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_status]")
+        status_select.click()
+        status_select.find_element(By.XPATH, "//div[contains(@class,'q-item')]//span[text()='Done']").click()
+
+        # Edit the date field
+        reference_input = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_start_date]")
+        reference_input.clear()
+        reference_input.send_keys("01-01-2000 12:34:56")
+
+        # Save the changes
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_save_button]").click()
+
+        # Verify the changes in the queue popup table
+        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        self.assertTrue(any("Edited Reference" in row[0] for row in table_data))
+        self.assertTrue(any("Done" in row[1] for row in table_data))
+        self.assertTrue(any("01-01-2000 12:34:56" in row[5] for row in table_data))
+
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
+
+    @ui_util.screenshot_on_error
+    def test_delete_queue_element(self):
+        """Test deleting a queue element through the popup."""
+        self._create_queue_elements()
+        ui_util.refresh_ui(self.browser)
+        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+
+        # Get the initial count of queue elements
+        initial_count = len(ui_util.get_table_data(self.browser, "queue_popup_table"))
+
+        # Open the first queue element in the popup
+        ui_util.click_table_row(self.browser, "queue_popup_table", 0)
+
+        # Click the delete button and confirm
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_delete_button]").click()
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button").click()
+
+        # Verify the element was deleted
+        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        self.assertEqual(len(table_data), initial_count - 1)
+
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
     def _create_queue_elements(self):
         """Create some queue elements.
@@ -233,10 +320,10 @@ class TestQueuesTab(unittest.TestCase):
         to_input.send_keys(Keys.CONTROL, "a", Keys.DELETE)
 
         if from_date:
-            from_input.send_keys(from_date.strftime("%d-%m-%Y %H:%M"))
+            from_input.send_keys(from_date.strftime("%d-%m-%Y %H:%M:%S"))
 
         if to_date:
-            to_input.send_keys(to_date.strftime("%d-%m-%Y %H:%M"))
+            to_input.send_keys(to_date.strftime("%d-%m-%Y %H:%M:%S"))
 
     def _set_status_filter(self, status=None):
         """Set status filter in queue popup."""

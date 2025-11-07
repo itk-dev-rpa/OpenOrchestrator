@@ -899,6 +899,62 @@ def get_queue_elements(queue_name: str, reference: str | None = None, status: Qu
         return elements_tuple
 
 
+def get_queue_element(element_id: UUID | str) -> QueueElement:
+    """Get a specific QueueElement from id.
+
+    Args:
+        element_id: ID of QueueElement to get.
+
+    Returns:
+        QueueElement with the requested ID.
+    """
+    if isinstance(element_id, str):
+        element_id = UUID(element_id)
+    with _get_session() as session:
+        query = select(QueueElement).where(QueueElement.id == element_id)
+        return session.scalar(query)
+
+
+def update_queue_element(element_id: str, reference: str | None = None, status: QueueStatus | None = None, data: str | None = None, message: str | None = None,
+                         created_by: str | None = None, created_date: datetime | None = None, start_date: datetime | None = None, end_date: datetime | None = None):
+    """Update fields of specific QueueElement.
+
+    Args:
+        element_id: ID of QueueElement to update.
+        reference: New value for reference. Defaults to None.
+        status: New value for status. Defaults to None.
+        data: New value for data. Defaults to None.
+        message: New value for message. Defaults to None.
+        created_by: New value for created_by. Defaults to None.
+        created_date: New value for created_date. Defaults to None.
+        start_date: New value for start_date. Defaults to None.
+        end_date: New value for end_date. Defaults to None.
+    """
+    with _get_session() as session:
+        query = select(QueueElement).where(QueueElement.id == element_id)
+        q_element: QueueElement = session.scalar(query)
+
+        if q_element:
+            if reference:
+                q_element.reference = reference
+            if status:
+                q_element.status = status
+            if data:
+                q_element.data = data
+            if message:
+                q_element.message = message
+            if created_date:
+                q_element.created_date = created_date
+            if start_date:
+                q_element.start_date = start_date
+            if end_date:
+                q_element.end_date = end_date
+            if created_by:
+                q_element.created_by = created_by
+            session.commit()
+            session.refresh(q_element)
+
+
 def get_queue_count() -> dict[str, dict[QueueStatus, int]]:
     """Count the number of queue elements of each status for every queue.
 

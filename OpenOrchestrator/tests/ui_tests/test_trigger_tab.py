@@ -32,7 +32,7 @@ class TestTriggerTab(unittest.TestCase):
         # Fill form
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_trigger_input]").send_keys("Trigger name")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_name_input]").send_keys("Process name")
-        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_time_input]").send_keys("12-11-2020 12:34")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_time_input]").send_keys("12-11-2020 12:34:56")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_path_input]").send_keys("Process Path")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_git_check]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_branch_input]").send_keys("Branch1")
@@ -51,7 +51,7 @@ class TestTriggerTab(unittest.TestCase):
 
         self.assertEqual(trigger.trigger_name, "Trigger name")
         self.assertEqual(trigger.process_name, "Process name")
-        self.assertEqual(trigger.next_run, datetime.strptime("12-11-2020 12:34", "%d-%m-%Y %H:%M"))
+        self.assertEqual(trigger.next_run, datetime.strptime("12-11-2020 12:34:56", "%d-%m-%Y %H:%M:%S"))
         self.assertEqual(trigger.process_path, "Process Path")
         self.assertEqual(trigger.git_branch, "Branch1")
         self.assertEqual(trigger.is_git_repo, True)

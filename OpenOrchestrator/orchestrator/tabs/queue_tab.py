@@ -62,19 +62,20 @@ class QueueTab():
     def _row_click(self, event):
         row = event.args[1]
         queue_name = row["Queue Name"]
-        QueuePopup(queue_name)
+        QueuePopup(queue_name, self.update)
 
 
 # pylint: disable-next=too-few-public-methods
 class QueuePopup():
     """A popup that displays queue elements in a queue."""
-    def __init__(self, queue_name: str):
+    def __init__(self, queue_name: str, update_callback):
         self.queue_name = queue_name
         self.order_by = "Created Date"
         self.order_descending = False
         self.page = 1
         self.rows_per_page = 25
         self.queue_count = 100
+        self.update_callback = update_callback  # To make sure the main table updates changes to queue elements.
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
@@ -95,10 +96,16 @@ class QueuePopup():
                 self.close_button = ui.button(icon="close", on_click=dialog.close)
             with ui.scroll_area().classes("h-full"):
                 self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count}).classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
-                self.table.on('rowClick', lambda e: QueueElementPopup(e.args[1]))
+                self.table.on('rowClick', lambda e: self._open_queue_element_popup(e.args[1]))
                 self.table.on('request', self._on_table_request)
 
+                with self.table.add_slot("top"):
+                    ui.label(self.queue_name).classes("text-xl")
+                    ui.space()
+                    self.new_button = ui.button(icon='playlist_add', on_click=self._open_create_dialog)
+
         self._update()
+        self.update_callback()
         test_helper.set_automation_ids(self, "queue_popup")
 
     def _dense_table(self, value: bool):
@@ -158,3 +165,17 @@ class QueuePopup():
         """
         self.queue_count = queue_count
         self.table.pagination = {"rowsNumber": self.queue_count, "page": self.page, "rowsPerPage": self.rows_per_page, "sortBy": self.order_by, "descending": self.order_descending}
+
+    def _open_queue_element_popup(self, row_data: ui.row):
+        """Open editable popup for specified row.
+
+        Args:
+            row_data: Row data from row clicked.
+        """
+        queue_element = db_util.get_queue_element(row_data.get("ID"))
+        print("Queue element:", vars(queue_element))
+        print("Queue element __dict__:", queue_element.__dict__)
+        QueueElementPopup(queue_element=queue_element, on_dialog_close_callback=self._update, queue_name=self.queue_name)
+
+    def _open_create_dialog(self):
+        QueueElementPopup(None, on_dialog_close_callback=self._update, queue_name=self.queue_name)

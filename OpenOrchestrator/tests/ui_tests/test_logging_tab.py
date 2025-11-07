@@ -140,10 +140,10 @@ class TestLogsTab(unittest.TestCase):
         to_input.send_keys(Keys.CONTROL, "a", Keys.DELETE)
 
         if from_date:
-            from_input.send_keys(from_date.strftime("%d-%m-%Y %H:%M"))
+            from_input.send_keys(from_date.strftime("%d-%m-%Y %H:%M:%S"))
 
         if to_date:
-            to_input.send_keys(to_date.strftime("%d-%m-%Y %H:%M"))
+            to_input.send_keys(to_date.strftime("%d-%m-%Y %H:%M:%S"))
 
     def _set_process_filter(self, index: int):
         """Select a process in the process filter.
