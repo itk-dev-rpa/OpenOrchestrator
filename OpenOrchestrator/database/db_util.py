@@ -911,13 +911,15 @@ def get_queue_element(element_id: UUID | str) -> QueueElement:
     if isinstance(element_id, str):
         element_id = UUID(element_id)
     with _get_session() as session:
-        query = select(QueueElement).where(QueueElement.id == element_id)
-        return session.scalar(query)
+        q_element = session.get(QueueElement, element_id)
+        if not q_element:
+            raise ValueError("No queue element with the given id was found.")
+        return q_element
 
 
 def update_queue_element(element_id: str, reference: str | None = None, status: QueueStatus | None = None, data: str | None = None, message: str | None = None,
                          created_by: str | None = None, created_date: datetime | None = None, start_date: datetime | None = None, end_date: datetime | None = None):
-    """Update fields of specific QueueElement.
+    """Update fields of specific QueueElement. Fields with value None will not be updated.
 
     Args:
         element_id: ID of QueueElement to update.
