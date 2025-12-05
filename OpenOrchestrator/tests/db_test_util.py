@@ -14,12 +14,12 @@ def establish_clean_database():
     crypto_util.set_key(crypto_util.generate_key().decode())
 
     drop_all_tables()
-    base.Base.metadata.create_all(db_util._connection_engine)  # pylint: disable=protected-access
+    base.Base.metadata.create_all(db_util._CONNECTION_ENGINE)  # pylint: disable=protected-access
 
 
 def drop_all_tables():
     """Drop all ORM tables from the database."""
-    engine = db_util._connection_engine  # pylint: disable=protected-access
+    engine = db_util._CONNECTION_ENGINE  # pylint: disable=protected-access
     if not engine:
         raise RuntimeError("Not connected to a database.")
 
