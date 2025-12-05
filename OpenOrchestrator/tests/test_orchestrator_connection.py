@@ -127,12 +127,12 @@ class TestOrchestratorConnection(unittest.TestCase):
         self.assertNotEqual(element, element2)
 
         # Set status
-        self.connection.set_queue_element_status(str(element.id), QueueStatus.DONE)
+        self.connection.set_queue_element_status(element.id, QueueStatus.DONE)
         elements = self.connection.get_queue_elements("Bulk Queue", status=QueueStatus.DONE)
         self.assertEqual(len(elements), 1)
 
         # Delete element
-        self.connection.delete_queue_element(str(element.id))
+        self.connection.delete_queue_element(element.id)
         elements = self.connection.get_queue_elements("Bulk Queue")
         self.assertEqual(len(elements), 9)
 
