@@ -20,7 +20,7 @@ from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 from OpenOrchestrator.database.schedulers import Scheduler
 from OpenOrchestrator.database.truncated_string import truncate_message
 
-_CONNECTION_ENGINE: Engine | None = None
+_connection_engine: Engine | None = None
 
 
 def connect(conn_string: str) -> bool:
@@ -32,25 +32,25 @@ def connect(conn_string: str) -> bool:
     Returns:
         bool: True if successful.
     """
-    global _CONNECTION_ENGINE  # pylint: disable=global-statement
+    global _connection_engine  # pylint: disable=global-statement
 
     try:
         engine = create_engine(conn_string)
         engine.connect()
-        _CONNECTION_ENGINE = engine
+        _connection_engine = engine
         return True
     except (alc_exc.InterfaceError, alc_exc.ArgumentError, alc_exc.OperationalError):
-        _CONNECTION_ENGINE = None
+        _connection_engine = None
 
     return False
 
 
 def disconnect() -> None:
     """Disconnect from the database."""
-    global _CONNECTION_ENGINE  # pylint: disable=global-statement
-    if _CONNECTION_ENGINE:
-        _CONNECTION_ENGINE.dispose()
-    _CONNECTION_ENGINE = None
+    global _connection_engine  # pylint: disable=global-statement
+    if _connection_engine:
+        _connection_engine.dispose()
+    _connection_engine = None
 
 
 def check_database_revision() -> bool:
@@ -76,10 +76,10 @@ def _get_session() -> Session:
     Returns:
         A database session.
     """
-    if not _CONNECTION_ENGINE:
+    if not _connection_engine:
         raise RuntimeError("Not connected to database.")
 
-    return Session(_CONNECTION_ENGINE)
+    return Session(_connection_engine)
 
 
 def get_conn_string() -> str:
@@ -88,10 +88,10 @@ def get_conn_string() -> str:
     Returns:
         str: The connection string if any.
     """
-    if not _CONNECTION_ENGINE:
+    if not _connection_engine:
         raise RuntimeError("Not connected to database.")
 
-    return str(_CONNECTION_ENGINE.url)
+    return str(_connection_engine.url)
 
 
 def get_trigger(trigger_id: UUID | str) -> Trigger:
