@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 import os
-from sqlalchemy import MetaData
 
 from OpenOrchestrator.database import db_util, base
 
@@ -25,10 +24,6 @@ def drop_all_tables():
         raise RuntimeError("Not connected to a database.")
 
     base.Base.metadata.drop_all(engine)
-
-    metadata = MetaData()
-    metadata.reflect(bind=engine)
-    metadata.drop_all(bind=engine)
 
 
 def reset_triggers():

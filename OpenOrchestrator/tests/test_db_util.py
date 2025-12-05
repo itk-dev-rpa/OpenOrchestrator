@@ -1,6 +1,7 @@
 """This module contains tests of the functionality of db_util."""
 
 import unittest
+import uuid
 from datetime import datetime, timedelta
 import time
 
@@ -24,8 +25,8 @@ class TestDBUtil(unittest.TestCase):
 
         for i in range(3):
             db_util.create_log(f"Test {i}", LogLevel.TRACE, None, "Message")
-            db_util.create_log(f"Test {i}", LogLevel.INFO, None, "Message")
-            db_util.create_log(f"Test {i}", LogLevel.ERROR, None, "Message")
+            db_util.create_log(f"Test {i}", LogLevel.INFO, uuid.uuid4(), "Message")
+            db_util.create_log(f"Test {i}", LogLevel.ERROR, str(uuid.uuid4()), "Message")
 
         # Get all logs
         logs = db_util.get_logs(0, 100)

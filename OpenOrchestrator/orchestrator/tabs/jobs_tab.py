@@ -1,8 +1,8 @@
 """This module is responsible for the layout and functionality of the Schedulers tab
 in Orchestrator."""
+from typing import Callable
 
 from nicegui import ui
-from typing import Callable
 
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator import test_helper
@@ -17,13 +17,14 @@ COLUMNS = [
 ]
 
 
-class JobsTab():
+#pylint: disable-next=too-few-public-methods
+class JobsTab:
     """A class for the jobs tab."""
     def __init__(self, tab_name: str, on_job_click: Callable[[str], None]) -> None:
         with ui.tab_panel(tab_name):
             self.jobs_table = ui.table(title="Jobs", columns=COLUMNS, rows=[], row_key='job_id', pagination=50).classes("w-full")
             self.jobs_table.on("rowClick", self._row_click)
-            self.add_column_colors()
+            self._add_column_colors()
         test_helper.set_automation_ids(self, "jobs_tab")
         self.on_job_click = on_job_click
 
@@ -37,7 +38,7 @@ class JobsTab():
         job_id = row["ID"]
         self.on_job_click(job_id)
 
-    def add_column_colors(self):
+    def _add_column_colors(self):
         """Add custom coloring to the jobs table."""
         # Add coloring to the status column
         color_dict = "{Running: 'blue', Done: 'green', Failed: 'red', Killed: 'grey-9'}"

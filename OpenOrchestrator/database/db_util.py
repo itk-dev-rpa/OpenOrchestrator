@@ -369,22 +369,17 @@ def get_job(job_id: UUID | str) -> Job:
         return job
 
 
-def get_unique_log_process_names(job_id: UUID | str | None = None) -> tuple[str, ...]:
+def get_unique_log_process_names() -> tuple[str, ...]:
     """Get a list of unique process names in the logs database.
 
     Returns:
         A list of unique process names.
     """
-    if isinstance(job_id, str):
-        job_id = UUID(job_id)
     query = (
         select(Log.process_name)
         .distinct()
         .order_by(Log.process_name)
     )
-
-    if job_id:
-        query.where(job_id=job_id)
 
     with _get_session() as session:
         result = session.scalars(query).all()

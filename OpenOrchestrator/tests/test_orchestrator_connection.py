@@ -2,7 +2,7 @@
 
 import unittest
 from datetime import datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 import os
 
 from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConnection
@@ -29,7 +29,7 @@ class TestOrchestratorConnection(unittest.TestCase):
                                                        is_blocking=False,
                                                        priority=0
                                                        )
-        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args", cls.trigger_id, None)
+        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args", str(cls.trigger_id), str(uuid4()))
 
     def test_trigger_pause(self):
         """Test pausing triggers."""
@@ -127,12 +127,12 @@ class TestOrchestratorConnection(unittest.TestCase):
         self.assertNotEqual(element, element2)
 
         # Set status
-        self.connection.set_queue_element_status(element.id, QueueStatus.DONE)
+        self.connection.set_queue_element_status(str(element.id), QueueStatus.DONE)
         elements = self.connection.get_queue_elements("Bulk Queue", status=QueueStatus.DONE)
         self.assertEqual(len(elements), 1)
 
         # Delete element
-        self.connection.delete_queue_element(element.id)
+        self.connection.delete_queue_element(str(element.id))
         elements = self.connection.get_queue_elements("Bulk Queue")
         self.assertEqual(len(elements), 9)
 
