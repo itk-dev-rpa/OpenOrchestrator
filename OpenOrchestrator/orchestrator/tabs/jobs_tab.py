@@ -17,7 +17,7 @@ COLUMNS = [
 ]
 
 
-#pylint: disable-next=too-few-public-methods
+# pylint: disable-next=too-few-public-methods
 class JobsTab:
     """A class for the jobs tab."""
     def __init__(self, tab_name: str, on_job_click: Callable[[str], None]) -> None:
