@@ -58,7 +58,7 @@ class TriggerTab():
     def add_column_colors(self):
         """Add custom coloring to the trigger table."""
         # Add coloring to the status column
-        color_dict = "{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red', Killing: 'orange', Killed: 'red'}"
+        color_dict = "{Running: 'green', Pausing: 'orange', Paused: 'orange', Failed: 'red', Killing: 'orange', Killed: 'grey-9'}"
 
         self.trigger_table.add_slot(
             "body-cell-Status",

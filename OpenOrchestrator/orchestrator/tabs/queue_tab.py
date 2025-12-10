@@ -32,7 +32,7 @@ ELEMENT_COLUMNS = [
 
 
 # pylint: disable-next=too-few-public-methods
-class QueueTab():
+class QueueTab:
     """The 'Queues' tab object. It contains tables and buttons for dealing with queues."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
@@ -65,8 +65,8 @@ class QueueTab():
         QueuePopup(queue_name, self.update)
 
 
-# pylint: disable-next=too-few-public-methods
-class QueuePopup():
+# pylint: disable-next=too-few-public-methods, too-many-instance-attributes
+class QueuePopup:
     """A popup that displays queue elements in a queue."""
     def __init__(self, queue_name: str, update_callback):
         self.queue_name = queue_name

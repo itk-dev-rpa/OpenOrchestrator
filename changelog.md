@@ -17,16 +17,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added overview of queue element.
 - Added option to create new queue element.
 - Added editing of queue elements.
+- Added option to delete queue element.- Added search and status filter to queue element list.
+- Added overview of queue element.
+- Added option to create new queue element.
+- Added editing of queue elements.
 - Added option to delete queue element.
+- Added Job objects, job tabs and linked logs to jobs.
 
 ### Changed
 
 - Removed Orchestrator exit on connection loss.
 - Queue element list pagination moved to server side.
+- Reordered columns in Orchestrator app.
+- Reordered columns in logs.
 
 ### Dev
 
 - Added automated tests for Alembic.
+- Automated tests of the Orchestrator ui.
+
+### Fixed
+
+- Removed warnings from tests.
 
 ## [2.0.1] - 2025-11-06
 

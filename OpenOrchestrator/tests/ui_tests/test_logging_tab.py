@@ -35,19 +35,19 @@ class TestLogsTab(unittest.TestCase):
         # Check result
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
         self.assertRegex(table_data[0][0], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")
-        self.assertEqual(table_data[0][1], "Test Error")
-        self.assertEqual(table_data[0][2], LogLevel.ERROR.value)
-        self.assertEqual(table_data[0][3], "Error Message")
+        self.assertEqual(table_data[0][1], LogLevel.ERROR.value)
+        self.assertEqual(table_data[0][3], "Test Error")
+        self.assertEqual(table_data[0][4], "Error Message")
 
         self.assertRegex(table_data[1][0], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")
-        self.assertEqual(table_data[1][1], "Test Info")
-        self.assertEqual(table_data[1][2], LogLevel.INFO.value)
-        self.assertEqual(table_data[1][3], "Info Message")
+        self.assertEqual(table_data[1][1], LogLevel.INFO.value)
+        self.assertEqual(table_data[1][3], "Test Info")
+        self.assertEqual(table_data[1][4], "Info Message")
 
         self.assertRegex(table_data[2][0], r"\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}")
-        self.assertEqual(table_data[2][1], "Test Trace")
-        self.assertEqual(table_data[2][2], LogLevel.TRACE.value)
-        self.assertEqual(table_data[2][3], "Trace Message")
+        self.assertEqual(table_data[2][1], LogLevel.TRACE.value)
+        self.assertEqual(table_data[2][3], "Test Trace")
+        self.assertEqual(table_data[2][4], "Trace Message")
 
     @ui_util.screenshot_on_error
     def test_date_filter(self):
@@ -97,15 +97,15 @@ class TestLogsTab(unittest.TestCase):
 
         self._set_process_filter(2)
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
-        self.assertEqual(table_data[0][1], "Test Error")
+        self.assertEqual(table_data[0][3], "Test Error")
 
         self._set_process_filter(3)
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
-        self.assertEqual(table_data[0][1], "Test Info")
+        self.assertEqual(table_data[0][3], "Test Info")
 
         self._set_process_filter(4)
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
-        self.assertEqual(table_data[0][1], "Test Trace")
+        self.assertEqual(table_data[0][3], "Test Trace")
 
         self._set_process_filter(1)
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
@@ -118,15 +118,15 @@ class TestLogsTab(unittest.TestCase):
 
         self._set_level_filter(2)
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
-        self.assertEqual(table_data[0][1], "Test Trace")
+        self.assertEqual(table_data[0][3], "Test Trace")
 
         self._set_level_filter(3)
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
-        self.assertEqual(table_data[0][1], "Test Info")
+        self.assertEqual(table_data[0][3], "Test Info")
 
         self._set_level_filter(4)
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
-        self.assertEqual(table_data[0][1], "Test Error")
+        self.assertEqual(table_data[0][3], "Test Error")
 
         self._set_level_filter(1)
         table_data = ui_util.get_table_data(self.browser, "logs_tab_logs_table")
@@ -167,11 +167,11 @@ class TestLogsTab(unittest.TestCase):
 
     def _create_logs(self):
         """Create some logs for testing."""
-        db_util.create_log("Test Trace", LogLevel.TRACE, "Trace Message")
+        db_util.create_log("Test Trace", LogLevel.TRACE, None, "Trace Message")
         time.sleep(0.1)
-        db_util.create_log("Test Info", LogLevel.INFO, "Info Message")
+        db_util.create_log("Test Info", LogLevel.INFO, None, "Info Message")
         time.sleep(0.1)
-        db_util.create_log("Test Error", LogLevel.ERROR, "Error Message")
+        db_util.create_log("Test Error", LogLevel.ERROR, None, "Error Message")
 
         ui_util.refresh_ui(self.browser)
 

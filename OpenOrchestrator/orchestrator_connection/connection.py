@@ -20,7 +20,7 @@ class OrchestratorConnection:
     to instead of initializing the object manually.
     """
 
-    def __init__(self, process_name: str, connection_string: str, crypto_key: str, process_arguments: str, trigger_id: str):
+    def __init__(self, process_name: str, connection_string: str, crypto_key: str, process_arguments: str, trigger_id: str, job_id: str):
         """
         Args:
             process_name: A human friendly tag to identify the process.
@@ -28,10 +28,12 @@ class OrchestratorConnection:
             crypto_key: Secret key for decrypting database content.
             process_arguments (optional): Arguments for the controlling how the process should run.
             trigger_id: ID of trigger used to start this process.
+            job_id: ID of job created when starting this process.
         """
         self.process_name = process_name
         self.process_arguments = process_arguments
         self.trigger_id = trigger_id
+        self.job_id = job_id
         crypto_util.set_key(crypto_key)
         db_util.connect(connection_string)
 
@@ -44,7 +46,7 @@ class OrchestratorConnection:
         Args:
             message: Message to be logged.
         """
-        db_util.create_log(self.process_name, LogLevel.TRACE, message)
+        db_util.create_log(self.process_name, LogLevel.TRACE, self.job_id, message)
 
     def log_info(self, message: str) -> None:
         """Create a message in the Orchestrator log with a level of 'info'.
@@ -52,7 +54,7 @@ class OrchestratorConnection:
         Args:
             message: Message to be logged.
         """
-        db_util.create_log(self.process_name, LogLevel.INFO, message)
+        db_util.create_log(self.process_name, LogLevel.INFO, self.job_id, message)
 
     def log_error(self, message: str) -> None:
         """Create a message in the Orchestrator log with a level of 'error'.
@@ -60,7 +62,7 @@ class OrchestratorConnection:
         Args:
             message: Message to be logged.
         """
-        db_util.create_log(self.process_name, LogLevel.ERROR, message)
+        db_util.create_log(self.process_name, LogLevel.ERROR, self.job_id, message)
 
     def get_constant(self, constant_name: str) -> Constant:
         """Get a constant from the database.
@@ -213,4 +215,5 @@ class OrchestratorConnection:
         crypto_key = sys.argv[3]
         process_arguments = sys.argv[4]
         trigger_id = sys.argv[5]
-        return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments, trigger_id)
+        job_id = sys.argv[6]
+        return OrchestratorConnection(process_name, connection_string, crypto_key, process_arguments, trigger_id, job_id)
