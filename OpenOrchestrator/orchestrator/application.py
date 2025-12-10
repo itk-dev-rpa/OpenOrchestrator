@@ -45,7 +45,7 @@ class Application():
 
         self._define_on_close()
 
-        app.on_connect(self.update_loop)
+        app.on_startup(self.update_loop)
         app.on_exception(lambda exc: ui.notify(exc, type='negative'))
         ui.run(title="Orchestrator", favicon='🤖', native=False, port=port or get_free_port(), reload=False, show=show)
 
@@ -65,9 +65,9 @@ class Application():
             case 'Constants':
                 self.c_tab.update()
 
-    async def update_loop(self):
-        """Update the selected tab on a timer but only if the page is in focus."""
-        ui.timer(10, self.update_loop, once=True)
+    def update_loop(self):
+        """Update the selected tab on a timer."""
+        ui.timer(10, self.update_tab)
 
     def _define_on_close(self) -> None:
         """Tell the browser to ask for confirmation before leaving the page."""

@@ -7,27 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added option to define Git branch/tag when creating a trigger.
+- Added the possibility to kill a running robot from Orchestrator.
+- Added search and status filter to queue element list.
+- Added overview of queue element.
+- Added search and status filter to queue element list.
+- Added overview of queue element.
+- Added option to create new queue element.
+- Added editing of queue elements.
+- Added option to delete queue element.- Added search and status filter to queue element list.
+- Added overview of queue element.
+- Added option to create new queue element.
+- Added editing of queue elements.
+- Added option to delete queue element.
+- Added Job objects, job tabs and linked logs to jobs.
+
+### Changed
+
+- Removed Orchestrator exit on connection loss.
+- Queue element list pagination moved to server side.
+- Reordered columns in Orchestrator app.
+- Reordered columns in logs.
+
 ### Dev
 
 - Added automated tests for Alembic.
 - Automated tests of the Orchestrator ui.
 
+### Fixed
+
+- Removed warnings from tests.
+
+## [2.0.1] - 2025-11-06
+
+### Fixed
+
+- Alembic will now use the dbo schema, even when upgrading a remote database.
+
+## [2.0.0] - 2025-11-06
+
 ### Added
 
-- Added option to define Git branch/tag when creating a trigger.
-- Added the possibility to kill a running robot from Orchestrator.
 - Added option for robots to check if they are pausing.
 - Added argument to manually set Orchestrator port.
 - Added argument to prevent Orchestrator from opening in the browser automatically.
 - Commandline command to upgrade a database to the newest schema.
 - Added 'Scheduler' tab with overview of running schedulers.
 - Added priority and scheduler whitelist to triggers.
-- Added search and status filter to queue element list.
-- Added overview of queue element.
-- Added Job objects, job tabs and linked logs to jobs.
 
 ### Changed
 
+- Server no longer stops after disconnects.
+- Ui no longer checks if the page is in focus before updating.
 - Changed cli to use argparser.
 - Arguments to start Scheduler and Orchestrator are now subcommands (no '-' before 'o' and 's').
 - Trigger status 'Paused' is now colored orange in the trigger tab.
@@ -35,15 +68,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scheduler no longer auto-connects.
 - Removed 'Initialize database' button from Orchestrator. Use upgrade command instead.
 - Updated all dependenices to newest version.
-- Removed Orchestrator exit on connection loss.
-- Queue element list pagination moved to server side.
-- Reordered columns in Orchestrator app.
-- Reordered columns in logs.
 
 ### Fixed
 
 - Raise error if git is not installed when trying to clone a git repo.
-- Removed warnings from tests.
+
+### Dev
+
+- Automated tests of the Orchestrator ui.
 
 ## [1.3.1] - 2025-03-12
 
@@ -143,7 +175,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/1.3.1...HEAD
+[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/2.0.1...HEAD
+[2.0.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/2.0.1
+[2.0.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/2.0.0
 [1.3.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.3.1
 [1.3.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.3.0
 [1.2.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.2.0
