@@ -62,6 +62,8 @@ def open_orchestrator() -> webdriver.Chrome:
     conn_input.send_keys(Keys.CONTROL, "a", Keys.DELETE)
     conn_input.send_keys(conn_string)
 
+    time.sleep(1)
+
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=settings_tab_key_button]").click()
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=connection_frame_conn_button]").click()
 
