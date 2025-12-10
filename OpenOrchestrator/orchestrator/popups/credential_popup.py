@@ -41,7 +41,7 @@ class CredentialPopup():
                 self.cancel_button = ui.button("Cancel", on_click=self.dialog.close)
 
                 if credential:
-                    self.delete_button = ui.button("Delete", color='red', on_click=self._delete_credential)
+                    self.delete_button = ui.button("Delete", color='negative', on_click=self._delete_credential)
 
         self._define_validation()
         self._pre_populate()
@@ -96,7 +96,7 @@ class CredentialPopup():
         """Delete the selected credential."""
         if not self.credential:
             return
-        if await question_popup(f"Delete credential '{self.credential.name}'?", "Delete", "Cancel", color1='red'):
+        if await question_popup(f"Delete credential '{self.credential.name}'?", "Delete", "Cancel", color1='negative'):
             db_util.delete_credential(self.credential.name)
             self.dialog.close()
             self.constant_tab.update()

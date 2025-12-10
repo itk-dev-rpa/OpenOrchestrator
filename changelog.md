@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the possibility to kill a running robot from Orchestrator.
 - Added search and status filter to queue element list.
 - Added overview of queue element.
+- Added search and status filter to queue element list.
+- Added overview of queue element.
+- Added option to create new queue element.
+- Added editing of queue elements.
+- Added option to delete queue element.
 
 ### Changed
 
