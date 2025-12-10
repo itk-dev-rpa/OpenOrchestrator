@@ -3,8 +3,8 @@
 from datetime import datetime, timedelta
 import os
 
+from sqlalchemy import text
 from OpenOrchestrator.database import db_util, base
-
 from OpenOrchestrator.common import crypto_util
 
 
@@ -24,6 +24,11 @@ def drop_all_tables():
         raise RuntimeError("Not connected to a database.")
 
     base.Base.metadata.drop_all(engine)
+
+    # alembic_version is not part of the ORM, drop it seperately.
+    with engine.connect() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        conn.commit()
 
 
 def reset_triggers():
