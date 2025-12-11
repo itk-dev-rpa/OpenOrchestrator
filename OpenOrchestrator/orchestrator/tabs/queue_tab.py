@@ -105,7 +105,7 @@ class QueuePopup:
                     self.new_button = ui.button(icon='playlist_add', on_click=self._open_create_dialog)
 
         self._update()
-        self.update_callback()
+        self.update_callback()  # TODO: Should this be in the update function?
         test_helper.set_automation_ids(self, "queue_popup")
 
     def _dense_table(self, value: bool):

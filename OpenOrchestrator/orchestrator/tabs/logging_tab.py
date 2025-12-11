@@ -25,6 +25,7 @@ class LoggingTab():
     """The 'Logs' tab object."""
     def __init__(self, tab_name: str) -> None:
         self.current_job_id: str | None = None
+        # TODO: Serverside pagination like queue tab maybe?
         with ui.tab_panel(tab_name):
             with ui.row().classes("w-full justify-between"):
                 with ui.row():

@@ -213,6 +213,11 @@ def kill_job(job: SchedulerJob) -> None:
     Args:
         job: The job whose process to kill.
     """
+    # Kill process tree to ensure child processes (like browsers or subprocesses) are also killed
+    # WARNING: This will cause an error on non-Windows systems
+    subprocess.run(['taskkill', '/F', '/T', '/PID', str(job.process.pid)],
+                   check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     job.process.kill()
     db_util.set_trigger_status(job.trigger.id, TriggerStatus.KILLED)
     db_util.set_job_status(job.job.id, JobStatus.KILLED)
@@ -261,7 +266,7 @@ def run_process(trigger: Trigger) -> SchedulerJob | None:
         conn_string = db_util.get_conn_string()
         crypto_key = crypto_util.get_key()
 
-        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, str(trigger.id), job.id]
+        command_args = ['python', process_path, trigger.process_name, conn_string, crypto_key, trigger.process_args, str(trigger.id), str(job.id)]
 
         process = subprocess.Popen(command_args, stderr=subprocess.PIPE, text=True)  # pylint: disable=consider-using-with
 
@@ -275,7 +280,7 @@ def run_process(trigger: Trigger) -> SchedulerJob | None:
         db_util.set_trigger_status(trigger.id, TriggerStatus.FAILED)
         error_msg = f"Scheduler couldn't launch the process:\n{exc.__class__.__name__}:\n{exc}"
         db_util.create_log(trigger.process_name, LogLevel.ERROR, None, error_msg)
-        db_util.set_job_status(job, JobStatus.FAILED)
+        db_util.set_job_status(job.id, JobStatus.FAILED)
         print(error_msg)
 
     return None
