@@ -20,12 +20,17 @@ COLUMNS = [
 ]
 
 
-# pylint: disable-next=too-few-public-methods
+# pylint: disable-next=too-few-public-methods, too-many-instance-attributes
 class LoggingTab():
     """The 'Logs' tab object."""
     def __init__(self, tab_name: str) -> None:
         self.current_job_id: str | None = None
-        # TODO: Serverside pagination like queue tab maybe?
+        self.order_by = "Log Time"
+        self.order_descending = True
+        self.page = 1
+        self.rows_per_page = 25
+        self.log_count = 0
+
         with ui.tab_panel(tab_name):
             with ui.row().classes("w-full justify-between"):
                 with ui.row():
@@ -33,15 +38,19 @@ class LoggingTab():
                     self.to_input = DatetimeInput("To Date", on_change=self.update, allow_empty=True)
                     self.level_input = ui.select(["All", "Trace", "Info", "Error"], value="All", label="Level", on_change=self.update).classes("w-48")
                     self.process_input = ui.select(["All"], label="Process Name", value="All", on_change=self.update).classes("w-48")
-                    self.limit_input = ui.select([100, 200, 500, 1000], value=100, label="Limit", on_change=self.update).classes("w-24")
-                with ui.column().classes("items-end") as self.job_filter_container:
-                    self.job_filter_label = ui.label("")
-                    self.all_jobs_button = ui.button("Show all jobs", on_click=self._show_all_jobs)
+                    with ui.column().classes("items-end") as self.job_filter_container:
+                        self.job_filter_label = ui.label("")
+                        self.all_jobs_button = ui.button("Show all jobs", on_click=self._show_all_jobs)
 
-            self.logs_table = ui.table(title="Logs", columns=COLUMNS, rows=[], row_key='ID', pagination=50).classes("w-full")
-            self.logs_table.on("rowClick", self._row_click)
+                self.logs_table = ui.table(title="Logs", columns=COLUMNS, rows=[], row_key='ID',
+                                           pagination={'rowsPerPage': self.rows_per_page,
+                                                       'rowsNumber': self.log_count})
+                self.logs_table.classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
+                self.logs_table.props(":rows-per-page-options='[10, 25, 50, 100, 1000]' rows-per-page-label='Logs per page:'")
+                self.logs_table.on("rowClick", self._row_click)
+                self.logs_table.on('request', self._on_table_request)
 
-        test_helper.set_automation_ids(self, "logs_tab")
+            test_helper.set_automation_ids(self, "logs_tab")
 
     def update(self):
         """Update the logs table and Process input list"""
@@ -63,10 +72,40 @@ class LoggingTab():
         to_date = self.to_input.get_datetime()
         level = LogLevel(self.level_input.value) if self.level_input.value != "All" else None
         process_name = self.process_input.value if self.process_input.value != 'All' else None
-        limit = self.limit_input.value
 
-        logs = db_util.get_logs(0, limit=limit, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name, job_id=self.current_job_id)
-        self.logs_table.rows = [log.to_row_dict() for log in logs]
+        offset = (self.page - 1) * self.rows_per_page
+        order_by = str(self.order_by).lower().replace(" ", "_")
+
+        logs, count = db_util.get_logs(offset, limit=self.rows_per_page, from_date=from_date, to_date=to_date, log_level=level, process_name=process_name, job_id=self.current_job_id, order_by=order_by, order_desc=self.order_descending, include_count=True)
+        self._update_pagination(count)
+        self.logs_table.update_rows([log.to_row_dict() for log in logs])
+
+    def _on_table_request(self, e):
+        """Called when updating table pagination and sorting, to handle these manually and allow for server side pagination.
+
+        Args:
+            e: The event triggering the request.
+        """
+        pagination = e.args['pagination']
+        self.page = pagination.get('page')
+        self.rows_per_page = pagination.get('rowsPerPage')
+        self.order_by = pagination.get('sortBy')
+        self.order_descending = pagination.get('descending', False)
+        self._update_table()
+
+    def _update_pagination(self, log_count):
+        """Update pagination element.
+
+        Args:
+            log_count: The element count of the current filtered table.
+        """
+        self.log_count = log_count
+        self.logs_table.pagination = {"rowsNumber": self.log_count,
+                                      "page": self.page,
+                                      "rowsPerPage": self.rows_per_page,
+                                      "sortBy": self.order_by,
+                                      "descending": self.order_descending}
+        self.logs_table.update()
 
     def _update_process_input(self):
         """Update the process input with names from the database."""
