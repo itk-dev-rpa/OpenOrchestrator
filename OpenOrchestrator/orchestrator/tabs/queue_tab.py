@@ -77,7 +77,7 @@ class QueuePopup:
         self.queue_count = 100
         self.update_callback = update_callback  # To make sure the main table updates changes to queue elements.
 
-        with (ui.dialog(value=True).props('full-width full-height') as dialog, ui.card()):
+        with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
                 self.search_input = ui.input(label='Search', placeholder="Ref, message or data", on_change=self._update).style('margin-left: 1rem')
                 self.status_select = ui.select(
@@ -95,12 +95,7 @@ class QueuePopup:
                 ui.button(icon='refresh', on_click=self._update)
                 self.close_button = ui.button(icon="close", on_click=lambda: (dialog.close(), self.update_callback()))
             with ui.scroll_area().classes("h-full"):
-                self.table = ui.table(columns=ELEMENT_COLUMNS,
-                                      rows=[], row_key='ID',
-                                      title=queue_name,
-                                      pagination={
-                                          'rowsPerPage': self.rows_per_page,
-                                          'rowsNumber': self.queue_count})
+                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count})
                 self.table.classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
                 self.table.on('rowClick', lambda e: self._open_queue_element_popup(e.args[1]))
                 self.table.props(
@@ -171,11 +166,7 @@ class QueuePopup:
             queue_count: The element count of the current filtered table.
         """
         self.queue_count = queue_count
-        self.table.pagination = {"rowsNumber": self.queue_count,
-                                 "page": self.page,
-                                 "rowsPerPage": self.rows_per_page,
-                                 "sortBy": self.order_by,
-                                 "descending": self.order_descending}
+        self.table.pagination = {"rowsNumber": self.queue_count, "page": self.page, "rowsPerPage": self.rows_per_page, "sortBy": self.order_by, "descending": self.order_descending}
 
     def _open_queue_element_popup(self, row_data: ui.row):
         """Open editable popup for specified row.
