@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Queue element list pagination moved to server side.
 - Reordered columns in Orchestrator app.
 - Reordered columns in logs.
+- Pagination of logs is now handled server side.
 
 ### Dev
 
