@@ -95,8 +95,11 @@ class QueuePopup:
                 ui.button(icon='refresh', on_click=self._update)
                 self.close_button = ui.button(icon="close", on_click=lambda: (dialog.close(), self.update_callback()))
             with ui.scroll_area().classes("h-full"):
-                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count}).classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
+                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count})
+                self.table.classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
                 self.table.on('rowClick', lambda e: self._open_queue_element_popup(e.args[1]))
+                self.table.props(
+                    ":rows-per-page-options='[10, 25, 50, 100, 1000]' rows-per-page-label='Queue elements per page:'")
                 self.table.on('request', self._on_table_request)
 
                 with self.table.add_slot("top"):
