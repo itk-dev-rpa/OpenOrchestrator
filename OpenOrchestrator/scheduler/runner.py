@@ -90,7 +90,7 @@ def run_trigger(trigger: Trigger) -> SchedulerJob | None:
     return None
 
 
-def clone_git_repo(repo_url: str, branch: str) -> str:
+def clone_git_repo(repo_url: str, branch: str | None) -> str:
     """Clone the git repo at the path to %USER%\\desktop\\Scheduler_Repos\\%UUID%.
 
     Args:
@@ -110,7 +110,7 @@ def clone_git_repo(repo_url: str, branch: str) -> str:
         raise RuntimeError('git is not installed or not found in the system PATH.')
 
     args = ['git', 'clone']
-    if branch.strip():
+    if branch and branch.strip():
         args.extend(["-b", branch.strip()])
     args.extend([repo_url, repo_path])
 
