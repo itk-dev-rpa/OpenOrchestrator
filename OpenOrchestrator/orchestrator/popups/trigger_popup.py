@@ -8,6 +8,7 @@ from nicegui import ui
 from cronsim import CronSim, CronSimError
 
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
+from OpenOrchestrator.orchestrator.input_chips_blur import InputChipsBlur
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, TriggerStatus, TriggerType, ScheduledTrigger, SingleTrigger, QueueTrigger
 from OpenOrchestrator.orchestrator.popups import generic_popups
@@ -53,7 +54,7 @@ class TriggerPopup():
             self.args_input = ui.input("Process Arguments").classes("w-full")
             self.blocking_check = ui.checkbox(text="Is process blocking?", value=True)
             self.priority_input = ui.number("Priority", value=0, precision=0, format="%.0f")
-            self.whitelist_input = ui.input_chips("Scheduler whitelist").classes("w-full")
+            self.whitelist_input = InputChipsBlur("Scheduler whitelist").classes("w-full")
 
             if trigger:
                 with ui.row():
