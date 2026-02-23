@@ -1,9 +1,8 @@
 """This module handles the connection to the database in OpenOrchestrator."""
+# pylint: disable=too-many-lines
 
 from datetime import datetime
-from typing import TypeVar, ParamSpec
 from uuid import UUID
-import json
 
 from cronsim import CronSim
 from sqlalchemy import Engine, create_engine, select, insert, desc, text
@@ -14,15 +13,12 @@ from sqlalchemy.orm import Session, selectin_polymorphic
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database.logs import Log, LogLevel
+from OpenOrchestrator.database.jobs import Job, JobStatus
 from OpenOrchestrator.database.constants import Constant, Credential
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 from OpenOrchestrator.database.schedulers import Scheduler
 from OpenOrchestrator.database.truncated_string import truncate_message
-
-# Type hint helpers for decorators
-T = TypeVar("T")
-P = ParamSpec("P")
 
 _connection_engine: Engine | None = None
 
@@ -67,7 +63,7 @@ def check_database_revision() -> bool:
     except alc_exc.ProgrammingError:
         return False
 
-    return version == "90d46abd44a3"
+    return version == "1c87ed320c78"
 
 
 def _get_session() -> Session:
@@ -204,9 +200,13 @@ def delete_trigger(trigger_id: UUID | str) -> None:
         session.commit()
 
 
+# pylint: disable=too-many-positional-arguments
 def get_logs(offset: int, limit: int,
              from_date: datetime | None = None, to_date: datetime | None = None,
-             process_name: str | None = None, log_level: LogLevel | None = None) -> tuple[Log, ...]:
+             process_name: str | None = None, log_level: LogLevel | None = None,
+             job_id: str | UUID | None = None,
+             order_by: str | None = None, order_desc: bool = True,
+             include_count: bool = False) -> tuple[Log, ...] | tuple[tuple[Log, ...], int]:
     """Get the logs from the database using filters and pagination.
 
     Args:
@@ -216,35 +216,66 @@ def get_logs(offset: int, limit: int,
         to_date: The datetime where the log time must be at or earlier. If none the filter is disabled.
         process_name: The process name to filter on. If none the filter is disabled.
         log_level: The log level to filter on. If none the filter is disabled.
+        job_id: The job ID to filter on. If none the filter is disabled.
+        order_by: Column to order the result by. If None, will use log_time.
+        order_desc: Should result be in descending order. Defaults to True.
+        include_count: Return a tuple with results as well as the total count of logs without limit applied.
 
     Returns:
         A list of logs matching the given filters.
     """
-    query = (
-            select(Log)
-            .order_by(desc(Log.log_time))
-            .offset(offset)
-            .limit(limit)
-        )
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
 
-    if from_date:
-        query = query.where(Log.log_time >= from_date)
-
-    if to_date:
-        query = query.where(Log.log_time <= to_date)
-
-    if process_name:
-        query = query.where(Log.process_name == process_name)
-
-    if log_level:
-        query = query.where(Log.log_level == log_level)
+    def _apply_filters(_query):
+        if from_date:
+            _query = _query.where(Log.log_time >= from_date)
+        if to_date:
+            _query = _query.where(Log.log_time <= to_date)
+        if process_name:
+            _query = _query.where(Log.process_name == process_name)
+        if log_level:
+            _query = _query.where(Log.log_level == log_level)
+        if job_id:
+            _query = _query.where(Log.job_id == job_id)
+        return _query
 
     with _get_session() as session:
+        query = _apply_filters(select(Log))
+
+        # Sort mapping
+        if order_by:
+            key = order_by.lower().replace(" ", "_")
+            if key == 'level':
+                sort_col = Log.log_level
+            elif key == 'message':
+                sort_col = Log.log_message
+            elif key in ('short_job_id', 'job_id', 'full_job_id'):
+                sort_col = Log.job_id
+            elif key == 'process_name':
+                sort_col = Log.process_name
+            else:
+                sort_col = Log.log_time
+        else:
+            sort_col = Log.log_time
+
+        query = query.order_by(desc(sort_col) if order_desc else sort_col)
+        query = query.offset(offset).select_from(Log)
+        if limit > 0:
+            query = query.limit(limit)
+
         result = session.scalars(query).all()
-        return tuple(result)
+        logs_tuple = tuple(result)
+
+        if include_count:
+            count_query = _apply_filters(select(alc_func.count()).select_from(Log))  # pylint: disable=not-callable
+            total_count = session.scalar(count_query)
+            return logs_tuple, total_count
+
+        return logs_tuple
 
 
-def create_log(process_name: str, level: LogLevel, message: str) -> None:
+def create_log(process_name: str, level: LogLevel, job_id: str | UUID | None, message: str) -> None:
     """Create a log in the logs table in the database.
 
     Args:
@@ -252,14 +283,118 @@ def create_log(process_name: str, level: LogLevel, message: str) -> None:
         level: The level of the log.
         message: The message of the log.
     """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
+
     with _get_session() as session:
         log = Log(
             log_level = level,
             process_name = process_name,
+            job_id = job_id,
             log_message = truncate_message(message)
         )
         session.add(log)
         session.commit()
+
+
+def get_jobs(status: JobStatus | None = None, process_name: str | None = None) -> tuple[Job]:
+    """Get jobs matching the requested status or process name.
+
+    Args:
+        status: Status of jobs, RUNNING, DONE, FAILED or KILLED. Defaults to None.
+        process_name: Process name matching the jobs. Defaults to None.
+
+    Returns:
+        Tuple containing jobs matching the filters.
+    """
+    query = (
+            select(Job)
+            .order_by(desc(Job.start_time))
+        )
+
+    if status:
+        query = query.where(Job.status == status)
+
+    if process_name:
+        query = query.where(Job.process_name == process_name)
+
+    with _get_session() as session:
+        result = session.scalars(query).all()
+        return tuple(result)
+
+
+def start_job(process_name: str, scheduler_name: str) -> Job:
+    """Create a new job, using count of previous jobs and process name as ID.
+
+    Args:
+        process_name: Process name starting this job.
+
+    Returns:
+        Job id of newly created job.
+    """
+    with _get_session() as session:
+        job = Job(
+            process_name=process_name,
+            scheduler_name=scheduler_name,
+            status=JobStatus.RUNNING
+        )
+        session.add(job)
+        session.commit()
+        session.refresh(job)
+        session.expunge(job)
+        return job
+
+
+def set_job_status(job_id: UUID | str, status: JobStatus):
+    """Set status of job and update end_time, based on status.
+
+    Args:
+        job_id: Job ID to set status on.
+        status: Status to set. Either RUNNING, DONE, FAILED or KILLED.
+        Will set end_time to null if RUNNING or current time if not.
+
+    Raises:
+        ValueError: If no job is found, will raise error.
+    """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
+
+    with _get_session() as session:
+        job = session.get(Job, job_id)
+
+        if not job:
+            raise ValueError("No job with the given id was found.")
+
+        job.status = status
+        if status == JobStatus.RUNNING:
+            job.end_time = None
+        else:
+            job.end_time = datetime.now()
+        session.commit()
+
+
+def get_job(job_id: UUID | str) -> Job:
+    """Get a job by ID.
+
+    Args:
+        job_id: The ID of the job to get.
+
+    Returns:
+        The Job object.
+
+    Raises:
+        ValueError: If no job is found.
+    """
+    if isinstance(job_id, str):
+        job_id = UUID(job_id)
+    with _get_session() as session:
+        job = session.get(Job, job_id)
+
+        if not job:
+            raise ValueError("No job with the given id was found.")
+
+        session.expunge(job)
+        return job
 
 
 def get_unique_log_process_names() -> tuple[str, ...]:
@@ -268,7 +403,6 @@ def get_unique_log_process_names() -> tuple[str, ...]:
     Returns:
         A list of unique process names.
     """
-
     query = (
         select(Log.process_name)
         .distinct()
@@ -283,7 +417,7 @@ def get_unique_log_process_names() -> tuple[str, ...]:
 # pylint: disable=too-many-positional-arguments
 def create_single_trigger(trigger_name: str, process_name: str, next_run: datetime,
                           process_path: str, process_args: str, is_git_repo: bool, is_blocking: bool,
-                          priority: int, scheduler_whitelist: list[str]) -> str:
+                          priority: int, scheduler_whitelist: list[str] | None = None, git_branch: str | None = None) -> UUID:
     """Create a new single trigger in the database.
 
     Args:
@@ -295,7 +429,8 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
         is_git_repo: If the process_path points to a git repo.
         is_blocking: If the process should be blocking.
         priority: The integer priority of the trigger.
-        cheduler_whitelist: A list of names of schedulers the trigger may run on.
+        scheduler_whitelist: A list of names of schedulers the trigger may run on.
+        git_branch: The specific git branch of the trigger.
 
     Returns:
         The id of the trigger that was created.
@@ -310,7 +445,8 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
             is_blocking = is_blocking,
             next_run = next_run,
             priority=priority,
-            scheduler_whitelist=json.dumps(scheduler_whitelist)
+            scheduler_whitelist=scheduler_whitelist,
+            git_branch=git_branch
         )
         session.add(trigger)
         session.commit()
@@ -320,7 +456,8 @@ def create_single_trigger(trigger_name: str, process_name: str, next_run: dateti
 # pylint: disable=too-many-positional-arguments
 def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: str, next_run: datetime,
                              process_path: str, process_args: str, is_git_repo: bool,
-                             is_blocking: bool, priority: int, scheduler_whitelist: list[str]) -> str:
+                             is_blocking: bool, priority: int, scheduler_whitelist: list[str] | None = None,
+                             git_branch: str | None = None) -> UUID:
     """Create a new scheduled trigger in the database.
 
     Args:
@@ -334,6 +471,8 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
         is_blocking: If the process should be blocking.
         priority: The integer priority of the trigger.
         scheduler_whitelist: A list of names of schedulers the trigger may run on.
+        git_branch: The specific git branch of the trigger.
+
     Returns:
         The id of the trigger that was created.
     """
@@ -348,7 +487,8 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
             next_run = next_run,
             cron_expr = cron_expr,
             priority=priority,
-            scheduler_whitelist=json.dumps(scheduler_whitelist)
+            scheduler_whitelist=scheduler_whitelist,
+            git_branch=git_branch
         )
         session.add(trigger)
         session.commit()
@@ -358,7 +498,8 @@ def create_scheduled_trigger(trigger_name: str, process_name: str, cron_expr: st
 # pylint: disable=too-many-positional-arguments
 def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, process_path: str,
                          process_args: str, is_git_repo: bool, is_blocking: bool,
-                         min_batch_size: int, priority: int, scheduler_whitelist: list[str]) -> str:
+                         min_batch_size: int, priority: int, scheduler_whitelist: list[str] | None = None,
+                         git_branch: str | None = None) -> UUID:
     """Create a new queue trigger in the database.
 
     Args:
@@ -372,6 +513,7 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
         min_batch_size: The minimum number of queue elements before triggering.
         priority: The integer priority of the trigger.
         scheduler_whitelist: A list of names of schedulers the trigger may run on.
+        git_branch: The specific git branch of the trigger.
 
     Returns:
         The id of the trigger that was created.
@@ -387,7 +529,8 @@ def create_queue_trigger(trigger_name: str, process_name: str, queue_name: str, 
             queue_name = queue_name,
             min_batch_size = min_batch_size,
             priority=priority,
-            scheduler_whitelist=json.dumps(scheduler_whitelist)
+            scheduler_whitelist=scheduler_whitelist,
+            git_branch=git_branch
         )
         session.add(trigger)
         session.commit()
@@ -827,42 +970,130 @@ def get_next_queue_element(queue_name: str, reference: str | None = None, set_st
 
 def get_queue_elements(queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
                        from_date: datetime | None = None, to_date: datetime | None = None,
-                       offset: int = 0, limit: int = 100) -> tuple[QueueElement, ...]:
+                       offset: int = 0, limit: int | None = 100, search_term: str | None = None,
+                       order_by: str | None = None, order_desc: bool = False, include_count: bool = False) -> tuple[QueueElement, ...] | tuple[tuple[QueueElement, ...], int]:
     """Get multiple queue elements from a queue. The elements are ordered by created_date.
 
     Args:
         queue_name: The queue to get elements from.
         reference (optional): The reference to filter by. If None the filter is disabled.
         status (optional): The status to filter by if any. If None the filter is disabled.
-        offset: The number of queue elements to skip.
-        limit: The number of queue elements to get.
+        offset (optional): The number of queue elements to skip.
+        limit (optional): The number of queue elements to get.
+        order_by (optional): Column to order the result by. If None, will use created_date.
+        order_desc (optional): Should result be in descending order, only used with order_by.
+        include_count (optional): Return a tuple with results as well as the total count of elements without limit applied.
 
     Returns:
-        tuple[QueueElement]: A tuple of queue elements.
+        tuple[QueueElement] | tuple[tuple[QueueElement], int]: A tuple of queue elements or a tuple with a tuple of queue elements and an element count.
     """
-    with _get_session() as session:
-        query = (
-            select(QueueElement)
-            .where(QueueElement.queue_name == queue_name)
-            .order_by(desc(QueueElement.created_date))
-            .offset(offset)
-            .limit(limit)
-        )
+    def _apply_filters(query):
+        """Create filters for query, to allow for optional return of count.
 
-        if from_date:
+        Args:
+            query: The initial query on a queue name.
+
+        Returns:
+            The query object.
+        """
+        query = query.where(QueueElement.queue_name == queue_name)
+
+        if from_date is not None:
             query = query.where(QueueElement.created_date >= from_date)
-
-        if to_date:
+        if to_date is not None:
             query = query.where(QueueElement.created_date <= to_date)
-
         if reference is not None:
             query = query.where(QueueElement.reference == reference)
-
         if status is not None:
             query = query.where(QueueElement.status == status)
+        if search_term is not None:
+            query = query.where(QueueElement.reference.startswith(search_term) |
+                                QueueElement.data.like(f"%{search_term}%") |
+                                QueueElement.message.like(f"%{search_term}%"))
+        return query
+
+    with _get_session() as session:
+        # Main query
+        query = _apply_filters(select(QueueElement))
+
+        if order_by:
+            order_column = getattr(QueueElement, order_by, 'created_date')
+        else:
+            order_column = 'created_date'
+        query = query.order_by(desc(order_column) if order_desc else order_column)
+
+        if offset:
+            query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
 
         result = session.scalars(query).all()
-        return tuple(result)
+        elements_tuple = tuple(result)
+
+        if include_count:
+            count_query = _apply_filters(select(alc_func.count()))  # pylint: disable=not-callable
+            total_count = session.scalar(count_query)
+            return elements_tuple, total_count
+
+        return elements_tuple
+
+
+def get_queue_element(element_id: UUID | str) -> QueueElement:
+    """Get a specific QueueElement from id.
+
+    Args:
+        element_id: ID of QueueElement to get.
+
+    Returns:
+        QueueElement with the requested ID.
+    """
+    if isinstance(element_id, str):
+        element_id = UUID(element_id)
+    with _get_session() as session:
+        q_element = session.get(QueueElement, element_id)
+        if not q_element:
+            raise ValueError("No queue element with the given id was found.")
+        return q_element
+
+
+def update_queue_element(element_id: str, reference: str | None = None, status: QueueStatus | None = None, data: str | None = None, message: str | None = None,
+                         created_by: str | None = None, created_date: datetime | None = None, start_date: datetime | None = None, end_date: datetime | None = None):
+    """Update fields of specific QueueElement. Fields with value None will not be updated.
+
+    Args:
+        element_id: ID of QueueElement to update.
+        reference: New value for reference. Defaults to None.
+        status: New value for status. Defaults to None.
+        data: New value for data. Defaults to None.
+        message: New value for message. Defaults to None.
+        created_by: New value for created_by. Defaults to None.
+        created_date: New value for created_date. Defaults to None.
+        start_date: New value for start_date. Defaults to None.
+        end_date: New value for end_date. Defaults to None.
+    """
+    with _get_session() as session:
+        query = select(QueueElement).where(QueueElement.id == element_id)
+        q_element: QueueElement = session.scalar(query)
+
+        if q_element:
+            if reference:
+                q_element.reference = reference
+            if status:
+                q_element.status = status
+            if data:
+                q_element.data = data
+            if message:
+                q_element.message = message
+            if created_date:
+                q_element.created_date = created_date
+            if start_date:
+                q_element.start_date = start_date
+            if end_date:
+                q_element.end_date = end_date
+            if created_by:
+                q_element.created_by = created_by
+            session.commit()
+            session.refresh(q_element)
 
 
 def get_queue_count() -> dict[str, dict[QueueStatus, int]]:

@@ -3,8 +3,8 @@
 from datetime import datetime, timedelta
 import os
 
+from sqlalchemy import text
 from OpenOrchestrator.database import db_util, base
-
 from OpenOrchestrator.common import crypto_util
 
 
@@ -25,6 +25,11 @@ def drop_all_tables():
 
     base.Base.metadata.drop_all(engine)
 
+    # alembic_version is not part of the ORM, drop it seperately.
+    with engine.connect() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        conn.commit()
+
 
 def reset_triggers():
     """Delete all triggers in the database and create a new of each."""
@@ -35,6 +40,6 @@ def reset_triggers():
         raise RuntimeError("Not all triggers were deleted.")
 
     next_run = datetime.now() - timedelta(seconds=2)
-    db_util.create_single_trigger("Single", "Process1", next_run, "Path", "Args", False, False, 0, "")
-    db_util.create_scheduled_trigger("Scheduled", "Process1", "0 0 * * *", next_run, "Path", "Args", False, False, 0, "")
-    db_util.create_queue_trigger("Queue", "Process1", "Trigger Queue", "Path", "Args", False, False, 2, 0, "")
+    db_util.create_single_trigger("Single", "Process1", next_run, "Path", "Args", False, False, 0)
+    db_util.create_scheduled_trigger("Scheduled", "Process1", "0 0 * * *", next_run, "Path", "Args", False, False, 0)
+    db_util.create_queue_trigger("Queue", "Process1", "Trigger Queue", "Path", "Args", False, False, 2, 0)

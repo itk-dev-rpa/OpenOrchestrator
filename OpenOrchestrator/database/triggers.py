@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from OpenOrchestrator.common import datetime_util
 from OpenOrchestrator.database.base import Base
+from OpenOrchestrator.database.data_types.string_list import StringList
 
 # All classes in this module are effectively dataclasses without methods.
 # pylint: disable=too-few-public-methods
@@ -23,6 +24,8 @@ class TriggerStatus(enum.Enum):
     DONE = "Done"
     PAUSED = "Paused"
     PAUSING = "Pausing"
+    KILLING = "Killing"
+    KILLED = "Killed"
 
 
 class TriggerType(enum.Enum):
@@ -44,8 +47,9 @@ class Trigger(Base):
     process_args: Mapped[Optional[str]] = mapped_column(String(1000))
     process_status: Mapped[TriggerStatus] = mapped_column(default=TriggerStatus.IDLE)
     is_git_repo: Mapped[bool]
+    git_branch: Mapped[Optional[str]] = mapped_column(String(100))
     is_blocking: Mapped[bool]
-    scheduler_whitelist: Mapped[str] = mapped_column(String(250))
+    scheduler_whitelist: Mapped[Optional[StringList]] = mapped_column(StringList(250))
     priority: Mapped[int] = mapped_column(default=0)
     type: Mapped[TriggerType]
 

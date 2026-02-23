@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-02-23
+
+### Added
+
+- Added option to define Git branch/tag when creating a trigger.
+- Added the possibility to kill a running robot from Orchestrator.
+- Added search and status filter to queue element list.
+- Added overview of queue element.
+- Added option to create new queue element.
+- Added editing of queue elements.
+- Added option to delete queue element.
+- Added search and status filter to queue element list.
+- Added Job objects, job tabs and linked logs to jobs.
+
+### Changed
+
+- Removed Orchestrator exit on connection loss.
+- Queue element list pagination moved to server side.
+- Reordered columns in Orchestrator app.
+- Reordered columns in logs.
+- Pagination of logs is now handled server side.
+
+### Dev
+
+- Added automated tests for Alembic.
+- Automated tests of the Orchestrator ui.
+
+### Fixed
+
+- Removed warnings from tests.
+
 ## [2.0.1] - 2025-11-06
 
 ### Fixed
@@ -142,7 +173,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/2.0.1...HEAD
+[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/3.0.0...HEAD
+[3.0.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/3.0.0
 [2.0.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/2.0.1
 [2.0.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/2.0.0
 [1.3.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.3.1

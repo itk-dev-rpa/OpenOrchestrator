@@ -5,7 +5,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 
-from OpenOrchestrator.database import base, logs, triggers, queues, constants, schedulers   # noqa: F401 pylint: disable=unused-import
+from OpenOrchestrator.database import base, logs, triggers, queues, constants, schedulers, jobs   # noqa: F401 pylint: disable=unused-import
 
 config = context.config
 
@@ -59,12 +59,20 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            version_table_schema='dbo',
-            include_schemas=True
-        )
+        # Check if we're using MSSQL or SQLite
+        dialect_name = connection.dialect.name
+
+        configure_args = {
+            "connection": connection,
+            "target_metadata": target_metadata,
+            "include_schemas": True
+        }
+
+        # Only set version_table_schema for MSSQL
+        if dialect_name == 'mssql':
+            configure_args["version_table_schema"] = 'dbo'
+
+        context.configure(**configure_args)
 
         with context.begin_transaction():
             context.run_migrations()

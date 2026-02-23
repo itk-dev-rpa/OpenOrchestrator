@@ -19,8 +19,8 @@ class Scheduler(Base):
 
     machine_name: Mapped[str] = mapped_column(String(100), primary_key=True)
     last_update: Mapped[datetime] = mapped_column(onupdate=datetime.now, default=datetime.now)
-    latest_trigger: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
-    latest_trigger_time: Mapped[Optional[datetime]] = mapped_column(nullable=True, default=None)
+    latest_trigger: Mapped[Optional[str]] = mapped_column(String(100))
+    latest_trigger_time: Mapped[Optional[datetime]]
 
     def to_row_dict(self) -> dict[str, str]:
         """Convert scheduler to a row dictionary for display in a table."""

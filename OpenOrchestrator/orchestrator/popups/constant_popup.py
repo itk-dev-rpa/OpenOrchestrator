@@ -39,7 +39,7 @@ class ConstantPopup():
                 self.cancel_button = ui.button("Cancel", on_click=self.dialog.close)
 
                 if constant:
-                    self.delete_button = ui.button("Delete", color='red', on_click=self._delete_constant)
+                    self.delete_button = ui.button("Delete", color='negative', on_click=self._delete_constant)
 
         self._define_validation()
         self._pre_populate()
@@ -92,7 +92,7 @@ class ConstantPopup():
     async def _delete_constant(self):
         if not self.constant:
             return
-        if await question_popup(f"Delete constant '{self.constant.name}?", "Delete", "Cancel", color1='red'):
+        if await question_popup(f"Delete constant '{self.constant.name}?", "Delete", "Cancel", color1='negative'):
             db_util.delete_constant(self.constant.name)
             self.dialog.close()
             self.constant_tab.update()

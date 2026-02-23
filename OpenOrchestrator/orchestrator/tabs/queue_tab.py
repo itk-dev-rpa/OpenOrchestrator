@@ -1,12 +1,12 @@
 """This module is responsible for the layout and functionality of the Queues tab
 in Orchestrator."""
-
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
 from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator.popups.queue_element_popup import QueueElementPopup
 
 
 QUEUE_COLUMNS = [
@@ -21,7 +21,7 @@ QUEUE_COLUMNS = [
 ELEMENT_COLUMNS = [
     {'name': "Reference", 'label': "Reference", 'field': "Reference", 'align': 'left', 'sortable': True},
     {'name': "Status", 'label': "Status", 'field': "Status", 'align': 'left', 'sortable': True},
-    {'name': "Data", 'label': "Data", 'field': "Data", 'align': 'left', 'sortable': True},
+    {'name': "Data", 'label': "Data", 'field': "Data", 'align': 'left', 'sortable': True, 'style': 'max-width: 200px; overflow: hidden; text-overflow: ellipsis;'},
     {'name': "Message", 'label': "Message", 'field': "Message", 'align': 'left', 'sortable': True},
     {'name': "Created Date", 'label': "Created Date", 'field': "Created Date", 'align': 'left', 'sortable': True},
     {'name': "Start Date", 'label': "Start Date", 'field': "Start Date", 'align': 'left', 'sortable': True},
@@ -32,7 +32,7 @@ ELEMENT_COLUMNS = [
 
 
 # pylint: disable-next=too-few-public-methods
-class QueueTab():
+class QueueTab:
     """The 'Queues' tab object. It contains tables and buttons for dealing with queues."""
     def __init__(self, tab_name: str) -> None:
         with ui.tab_panel(tab_name):
@@ -62,34 +62,50 @@ class QueueTab():
     def _row_click(self, event):
         row = event.args[1]
         queue_name = row["Queue Name"]
-        QueuePopup(queue_name)
+        QueuePopup(queue_name, self.update)
 
 
-# pylint: disable-next=too-few-public-methods
-class QueuePopup():
+# pylint: disable-next=too-few-public-methods, too-many-instance-attributes
+class QueuePopup:
     """A popup that displays queue elements in a queue."""
-    def __init__(self, queue_name) -> None:
+    def __init__(self, queue_name: str, update_callback):
         self.queue_name = queue_name
+        self.order_by = "Created Date"
+        self.order_descending = False
+        self.page = 1
+        self.rows_per_page = 25
+        self.queue_count = 100
+        self.update_callback = update_callback  # To make sure the main table updates changes to queue elements.
 
         with ui.dialog(value=True).props('full-width full-height') as dialog, ui.card():
             with ui.row().classes("w-full"):
-                self.from_input = DatetimeInput("From Date", on_change=self._update, allow_empty=True).style('margin-left: 1rem')
-                self.to_input = DatetimeInput("To Date", on_change=self._update, allow_empty=True)
-
-                self.limit_select = ui.select(
-                    options=[100, 200, 500, 1000, "All"],
-                    label="Limit",
-                    value=100,
+                self.search_input = ui.input(label='Search', placeholder="Ref, message or data", on_change=self._update).style('margin-left: 1rem')
+                self.status_select = ui.select(
+                    options= {'All': 'All'} | {status.name: status.value for status in QueueStatus},
+                    label="Status",
+                    value="All",
                     on_change=self._update).classes("w-24")
+                self.from_input = DatetimeInput("From Date", on_change=self._update, allow_empty=True)
+                self.to_input = DatetimeInput("To Date", on_change=self._update, allow_empty=True)
 
                 ui.space()
 
                 ui.switch("Dense", on_change=lambda e: self._dense_table(e.value))
                 self._create_column_filter()
                 ui.button(icon='refresh', on_click=self._update)
-                self.close_button = ui.button(icon="close", on_click=dialog.close)
+                self.close_button = ui.button(icon="close", on_click=lambda: (dialog.close(), self.update_callback()))
             with ui.scroll_area().classes("h-full"):
-                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination=100).classes("w-full")
+                self.table = ui.table(columns=ELEMENT_COLUMNS, rows=[], row_key='ID', title=queue_name, pagination={'rowsPerPage': self.rows_per_page, 'rowsNumber': self.queue_count})
+                self.table.classes("w-full sticky-header h-[calc(100vh-200px)] overflow-auto")
+                self.table.on('rowClick', lambda e: self._open_queue_element_popup(e.args[1]))
+                self.table.props(
+                    ":rows-per-page-options='[10, 25, 50, 100, 1000]' rows-per-page-label='Queue elements per page:'")
+                self.table.on('request', self._on_table_request)
+
+                with self.table.add_slot("top"):
+                    ui.label(self.queue_name).classes("text-xl")
+                    ui.space()
+                    self.new_button = ui.button(icon='playlist_add', on_click=self._open_create_dialog)
 
         self._update()
         test_helper.set_automation_ids(self, "queue_popup")
@@ -115,13 +131,51 @@ class QueuePopup():
 
     def _update(self):
         """Update the table with values from the database."""
-        limit = self.limit_select.value
-        if limit == 'All':
-            limit = 1_000_000_000
+        search_input = self.search_input.value.strip()
+        if len(search_input) == 0:
+            search_input = None
+        status = None if self.status_select.value == "All" else self.status_select.value.strip()
 
         from_date = self.from_input.get_datetime()
         to_date = self.to_input.get_datetime()
+        offset = (self.page - 1) * self.rows_per_page
+        order_by = str(self.order_by).lower().replace(" ", "_")
 
-        queue_elements = db_util.get_queue_elements(self.queue_name, limit=limit, from_date=from_date, to_date=to_date)
+        queue_elements, queue_count = db_util.get_queue_elements(self.queue_name, status=status, limit=self.rows_per_page, from_date=from_date, to_date=to_date, order_by=order_by, order_desc=self.order_descending, offset=offset, search_term=search_input, include_count=True)
+        self._update_pagination(queue_count)
         rows = [element.to_row_dict() for element in queue_elements]
         self.table.update_rows(rows)
+
+    def _on_table_request(self, e):
+        """Called when updating table pagination and sorting, to handle these manually and allow for server side pagination.
+
+        Args:
+            e: The event triggering the request.
+        """
+        pagination = e.args['pagination']
+        self.page = pagination.get('page')
+        self.rows_per_page = pagination.get('rowsPerPage')
+        self.order_by = pagination.get('sortBy')
+        self.order_descending = pagination.get('descending', False)
+        self._update()
+
+    def _update_pagination(self, queue_count):
+        """Update pagination element.
+
+        Args:
+            queue_count: The element count of the current filtered table.
+        """
+        self.queue_count = queue_count
+        self.table.pagination = {"rowsNumber": self.queue_count, "page": self.page, "rowsPerPage": self.rows_per_page, "sortBy": self.order_by, "descending": self.order_descending}
+
+    def _open_queue_element_popup(self, row_data: ui.row):
+        """Open editable popup for specified row.
+
+        Args:
+            row_data: Row data from row clicked.
+        """
+        queue_element = db_util.get_queue_element(row_data.get("ID"))
+        QueueElementPopup(queue_element=queue_element, on_dialog_close_callback=self._update, queue_name=self.queue_name)
+
+    def _open_create_dialog(self):
+        QueueElementPopup(None, on_dialog_close_callback=self._update, queue_name=self.queue_name)

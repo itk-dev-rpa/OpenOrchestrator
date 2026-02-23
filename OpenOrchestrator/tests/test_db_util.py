@@ -1,6 +1,7 @@
 """This module contains tests of the functionality of db_util."""
 
 import unittest
+import uuid
 from datetime import datetime, timedelta
 import time
 
@@ -23,9 +24,9 @@ class TestDBUtil(unittest.TestCase):
         creation_time = datetime.now() - timedelta(seconds=2)
 
         for i in range(3):
-            db_util.create_log(f"Test {i}", LogLevel.TRACE, "Message")
-            db_util.create_log(f"Test {i}", LogLevel.INFO, "Message")
-            db_util.create_log(f"Test {i}", LogLevel.ERROR, "Message")
+            db_util.create_log(f"Test {i}", LogLevel.TRACE, None, "Message")
+            db_util.create_log(f"Test {i}", LogLevel.INFO, uuid.uuid4(), "Message")
+            db_util.create_log(f"Test {i}", LogLevel.ERROR, str(uuid.uuid4()), "Message")
 
         # Get all logs
         logs = db_util.get_logs(0, 100)
@@ -207,7 +208,7 @@ class TestDBUtil(unittest.TestCase):
 
         trigger = db_util.get_trigger(triggers[0].id)
         self.assertIsNotNone(trigger)
-        self.assertIsNotNone(trigger.id)
+        self.assertEqual(trigger.id, triggers[0].id)
 
         # Update trigger
         trigger.process_path = "New path"
@@ -236,7 +237,7 @@ class TestDBUtil(unittest.TestCase):
         has_begun = db_util.begin_single_trigger(trigger.id)
         self.assertFalse(has_begun)
 
-        # Check is running- and next run
+        # Check is running and next run
         trigger = db_util.get_trigger(trigger.id)
         self.assertEqual(trigger.process_status, TriggerStatus.RUNNING)
         self.assertIsNotNone(trigger.last_run)
@@ -319,9 +320,9 @@ class TestDBUtil(unittest.TestCase):
         medium_message = "a"*8000
         short_message = "HelloWorld"
 
-        db_util.create_log("TruncateTest", LogLevel.TRACE, long_message)
-        db_util.create_log("TruncateTest", LogLevel.INFO, medium_message)
-        db_util.create_log("TruncateTest", LogLevel.ERROR, short_message)
+        db_util.create_log("TruncateTest", LogLevel.TRACE, None, long_message)
+        db_util.create_log("TruncateTest", LogLevel.INFO, None, medium_message)
+        db_util.create_log("TruncateTest", LogLevel.ERROR, None, short_message)
 
         # Test long message
         logs = db_util.get_logs(0, 100, log_level=LogLevel.TRACE)

@@ -14,5 +14,5 @@ depends_on = None
 
 def upgrade() -> None:
     """Upgrade the database."""
-    op.add_column('Triggers', sa.Column('scheduler_whitelist', sa.String(length=250), nullable=False, server_default=sa.text("'[]'")))
+    op.add_column('Triggers', sa.Column('scheduler_whitelist', sa.String(length=250), nullable=True))
     op.add_column('Triggers', sa.Column('priority', sa.Integer(), nullable=False, server_default=sa.text("0")))

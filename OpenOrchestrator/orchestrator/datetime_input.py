@@ -8,8 +8,8 @@ from nicegui import ui
 
 class DatetimeInput(ui.input):
     """A datetime input with a button to show a date and time picker dialog."""
-    PY_FORMAT = "%d-%m-%Y %H:%M"
-    VUE_FORMAT = "DD-MM-YYYY HH:mm"
+    PY_FORMAT = "%d-%m-%Y %H:%M:%S"
+    VUE_FORMAT = "DD-MM-YYYY HH:mm:ss"
 
     def __init__(self, label: str, on_change: Optional[Callable[..., Any]] = None, allow_empty: bool = False) -> None:
         """Create a new DatetimeInput.
@@ -75,6 +75,8 @@ class DatetimeInput(ui.input):
         Args:
             value: The new datetime value.
         """
+        if not value:
+            return
         self.value = value.strftime(self.PY_FORMAT)
 
     def _on_change(self, func: Optional[Callable[..., Any]]) -> None:

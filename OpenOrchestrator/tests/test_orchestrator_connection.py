@@ -2,7 +2,7 @@
 
 import unittest
 from datetime import datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 import os
 
 from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConnection
@@ -27,10 +27,9 @@ class TestOrchestratorConnection(unittest.TestCase):
                                                        process_args="",
                                                        is_git_repo=False,
                                                        is_blocking=False,
-                                                       priority=0,
-                                                       scheduler_whitelist=""
+                                                       priority=0
                                                        )
-        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args", cls.trigger_id)
+        cls.connection = OrchestratorConnection("Process", os.environ["CONN_STRING"], crypto_util.get_key(), "Args", str(cls.trigger_id), str(uuid4()))
 
     def test_trigger_pause(self):
         """Test pausing triggers."""
