@@ -284,6 +284,41 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.priority, 1)
         self.assertEqual(trigger.min_batch_size, 251)
 
+    @ui_util.screenshot_on_error
+    def test_whitelist_blur_functionality(self):
+        """Test that whitelist chips are added on blur (tab/click away)."""
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_single_button]").click()
+
+        # Fill required fields
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_trigger_input]").send_keys("Test Trigger")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_name_input]").send_keys("Test Process")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_time_input]").send_keys("12-11-2025 12:00:00")
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_path_input]").send_keys("test/path")
+
+        # Type in whitelist field without pressing Enter
+        whitelist_input = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]")
+        whitelist_input.send_keys("Scheduler1")
+
+        # Click away to trigger blur (click on another field)
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_args_input]").click()
+        time.sleep(0.5)
+
+        # Type another value and tab away
+        whitelist_input.send_keys("Scheduler2")
+        whitelist_input.send_keys("\t")  # Tab to trigger blur
+        time.sleep(0.5)
+
+        # Save trigger
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
+        self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
+        time.sleep(2)
+
+        # Verify whitelist was saved correctly with both values
+        triggers = db_util.get_all_triggers()
+        self.assertEqual(len(triggers), 1)
+        trigger = triggers[0]
+        self.assertEqual(trigger.scheduler_whitelist, ["Scheduler1", "Scheduler2"])
+
 
 if __name__ == '__main__':
     unittest.main(failfast=True)
