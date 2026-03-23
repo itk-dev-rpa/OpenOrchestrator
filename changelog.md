@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-02-23
+
 ### Added
 
 - Added option to define Git branch/tag when creating a trigger.
@@ -171,7 +173,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/2.0.1...HEAD
+[Unreleased]: https://github.com/itk-dev-rpa/OpenOrchestrator/compare/3.0.0...HEAD
+[3.0.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/3.0.0
 [2.0.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/2.0.1
 [2.0.0]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/2.0.0
 [1.3.1]: https://github.com/itk-dev-rpa/OpenOrchestrator/releases/tag/1.3.1
