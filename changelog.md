@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Chips on triggers now update on "blur" events, when the user clicks away from the input.
+
 ## [3.0.0] - 2026-02-23
 
 ### Added
