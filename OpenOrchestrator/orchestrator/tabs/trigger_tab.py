@@ -6,7 +6,7 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerType
 from OpenOrchestrator.orchestrator.popups.trigger_popup import TriggerPopup
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 COLUMNS = [
     {'name': "Trigger Name", 'label': "Trigger Name", 'field': "Trigger Name", 'align': 'left', 'sortable': True},
@@ -34,7 +34,7 @@ class TriggerTab():
             self.trigger_table.on('rowClick', self._row_click)
             self.add_column_colors()
 
-        test_helper.set_automation_ids(self, "trigger_tab")
+        ui_util.set_automation_ids(self, "trigger_tab")
 
     def _row_click(self, event):
         """Callback for when a row is clicked in the table."""

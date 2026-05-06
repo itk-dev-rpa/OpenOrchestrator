@@ -19,6 +19,13 @@ from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, Scheduled
 from OpenOrchestrator.database.queues import QueueElement, QueueStatus
 from OpenOrchestrator.database.schedulers import Scheduler
 from OpenOrchestrator.database.truncated_string import truncate_message
+from OpenOrchestrator.database.exceptions import (
+    TriggerNotFoundError,
+    JobNotFoundError,
+    ConstantNotFoundError,
+    CredentialNotFoundError,
+    QueueElementNotFoundError,
+)
 
 _connection_engine: Engine | None = None
 
@@ -118,7 +125,7 @@ def get_trigger(trigger_id: UUID | str) -> Trigger:
         trigger = session.scalar(query)
 
     if not trigger:
-        raise ValueError(f"No trigger with the given id: {trigger_id}")
+        raise TriggerNotFoundError(f"No trigger with the given id: {trigger_id}")
 
     return trigger
 
@@ -363,7 +370,7 @@ def set_job_status(job_id: UUID | str, status: JobStatus):
         job = session.get(Job, job_id)
 
         if not job:
-            raise ValueError("No job with the given id was found.")
+            raise JobNotFoundError("No job with the given id was found.")
 
         job.status = status
         if status == JobStatus.RUNNING:
@@ -391,7 +398,7 @@ def get_job(job_id: UUID | str) -> Job:
         job = session.get(Job, job_id)
 
         if not job:
-            raise ValueError("No job with the given id was found.")
+            raise JobNotFoundError("No job with the given id was found.")
 
         session.expunge(job)
         return job
@@ -552,7 +559,7 @@ def get_constant(name: str) -> Constant:
     with _get_session() as session:
         constant = session.get(Constant, name)
         if constant is None:
-            raise ValueError(f"No constant with name '{name}' was found.")
+            raise ConstantNotFoundError(f"No constant with name '{name}' was found.")
         return constant
 
 
@@ -592,7 +599,7 @@ def update_constant(name: str, new_value: str) -> None:
         constant = session.get(Constant, name)
 
         if not constant:
-            raise ValueError(f"No constant with name '{name}' was found.")
+            raise ConstantNotFoundError(f"No constant with name '{name}' was found.")
 
         constant.value = new_value
         session.commit()
@@ -628,7 +635,7 @@ def get_credential(name: str, decrypt_password: bool = True) -> Credential:
         credential = session.get(Credential, name)
 
     if credential is None:
-        raise ValueError(f"No credential with name '{name}' was found.")
+        raise CredentialNotFoundError(f"No credential with name '{name}' was found.")
 
     if decrypt_password:
         credential.password = crypto_util.decrypt_string(credential.password)
@@ -685,7 +692,7 @@ def update_credential(name: str, new_username: str, new_password: str) -> None:
         credential = session.get(Credential, name)
 
         if not credential:
-            raise ValueError(f"No credential with name '{name}' was found.")
+            raise CredentialNotFoundError(f"No credential with name '{name}' was found.")
 
         credential.username = new_username
         credential.password = new_password
@@ -721,7 +728,7 @@ def begin_single_trigger(trigger_id: UUID | str) -> bool:
         trigger = session.get(SingleTrigger, trigger_id)
 
         if not trigger:
-            raise ValueError("No trigger with the given id was found.")
+            raise TriggerNotFoundError("No trigger with the given id was found.")
 
         if trigger.process_status != TriggerStatus.IDLE:
             return False
@@ -784,7 +791,7 @@ def begin_scheduled_trigger(trigger_id: UUID | str) -> bool:
         trigger = session.get(ScheduledTrigger, trigger_id)
 
         if not trigger:
-            raise ValueError("No trigger with the given id was found.")
+            raise TriggerNotFoundError("No trigger with the given id was found.")
 
         if trigger.process_status != TriggerStatus.IDLE:
             return False
@@ -838,7 +845,7 @@ def begin_queue_trigger(trigger_id: UUID | str) -> bool:
         trigger = session.get(QueueTrigger, trigger_id)
 
         if not trigger:
-            raise ValueError("No trigger with the given id was found.")
+            raise TriggerNotFoundError("No trigger with the given id was found.")
 
         if trigger.process_status != TriggerStatus.IDLE:
             return False
@@ -864,7 +871,7 @@ def set_trigger_status(trigger_id: UUID | str, status: TriggerStatus) -> None:
         trigger = session.get(Trigger, trigger_id)
 
         if not trigger:
-            raise ValueError("No trigger with the given id was found.")
+            raise TriggerNotFoundError("No trigger with the given id was found.")
 
         trigger.process_status = status
         session.commit()
@@ -1052,7 +1059,7 @@ def get_queue_element(element_id: UUID | str) -> QueueElement:
     with _get_session() as session:
         q_element = session.get(QueueElement, element_id)
         if not q_element:
-            raise ValueError("No queue element with the given id was found.")
+            raise QueueElementNotFoundError("No queue element with the given id was found.")
         return q_element
 
 
@@ -1138,7 +1145,7 @@ def set_queue_element_status(element_id: UUID | str, status: QueueStatus, messag
         q_element = session.get(QueueElement, element_id)
 
         if not q_element:
-            raise ValueError("No queue element with the given id was found.")
+            raise QueueElementNotFoundError("No queue element with the given id was found.")
 
         q_element.status = status
 

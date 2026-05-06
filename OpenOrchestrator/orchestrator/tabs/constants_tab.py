@@ -6,7 +6,7 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator.popups.constant_popup import ConstantPopup
 from OpenOrchestrator.orchestrator.popups.credential_popup import CredentialPopup
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 CONSTANT_COLUMNS = ("Constant Name", "Value", "Last Changed")
 CREDENTIAL_COLUMNS = ("Credential Name", "Username", "Password", "Last Changed")
@@ -28,7 +28,7 @@ class ConstantTab():
             self.credentials_table = ui.table(title="Credentials", columns=columns, rows=[], row_key='Credential Name', pagination=10).classes("w-full")
             self.credentials_table.on('rowClick', self.row_click_credential)
 
-        test_helper.set_automation_ids(self, "constants_tab")
+        ui_util.set_automation_ids(self, "constants_tab")
 
     def row_click_constant(self, event):
         """Callback for when a row is clicked in the table."""

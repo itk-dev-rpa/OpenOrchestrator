@@ -6,7 +6,7 @@ from nicegui import ui
 
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 from OpenOrchestrator.orchestrator.popups import generic_popups
 
 
@@ -23,7 +23,7 @@ class ConnectionFrame():
             self.disconn_button.disable()
 
         self._initial_connect()
-        test_helper.set_automation_ids(self, "connection_frame")
+        ui_util.set_automation_ids(self, "connection_frame")
 
     def _define_validation(self):
         self.conn_input._validation = {"Please enter a connection string": bool}  # pylint: disable=protected-access

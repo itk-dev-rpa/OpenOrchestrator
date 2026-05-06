@@ -5,7 +5,7 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueStatus
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 from OpenOrchestrator.orchestrator.popups.queue_element_popup import QueueElementPopup
 
 
@@ -38,7 +38,7 @@ class QueueTab:
         with ui.tab_panel(tab_name):
             self.queue_table = ui.table(title="Queues", columns=QUEUE_COLUMNS, rows=[], row_key='Queue Name', pagination={'rowsPerPage': 50, 'sortBy': 'Queue Name'}).classes("w-full")
             self.queue_table.on("rowClick", self._row_click)
-        test_helper.set_automation_ids(self, "queues_tab")
+        ui_util.set_automation_ids(self, "queues_tab")
 
     def update(self):
         """Update the queue table with data from the database."""
@@ -108,7 +108,7 @@ class QueuePopup:
                     self.new_button = ui.button(icon='playlist_add', on_click=self._open_create_dialog)
 
         self._update()
-        test_helper.set_automation_ids(self, "queue_popup")
+        ui_util.set_automation_ids(self, "queue_popup")
 
     def _dense_table(self, value: bool):
         """Change if the table is dense or not."""
