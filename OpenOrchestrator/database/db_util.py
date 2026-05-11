@@ -60,6 +60,11 @@ def disconnect() -> None:
     _connection_engine = None
 
 
+def is_connected() -> bool:
+    """Check if the database is connected."""
+    return _connection_engine is not None
+
+
 def check_database_revision() -> bool:
     """Check if the revision number of the connected database matches the expected revision."""
     try:

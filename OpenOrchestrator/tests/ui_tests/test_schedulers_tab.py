@@ -13,11 +13,13 @@ class TestSchedulersTab(unittest.TestCase):
     """Test functionality of the schedulers tab ui."""
     @classmethod
     def setUpClass(cls) -> None:
-        cls.browser = ui_util.open_orchestrator()
+        cls.browser, cls.proc = ui_util.open_orchestrator()
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls.browser.quit()
+        cls.proc.terminate()
+        cls.proc.wait(timeout=5)
 
     def setUp(self) -> None:
         db_test_util.establish_clean_database()
