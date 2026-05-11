@@ -42,6 +42,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
+        time.sleep(0.5)
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result
