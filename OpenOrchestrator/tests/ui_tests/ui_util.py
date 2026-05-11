@@ -10,6 +10,7 @@ from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -19,20 +20,22 @@ from OpenOrchestrator.orchestrator.application import get_free_port
 ENCRYPTION_KEY = None
 
 
-def open_orchestrator() -> webdriver.Chrome:
+def open_orchestrator() -> tuple[webdriver.Chrome, subprocess.Popen]:
     """Open Orchestrator in a Selenium Chrome browser.
 
     Raises:
         RuntimeError: If the Orchestrator app didn't start.
 
     Returns:
-        The Chrome browser logged in to Orchestrator.
+        A tuple of the Chrome browser logged in to Orchestrator and the
+        Popen handle for the Orchestrator subprocess. The caller is
+        responsible for terminating the subprocess.
     """
     conn_string = os.environ['CONN_STRING']
     os.environ['ORCHESTRATOR_TEST'] = "True"
 
     port = get_free_port()
-    subprocess.Popen([sys.executable, "-m", "OpenOrchestrator", "o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
+    proc = subprocess.Popen([sys.executable, "-m", "OpenOrchestrator", "o", "--port", str(port), "--dont_show"])  # pylint: disable=consider-using-with
 
     chrome_options = webdriver.ChromeOptions()
     custom_browser_options = [
@@ -65,14 +68,17 @@ def open_orchestrator() -> webdriver.Chrome:
     time.sleep(1)
 
     browser.find_element(By.CSS_SELECTOR, "button[auto-id=settings_tab_key_button]").click()
-    browser.find_element(By.CSS_SELECTOR, "button[auto-id=connection_frame_conn_button]").click()
+    conn_button = browser.find_element(By.CSS_SELECTOR, "button[auto-id=connection_frame_conn_button]")
+    conn_button.click()
 
     global ENCRYPTION_KEY  # pylint: disable=global-statement
     ENCRYPTION_KEY = browser.find_element(By.CSS_SELECTOR, "input[auto-id=connection_frame_key_input]").get_attribute("value")
 
-    time.sleep(1)
+    # Wait for the async _connect() to finish: the Connect button is
+    # disabled by _set_state(True) after a successful connect.
+    WebDriverWait(browser, 5).until(lambda _: conn_button.get_attribute("disabled") is not None)
 
-    return browser
+    return browser, proc
 
 
 def refresh_ui(browser: webdriver.Chrome):

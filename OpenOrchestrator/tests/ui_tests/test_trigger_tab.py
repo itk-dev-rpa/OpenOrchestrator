@@ -16,13 +16,15 @@ from OpenOrchestrator.tests.ui_tests import ui_util
 class TestTriggerTab(unittest.TestCase):
     """Test functionality of the trigger tab ui."""
     def setUp(self) -> None:
-        self.browser = ui_util.open_orchestrator()
+        self.browser, self.proc = ui_util.open_orchestrator()
         db_test_util.establish_clean_database()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab]").click()
         ui_util.refresh_ui(self.browser)
 
     def tearDown(self) -> None:
         self.browser.quit()
+        self.proc.terminate()
+        self.proc.wait(timeout=5)
 
     @ui_util.screenshot_on_error
     def test_single_trigger_creation(self):
@@ -40,6 +42,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
+        time.sleep(0.5)
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result

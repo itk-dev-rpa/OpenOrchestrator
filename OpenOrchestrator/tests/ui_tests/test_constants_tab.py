@@ -14,13 +14,15 @@ from OpenOrchestrator.tests.ui_tests import ui_util
 class TestConstantsTab(unittest.TestCase):
     """Test functionality of the constants tab ui."""
     def setUp(self) -> None:
-        self.browser = ui_util.open_orchestrator()
+        self.browser, self.proc = ui_util.open_orchestrator()
         db_test_util.establish_clean_database()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=constants_tab]").click()
         ui_util.refresh_ui(self.browser)
 
     def tearDown(self) -> None:
         self.browser.quit()
+        self.proc.terminate()
+        self.proc.wait(timeout=5)
 
     @ui_util.screenshot_on_error
     def test_constants_table(self):
