@@ -1,6 +1,7 @@
 """Tests relating to the queues tab in Orchestrator."""
 
 import unittest
+import time
 from datetime import datetime, timedelta
 
 from selenium.webdriver.common.by import By
@@ -292,6 +293,7 @@ class TestQueuesTab(unittest.TestCase):
 
         # Click the delete button and confirm
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_delete_button]").click()
+        time.sleep(0.5)
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button").click()
 
         # Verify the element was deleted
