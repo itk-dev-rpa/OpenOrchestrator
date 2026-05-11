@@ -108,6 +108,7 @@ def get_next_queue_element(queue_name: str, reference: str | None = None, set_st
         return q_element
 
 
+# pylint: disable=too-many-positional-arguments
 def get_queue_elements(queue_name: str, reference: str | None = None, status: QueueStatus | None = None,
                        from_date: datetime | None = None, to_date: datetime | None = None,
                        offset: int = 0, limit: int | None = 100, search_term: str | None = None,
