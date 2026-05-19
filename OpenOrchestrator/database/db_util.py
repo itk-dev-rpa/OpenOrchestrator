@@ -101,7 +101,7 @@ def get_conn_string() -> str:
 # ---------------------------------------------------------------------------
 
 # pylint: disable=wrong-import-position,unused-import,cyclic-import
-from OpenOrchestrator.database.trigger_util import (  # noqa: E402,F401
+from OpenOrchestrator.database.db_utils.trigger_util import (  # noqa: E402,F401
     get_trigger,
     get_all_triggers,
     update_trigger,
@@ -120,7 +120,7 @@ from OpenOrchestrator.database.trigger_util import (  # noqa: E402,F401
     begin_queue_trigger,
     set_trigger_status,
 )
-from OpenOrchestrator.database.queue_util import (  # noqa: E402,F401
+from OpenOrchestrator.database.db_utils.queue_util import (  # noqa: E402,F401
     create_queue_element,
     bulk_create_queue_elements,
     get_next_queue_element,
@@ -131,18 +131,18 @@ from OpenOrchestrator.database.queue_util import (  # noqa: E402,F401
     set_queue_element_status,
     delete_queue_element,
 )
-from OpenOrchestrator.database.job_util import (  # noqa: E402,F401
+from OpenOrchestrator.database.db_utils.job_util import (  # noqa: E402,F401
     get_jobs,
     start_job,
     set_job_status,
     get_job,
 )
-from OpenOrchestrator.database.log_util import (  # noqa: E402,F401
+from OpenOrchestrator.database.db_utils.log_util import (  # noqa: E402,F401
     get_logs,
     create_log,
     get_unique_log_process_names,
 )
-from OpenOrchestrator.database.settings_util import (  # noqa: E402,F401
+from OpenOrchestrator.database.db_utils.settings_util import (  # noqa: E402,F401
     get_constant,
     get_constants,
     create_constant,
@@ -154,7 +154,7 @@ from OpenOrchestrator.database.settings_util import (  # noqa: E402,F401
     update_credential,
     delete_credential,
 )
-from OpenOrchestrator.database.scheduler_util import (  # noqa: E402,F401
+from OpenOrchestrator.database.db_utils.scheduler_util import (  # noqa: E402,F401
     get_schedulers,
     send_ping_from_scheduler,
     start_trigger_from_machine,
