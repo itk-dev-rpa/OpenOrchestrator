@@ -9,41 +9,41 @@ from selenium.webdriver.common.keys import Keys
 from OpenOrchestrator.tests import db_test_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.queues import QueueStatus
-from OpenOrchestrator.tests.ui_tests import ui_util
+from OpenOrchestrator.tests.ui_tests import test_helper
 
 
 class TestQueuesTab(unittest.TestCase):
     """Test functionality of the queues tab ui."""
     def setUp(self) -> None:
-        self.browser, self.proc = ui_util.open_orchestrator()
+        self.browser, self.proc = test_helper.open_orchestrator()
         db_test_util.establish_clean_database()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queues_tab]").click()
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
     def tearDown(self) -> None:
         self.browser.quit()
         self.proc.terminate()
         self.proc.wait(timeout=5)
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_queues_table(self):
         """Test that queues are displayed correctly in the queues table."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
-        table_data = ui_util.get_table_data(self.browser, "queues_tab_queue_table")
+        table_data = test_helper.get_table_data(self.browser, "queues_tab_queue_table")
         self.assertEqual(table_data[0], ["Queue Name 1", "1", "2", "3", "4", "5"])
         self.assertEqual(table_data[1], ["Queue Name 2", "1", "2", "3", "4", "5"])
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_queue_popup(self):
         """Test that queue elements are displayed correctly in the queue popup."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
 
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
 
         queue_elements = db_util.get_queue_elements("Queue Name 1")
 
@@ -60,82 +60,82 @@ class TestQueuesTab(unittest.TestCase):
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_queue_popup_status_filter(self):
         """Test status filtering in queue popup."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        test_helper.refresh_ui(self.browser)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
 
         # Test each status individually
         for i, status in enumerate(QueueStatus):
             self._set_status_filter(status.value)
-            table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+            table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
             expected_count = i + 1
             self.assertEqual(len(table_data), expected_count)
 
         # Test clearing status filter
         self._set_status_filter(None)
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 15)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_queue_popup_search_filter(self):
         """Test search filtering in queue popup."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        test_helper.refresh_ui(self.browser)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
 
         # Test partial reference search
         self._set_search_filter("Reference 0")
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         expected_count = len(QueueStatus)  # One "Reference 0,x" per status
         self.assertEqual(len(table_data), expected_count)
         self.assertIn("Reference 0", table_data[0][0])
 
         # Test exact reference search
         self._set_search_filter("Reference 0,1")
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 1)
         self.assertEqual("Reference 0,1", table_data[0][0])
 
         # Test data search
         self._set_search_filter("Data 0,1")
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 1)
         self.assertEqual("Data 0,1", table_data[0][2])
 
         # Test partial data search
         self._set_search_filter("ata 0")
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 5)
 
         # Test message search
         self._set_search_filter("Message 0,1")
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 1)
         self.assertEqual("Message 0,1", table_data[0][3])
 
         # Test no matches
         self._set_search_filter("NonExistentRef")
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 0)
 
         # Test empty search (should show all)
         self._set_search_filter("")
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 15)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_queue_popup_combined_filters(self):
         """Test combining multiple filters."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        test_helper.refresh_ui(self.browser)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
 
         yesterday = datetime.today() - timedelta(days=1)
         tomorrow = datetime.today() + timedelta(days=1)
@@ -143,70 +143,70 @@ class TestQueuesTab(unittest.TestCase):
         # Date + Status filter
         self._set_date_filter(from_date=yesterday, to_date=tomorrow)
         self._set_status_filter("New")  # Assuming this is first status
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 1)
 
         # Date + Search filter
         self._set_status_filter(None)  # Clear status
         self._set_search_filter("Reference 0")
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         expected_count = len(QueueStatus)
         self.assertIn("Reference 0", table_data[0][0])
         self.assertEqual(len(table_data), expected_count)
 
         # All three filters
         self._set_status_filter("In Progress")  # Assuming second status
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 1)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_queue_popup_filters(self):
         """Test setting filters in the queue popup."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
 
         yesterday = datetime.today() - timedelta(days=1)
         tomorrow = datetime.today() + timedelta(days=1)
 
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 15)
 
         # From yesterday
         self._set_date_filter(from_date=yesterday, to_date=None)
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 15)
 
         # From tomorrow
         self._set_date_filter(from_date=tomorrow, to_date=None)
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 0)
 
         # To yesterday
         self._set_date_filter(from_date=None, to_date=yesterday)
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 0)
 
         # From yesterday to tomorrow
         self._set_date_filter(from_date=yesterday, to_date=tomorrow)
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), 15)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_queue_element_popup(self):
         """Test content of queue element popup.
         """
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
-        ui_util.click_table_row(self.browser, "queue_popup_table", 0)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
+        test_helper.click_table_row(self.browser, "queue_popup_table", 0)
         for i, field in enumerate(['reference', 'status', 'data_field', 'message', 'created_date', 'start_date', 'end_date', 'created_by', 'id_text']):
             field_content = self.browser.find_element(By.CSS_SELECTOR, f"[auto-id=queue_element_popup_{field}]").get_attribute('value')
             if field in ['status', 'id_text', 'created_by']:
@@ -215,12 +215,12 @@ class TestQueuesTab(unittest.TestCase):
                 field_content = "N/A"
             self.assertEqual(table_data[0][i], field_content)
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_create_new_queue_element(self):
         """Test creating a new queue element through the popup."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        test_helper.refresh_ui(self.browser)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
 
         # Click "New" button to create a new queue element
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_new_button]").click()
@@ -236,20 +236,20 @@ class TestQueuesTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_save_button]").click()
 
         # Verify the new element appears in the queue popup table
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertTrue(any("New Reference" in row[0] for row in table_data))
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_edit_queue_element(self):
         """Test editing an existing queue element through the popup."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        test_helper.refresh_ui(self.browser)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
 
         # Open the first queue element in the popup
-        ui_util.click_table_row(self.browser, "queue_popup_table", 0)
+        test_helper.click_table_row(self.browser, "queue_popup_table", 0)
 
         # Edit the reference field
         reference_input = self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_reference]")
@@ -270,32 +270,32 @@ class TestQueuesTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_save_button]").click()
 
         # Verify the changes in the queue popup table
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertTrue(any("Edited Reference" in row[0] for row in table_data))
         self.assertTrue(any("Done" in row[1] for row in table_data))
         self.assertTrue(any("01-01-2000 12:34:56" in row[5] for row in table_data))
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_delete_queue_element(self):
         """Test deleting a queue element through the popup."""
         self._create_queue_elements()
-        ui_util.refresh_ui(self.browser)
-        ui_util.click_table_row(self.browser, "queues_tab_queue_table", 0)
+        test_helper.refresh_ui(self.browser)
+        test_helper.click_table_row(self.browser, "queues_tab_queue_table", 0)
 
         # Get the initial count of queue elements
-        initial_count = len(ui_util.get_table_data(self.browser, "queue_popup_table"))
+        initial_count = len(test_helper.get_table_data(self.browser, "queue_popup_table"))
 
         # Open the first queue element in the popup
-        ui_util.click_table_row(self.browser, "queue_popup_table", 0)
+        test_helper.click_table_row(self.browser, "queue_popup_table", 0)
 
         # Click the delete button and confirm
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_delete_button]").click()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button").click()
 
         # Verify the element was deleted
-        table_data = ui_util.get_table_data(self.browser, "queue_popup_table")
+        table_data = test_helper.get_table_data(self.browser, "queue_popup_table")
         self.assertEqual(len(table_data), initial_count - 1)
 
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_popup_close_button]").click()
