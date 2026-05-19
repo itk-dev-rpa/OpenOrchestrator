@@ -1,19 +1,18 @@
 """Database engine and session management for OpenOrchestrator.
 
-This module owns the global engine handle and provides
-:func:`_get_session` to the domain modules. Domain-specific access
-functions live in:
+This module owns the global engine handle and provides `_get_session()`
+to the domain modules. Domain-specific access functions live in:
 
-- :mod:`OpenOrchestrator.database.trigger_util`
-- :mod:`OpenOrchestrator.database.queue_util`
-- :mod:`OpenOrchestrator.database.job_util`
-- :mod:`OpenOrchestrator.database.log_util`
-- :mod:`OpenOrchestrator.database.settings_util` (constants + credentials)
-- :mod:`OpenOrchestrator.database.scheduler_util`
+- `OpenOrchestrator.database.trigger_util`
+- `OpenOrchestrator.database.queue_util`
+- `OpenOrchestrator.database.job_util`
+- `OpenOrchestrator.database.log_util`
+- `OpenOrchestrator.database.settings_util` (constants + credentials)
+- `OpenOrchestrator.database.scheduler_util`
 
 For backwards compatibility this module re-exports every domain
-function under the historical ``db_util`` namespace, so existing
-``db_util.create_log(...)`` style calls continue to work. New code
+function under the historical `db_util` namespace, so existing
+`db_util.create_log(...)` style calls continue to work. New code
 should import directly from the domain module.
 """
 

@@ -1,7 +1,7 @@
 """Database access functions for constants and credentials.
 
 Credential passwords are encrypted at rest with the key managed by
-:mod:`OpenOrchestrator.common.crypto_util`.
+`OpenOrchestrator.common.crypto_util`.
 """
 
 from sqlalchemy import select
