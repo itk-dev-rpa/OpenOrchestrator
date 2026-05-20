@@ -24,25 +24,68 @@ _connection_engine: Engine | None = None
 
 
 def connect(conn_string: str) -> bool:
-    """Connects to the database using the given connection string.
+    """Connect to the database using the given connection string.
+
+    The engine is created with ``pool_pre_ping=True`` and ``pool_recycle=1800``
+    so pooled connections that go stale across server restarts or firewall
+    idle-disconnects are transparently replaced on the next checkout.
+
+    For pyodbc/MSSQL connection strings a 5-second ODBC login timeout is
+    also set; the default is 15 s, which would freeze the scheduler's Tk
+    event loop for that long on each failed attempt during an outage.
+
+    If the engine is created successfully but the probe fails because the
+    server is unreachable, the engine is still stored: ``pool_pre_ping``
+    will retry on the next session checkout and recover when the network
+    comes back.
 
     Args:
-        conn_string: The connection string.
+        conn_string: The SQLAlchemy connection string.
 
     Returns:
-        bool: True if successful.
+        True if both the engine creation and the probe succeeded. False if
+        the connection string is malformed or the server is currently
+        unreachable. A False return when the server is unreachable still
+        leaves a usable engine in place for ``pool_pre_ping`` to recover.
     """
     global _connection_engine  # pylint: disable=global-statement
 
     try:
-        engine = create_engine(conn_string)
-        engine.connect()
+        engine = create_engine(
+            conn_string,
+            pool_pre_ping=True,
+            pool_recycle=1800,
+            connect_args=_driver_connect_args(conn_string),
+        )
+    except alc_exc.ArgumentError:
+        _connection_engine = None
+        return False
+
+    try:
+        engine.connect().close()
         _connection_engine = engine
         return True
-    except (alc_exc.InterfaceError, alc_exc.ArgumentError, alc_exc.OperationalError):
-        _connection_engine = None
+    except (alc_exc.InterfaceError, alc_exc.OperationalError):
+        _connection_engine = engine
+        return False
 
-    return False
+
+def _driver_connect_args(conn_string: str) -> dict:
+    """Return driver-specific ``connect_args`` for :func:`create_engine`.
+
+    Only pyodbc/MSSQL gets a short login timeout. Other drivers (sqlite,
+    psycopg2, ...) use their own defaults to avoid passing unknown keyword
+    arguments through to ``DBAPI.connect``.
+
+    Args:
+        conn_string: The SQLAlchemy connection string.
+
+    Returns:
+        A keyword-argument mapping to pass as ``connect_args``.
+    """
+    if conn_string.startswith("mssql+pyodbc"):
+        return {"timeout": 5}
+    return {}
 
 
 def disconnect() -> None:
