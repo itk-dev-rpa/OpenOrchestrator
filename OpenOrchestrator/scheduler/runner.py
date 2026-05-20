@@ -8,11 +8,13 @@ import subprocess
 from dataclasses import dataclass
 import uuid
 
+from sqlalchemy import exc as alc_exc
+
 from OpenOrchestrator.common import crypto_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
 from OpenOrchestrator.database.logs import LogLevel
-from OpenOrchestrator.scheduler import util
+from OpenOrchestrator.scheduler import util, inflight
 from OpenOrchestrator.database.jobs import Job, JobStatus
 
 if TYPE_CHECKING:
@@ -67,27 +69,38 @@ def poll_triggers(app: Application) -> Trigger | None:
 
 
 def run_trigger(trigger: Trigger) -> SchedulerJob | None:
-    """Mark a trigger as running in the database
-    and start the process.
+    """Mark a trigger as running in the database and start its process.
+
+    The trigger ID is added to the in-flight registry only after the DB row
+    has been flipped to RUNNING, so a crash inside ``begin_*_trigger`` leaves
+    nothing to reconcile (the DB is still IDLE in that case).
 
     Args:
         trigger: The trigger to run.
 
     Returns:
-        A Job object describing the process if successful.
+        A ``SchedulerJob`` describing the running process, or ``None`` if the
+        trigger could not be marked as running or the process failed to launch.
     """
     print('Running trigger: ', trigger.trigger_name)
 
-    if isinstance(trigger, SingleTrigger) and db_util.begin_single_trigger(trigger.id):
-        return run_process(trigger)
+    began = False
+    if isinstance(trigger, SingleTrigger):
+        began = db_util.begin_single_trigger(trigger.id)
+    elif isinstance(trigger, ScheduledTrigger):
+        began = db_util.begin_scheduled_trigger(trigger.id)
+    elif isinstance(trigger, QueueTrigger):
+        began = db_util.begin_queue_trigger(trigger.id)
 
-    if isinstance(trigger, ScheduledTrigger) and db_util.begin_scheduled_trigger(trigger.id):
-        return run_process(trigger)
+    if not began:
+        return None
 
-    if isinstance(trigger, QueueTrigger) and db_util.begin_queue_trigger(trigger.id):
-        return run_process(trigger)
+    inflight.add(trigger.id)
 
-    return None
+    job = run_process(trigger)
+    if job is None:
+        inflight.remove(trigger.id)
+    return job
 
 
 def clone_git_repo(repo_url: str, branch: str | None) -> str:
@@ -190,6 +203,8 @@ def end_job(job: SchedulerJob) -> None:
     if job.process_folder:
         clear_folder(job.process_folder)
 
+    inflight.remove(job.trigger.id)
+
 
 def fail_job(job: SchedulerJob) -> None:
     """Mark a job as failed in the triggers table in the database.
@@ -205,6 +220,8 @@ def fail_job(job: SchedulerJob) -> None:
 
     if job.process_folder:
         clear_folder(job.process_folder)
+
+    inflight.remove(job.trigger.id)
 
 
 def kill_job(job: SchedulerJob) -> None:
@@ -224,6 +241,55 @@ def kill_job(job: SchedulerJob) -> None:
 
     if job.process_folder:
         clear_folder(job.process_folder)
+
+    inflight.remove(job.trigger.id)
+
+
+def reconcile_orphans() -> int:
+    """Fail orphan triggers left behind by a previous crashed scheduler.
+
+    Called once at scheduler startup. For every trigger ID still listed in
+    the local in-flight registry, fetch the row: if the DB still shows it
+    as RUNNING the job was never finished cleanly (the scheduler crashed,
+    the machine rebooted, or the DB was unreachable when the job ended),
+    so the trigger is set to FAILED and a log entry is written. Triggers
+    whose DB status is no longer RUNNING are silently dropped from the
+    local registry.
+
+    A passed-in ``job_id`` of ``None`` is used in ``create_log`` because the
+    original :class:`Job` object died with the scheduler.
+
+    Returns:
+        Number of orphan triggers that were transitioned to FAILED.
+    """
+    failed = 0
+    for tid in inflight.get_all():
+        try:
+            trigger = db_util.get_trigger(tid)
+        except (alc_exc.SQLAlchemyError, ValueError, RuntimeError) as e:
+            print(f"Could not check orphan {tid}: {e.__class__.__name__}: {e}")
+            continue
+
+        if trigger.process_status == TriggerStatus.RUNNING:
+            try:
+                db_util.set_trigger_status(tid, TriggerStatus.FAILED)
+                db_util.create_log(
+                    trigger.process_name,
+                    LogLevel.ERROR,
+                    None,
+                    "Trigger failed by scheduler startup orphan-reconciliation: "
+                    "process state was lost (scheduler crashed, machine "
+                    "rebooted, or DB was unreachable when the job ended)."
+                )
+                failed += 1
+                print(f"Failed orphan trigger '{trigger.trigger_name}' ({tid})")
+            except alc_exc.SQLAlchemyError as e:
+                print(f"Could not fail orphan {tid}: {e.__class__.__name__}: {e}")
+                continue
+
+        inflight.remove(tid)
+
+    return failed
 
 
 def run_process(trigger: Trigger) -> SchedulerJob | None:

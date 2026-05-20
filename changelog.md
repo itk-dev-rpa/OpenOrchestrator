@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Chips on triggers now update on "blur" events, when the user clicks away from the input.
+- Orphan-trigger reconciliation on Scheduler startup. Trigger IDs the Scheduler has flipped to RUNNING are persisted to a small JSON file in the per-user data directory; on the next start any of those still showing RUNNING in the database (because the previous Scheduler crashed mid-job) are marked FAILED with a matching log entry.
+
+### Fixed
+
+- Scheduler no longer freezes when the SQL Server is restarted or briefly unreachable (closes #152 and #106). The main loop is wrapped so the Tk after-chain cannot die, and `pool_pre_ping` plus `pool_recycle` on the SQLAlchemy engine handle reconnection transparently. Failed ticks back off exponentially up to a 10-minute cap; the counter resets on the next successful tick. Tracebacks are appended to a desktop crash log so failures that happen overnight are visible afterwards.
+- ODBC login timeout for MSSQL connections is now 5 s instead of the 15 s pyodbc default, so a failed connection attempt no longer freezes the Scheduler's Tk loop for 15 s at a time during an outage.
 
 ## [3.0.0] - 2026-02-23
 

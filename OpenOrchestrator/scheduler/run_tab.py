@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING
 import tkinter
 from tkinter import ttk
 import sys
+import traceback
+from datetime import datetime
+from pathlib import Path
 
 from sqlalchemy import exc as alc_exc
 
@@ -17,6 +20,53 @@ from OpenOrchestrator.database.triggers import TriggerStatus
 
 if TYPE_CHECKING:
     from OpenOrchestrator.scheduler.application import Application
+
+
+# Consecutive DB-error ticks since the last successful one. Tk's after-loop
+# is single-threaded so a module-level int is safe.
+_consecutive_db_failures = 0
+
+_BASE_TICK_MS = 6_000
+_MAX_BACKOFF_MS = 600_000  # 10 minutes
+_DESKTOP_LOG_NAME = "OpenOrchestrator_scheduler_errors.log"
+
+
+def _backoff_delay_ms() -> int:
+    """Compute the next-tick delay using exponential backoff.
+
+    Returns:
+        Delay in milliseconds: ``_BASE_TICK_MS * 2**_consecutive_db_failures``
+        clamped to ``_MAX_BACKOFF_MS``.
+    """
+    return min(_BASE_TICK_MS * (2 ** _consecutive_db_failures), _MAX_BACKOFF_MS)
+
+
+def _log_to_desktop(exc: BaseException, context: str = "") -> None:
+    """Append a timestamped traceback to a desktop log file.
+
+    Used to surface scheduler-loop crashes outside the Tk text widget so they
+    survive across restarts. Never raises - if the log can't be written the
+    failure is swallowed so the scheduler loop itself can continue.
+
+    Args:
+        exc: The exception to record.
+        context: Optional short string identifying the code path that raised.
+    """
+    try:
+        desktop = Path.home() / "Desktop"
+        desktop.mkdir(parents=True, exist_ok=True)
+        log_path = desktop / _DESKTOP_LOG_NAME
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write("\n" + ("=" * 80) + "\n")
+            f.write(f"[{ts}] {exc.__class__.__name__}: {exc}\n")
+            if context:
+                f.write(f"Context: {context}\n")
+            f.write(("-" * 80) + "\n")
+            f.write(traceback.format_exc())
+            f.write(("=" * 80) + "\n")
+    except Exception:  # pylint: disable=broad-except
+        pass
 
 
 # pylint: disable-next=too-many-ancestors
@@ -77,6 +127,15 @@ class RunTab(ttk.Frame):
 
         self.button.configure(text="Pause")
         print('Running...\n')
+
+        try:
+            n = runner.reconcile_orphans()
+            if n > 0:
+                print(f"*** Failed {n} orphan trigger(s) from previous run ***\n")
+        except Exception as e:  # pylint: disable=broad-except
+            print(f"Orphan reconciliation failed: {e.__class__.__name__}: {e}")
+            _log_to_desktop(e, context="reconcile_orphans during run()")
+
         self.app.running = True
 
         # Only start a new loop if it's not already running
@@ -105,60 +164,110 @@ class RunTab(ttk.Frame):
 
 
 def loop(app: Application) -> None:
-    """The main loop function of the Scheduler.
-    Checks heartbeats, check triggers, and schedules the next loop.
+    """Run one Scheduler tick: pings, heartbeats, triggers, and reschedule.
+
+    The body is fully guarded: any uncaught exception in a tick would
+    otherwise break Tk's ``after``-chain and leave the scheduler frozen
+    (see issues #152, #106). The reschedule lives in ``finally`` so the next
+    tick is always queued.
+
+    DB-class errors (``SQLAlchemyError`` and the ``RuntimeError`` raised by
+    ``_get_session`` when there is no engine) route through an exponential
+    backoff capped at ``_MAX_BACKOFF_MS``. ``pool_pre_ping`` on the engine
+    is responsible for actually re-establishing the connection on subsequent
+    ticks; this function only needs to keep ticking.
 
     Args:
         app: The Scheduler Application object.
     """
+    global _consecutive_db_failures  # pylint: disable=global-statement
+
+    delay_ms = _BASE_TICK_MS
+
     try:
-        send_ping_to_orchestrator()
+        try:
+            send_ping_to_orchestrator()
 
-        check_heartbeats(app)
+            check_heartbeats(app)
 
-        if app.running:
-            check_triggers(app)
+            if app.running:
+                check_triggers(app)
 
-    except (alc_exc.OperationalError, alc_exc.ProgrammingError) as e:
-        print(f"Couldn't connect to database. {e}")
+        except (alc_exc.SQLAlchemyError, RuntimeError) as e:
+            _consecutive_db_failures += 1
+            delay_ms = _backoff_delay_ms()
+            print("\n!!! LOST DATABASE CONNECTION "
+                  f"(consecutive failures: {_consecutive_db_failures}) !!!")
+            print(f"Error: {e.__class__.__name__}: {e}")
+            print(f"Retrying in {delay_ms // 1000} seconds...\n")
+            _log_to_desktop(e, context="scheduler loop - DB error")
 
-    if len(app.running_jobs) == 0:
-        print("Doing cleanup...")
-        runner.clear_repo_folder()
+        except Exception as e:  # pylint: disable=broad-except
+            print("\n!!! UNEXPECTED SCHEDULER ERROR !!!")
+            print(f"{e.__class__.__name__}: {e}")
+            print("Will continue on next tick.\n")
+            _log_to_desktop(e, context="scheduler loop - unexpected error")
 
-    # Schedule next loop
-    if app.running or len(app.running_jobs) > 0:
-        print('Waiting 6 seconds...\n')
-        app.after(6_000, loop, app)
-    else:
-        print("Scheduler is paused and no more processes are running.")
+        else:
+            if _consecutive_db_failures > 0:
+                print(f"\n*** Database connection restored after "
+                      f"{_consecutive_db_failures} failed attempt(s) ***\n")
+                _consecutive_db_failures = 0
+
+        if len(app.running_jobs) == 0:
+            try:
+                print("Doing cleanup...")
+                runner.clear_repo_folder()
+            except Exception as e:  # pylint: disable=broad-except
+                print(f"Cleanup failed: {e.__class__.__name__}: {e}")
+                _log_to_desktop(e, context="clear_repo_folder")
+
+    finally:
+        if app.running or len(app.running_jobs) > 0:
+            print(f'Waiting {delay_ms // 1000} seconds...\n')
+            app.after(delay_ms, loop, app)
+        else:
+            print("Scheduler is paused and no more processes are running.")
 
 
 def check_heartbeats(app: Application) -> None:
-    """Check if any running jobs are still running, failed or done.
+    """Reconcile each running job's state against its subprocess and the DB.
+
+    Each per-job check is wrapped so a DB failure on one job does not abort
+    the whole sweep; if any DB error occurred, the first one is re-raised
+    after the loop so :func:`loop` enters the backoff path on this tick.
 
     Args:
         app: The Scheduler Application object.
     """
     print('Checking heartbeats...')
-    for job in app.running_jobs:
-        if job.process.poll() is not None:
-            if job.process.returncode == 0:
-                print(f"Process '{job.trigger.process_name}' is done")
-                runner.end_job(job)
+    db_errors: list[BaseException] = []
+    for job in list(app.running_jobs):
+        try:
+            if job.process.poll() is not None:
+                if job.process.returncode == 0:
+                    print(f"Process '{job.trigger.process_name}' is done")
+                    runner.end_job(job)
+                else:
+                    print(f"Process '{job.trigger.process_name}' failed. Check process log for more info.")
+                    runner.fail_job(job)
+
+                app.running_jobs.remove(job)
+
+            elif db_util.get_trigger(job.trigger.id).process_status == TriggerStatus.KILLING:
+                runner.kill_job(job)
+                print(f"Process '{job.trigger.process_name}' has been killed.")
+                app.running_jobs.remove(job)
+
             else:
-                print(f"Process '{job.trigger.process_name}' failed. Check process log for more info.")
-                runner.fail_job(job)
+                print(f"Process '{job.trigger.process_name}' is still running")
+        except (alc_exc.SQLAlchemyError, RuntimeError) as e:
+            print(f"DB unavailable while checking '{job.trigger.process_name}': "
+                  f"{e.__class__.__name__}. Will retry next tick.")
+            db_errors.append(e)
 
-            app.running_jobs.remove(job)
-
-        elif db_util.get_trigger(job.trigger.id).process_status == TriggerStatus.KILLING:
-            runner.kill_job(job)
-            print(f"Process '{job.trigger.process_name}' has been killed.")
-            app.running_jobs.remove(job)
-
-        else:
-            print(f"Process '{job.trigger.process_name}' is still running")
+    if db_errors:
+        raise db_errors[0]
 
 
 def check_triggers(app: Application) -> None:
