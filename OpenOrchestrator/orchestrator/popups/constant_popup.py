@@ -22,6 +22,7 @@ class ConstantPopup():
         If a constant is given it will be updated instead of creating a new constant.
 
         Args:
+            constant_tab: The parent tab that owns this popup.
             constant: The constant to update if any.
         """
         self.constant_tab = constant_tab

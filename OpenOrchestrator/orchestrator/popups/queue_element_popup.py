@@ -19,7 +19,9 @@ class QueueElementPopup():
         """Show a dialogue with details of the row selected.
 
         Args:
-            row_data: Data from the row selected.
+            queue_element: The queue element to display, or None for a new element.
+            on_dialog_close_callback: Callback invoked when the dialog closes.
+            queue_name: The name of the queue this element belongs to.
         """
         self.on_dialog_close_callback = on_dialog_close_callback
         self.queue_element = queue_element

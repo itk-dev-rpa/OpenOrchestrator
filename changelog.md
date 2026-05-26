@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README rewritten with an Architecture section and project layout overview. Contributing details moved to `CONTRIBUTING.md`.
 - Database access functions now raise typed exceptions instead of generic `ValueError` (still catchable as `ValueError`).
 - Renamed `orchestrator/test_helper.py` to `orchestrator/ui_util.py` to reflect its role as production UI test instrumentation.
+- Split `database/db_util.py` (1224 lines) into per-domain modules: `trigger_util.py`, `queue_util.py`, `job_util.py`, `log_util.py`, `settings_util.py` (constants + credentials), and `scheduler_util.py`. `db_util.py` is now a slim engine/session module (157 lines) that re-exports every domain function for backwards compatibility — existing `db_util.X(...)` calls continue to work unchanged. New code should import from the domain module directly.
 
 ### Fixed
 

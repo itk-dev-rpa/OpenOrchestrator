@@ -1,7 +1,7 @@
 """Typed exceptions raised by the database access layer.
 
-All "not found" errors inherit from both :class:`OrchestratorError` and
-:class:`ValueError` so callers using the historical ``except ValueError``
+All "not found" errors inherit from both `OrchestratorError` and
+`ValueError` so callers using the historical `except ValueError`
 contract continue to work.
 """
 

@@ -1,6 +1,7 @@
 """Tests relating to the queues tab in Orchestrator."""
 
 import unittest
+import time
 from datetime import datetime, timedelta
 
 from selenium.webdriver.common.by import By
@@ -292,6 +293,7 @@ class TestQueuesTab(unittest.TestCase):
 
         # Click the delete button and confirm
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=queue_element_popup_delete_button]").click()
+        time.sleep(0.5)
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button").click()
 
         # Verify the element was deleted
@@ -327,6 +329,8 @@ class TestQueuesTab(unittest.TestCase):
         if to_date:
             to_input.send_keys(to_date.strftime("%d-%m-%Y %H:%M:%S"))
 
+        time.sleep(0.5)
+
     def _set_status_filter(self, status=None):
         """Set status filter in queue popup."""
         if status is None:
@@ -335,6 +339,7 @@ class TestQueuesTab(unittest.TestCase):
         status_select.click()
         option = status_select.find_element(By.XPATH, f"//div[contains(@class,'q-item')]//span[text()='{status}']")
         option.click()
+        time.sleep(0.5)
 
     def _set_search_filter(self, search_term=""):
         """Set reference search filter in queue popup."""
@@ -342,6 +347,7 @@ class TestQueuesTab(unittest.TestCase):
         search_field.send_keys(Keys.CONTROL, "a", Keys.DELETE)
         if search_term:
             search_field.send_keys(search_term)
+        time.sleep(0.5)
 
 
 if __name__ == '__main__':
