@@ -4,7 +4,7 @@ in Orchestrator."""
 from nicegui import ui
 
 from OpenOrchestrator.common.connection_frame import ConnectionFrame
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 
 # pylint: disable-next=too-few-public-methods
@@ -16,4 +16,4 @@ class SettingsTab():
             with ui.row().classes("w-full"):
                 self.key_button = ui.button("Generate Key", on_click=conn_frame.new_key)
 
-        test_helper.set_automation_ids(self, "settings_tab")
+        ui_util.set_automation_ids(self, "settings_tab")

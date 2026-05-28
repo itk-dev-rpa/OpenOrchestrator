@@ -6,7 +6,7 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.logs import LogLevel
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 
 COLUMNS = [
@@ -50,7 +50,7 @@ class LoggingTab():
                 self.logs_table.on("rowClick", self._row_click)
                 self.logs_table.on('request', self._on_table_request)
 
-            test_helper.set_automation_ids(self, "logs_tab")
+            ui_util.set_automation_ids(self, "logs_tab")
 
     def update(self):
         """Update the logs table and Process input list"""

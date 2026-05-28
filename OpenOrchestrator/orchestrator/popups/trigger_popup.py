@@ -12,7 +12,7 @@ from OpenOrchestrator.orchestrator.input_chips_blur import InputChipsBlur
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import Trigger, TriggerStatus, TriggerType, ScheduledTrigger, SingleTrigger, QueueTrigger
 from OpenOrchestrator.orchestrator.popups import generic_popups
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
@@ -74,7 +74,7 @@ class TriggerPopup():
         self._disable_unused()
         self._define_validation()
         self._pre_populate()
-        test_helper.set_automation_ids(self, "trigger_popup")
+        ui_util.set_automation_ids(self, "trigger_popup")
 
     def _define_validation(self):
         self.trigger_input._validation = {"Please enter a trigger name": bool}  # pylint: disable=protected-access

@@ -1,31 +1,51 @@
 # OpenOrchestrator
 
-Read the documentation [here](https://itk-dev-rpa.github.io/OpenOrchestrator-docs).
+OpenOrchestrator is a Python toolkit for orchestrating, monitoring, and running automation scripts (RPA bots) on Windows. It ships an admin web UI (Orchestrator), a worker-side runner (Scheduler), and an SDK that bots use to log, fetch credentials and manage queue work.
 
-Package is located at [Pypi](https://pypi.org/project/OpenOrchestrator/).
+End-user documentation: [OpenOrchestrator-docs](https://itk-dev-rpa.github.io/OpenOrchestrator-docs).
+Package on PyPI: [OpenOrchestrator](https://pypi.org/project/OpenOrchestrator/).
+
+## Architecture
+
+| Component | Purpose | Started by |
+|---|---|---|
+| **Orchestrator** | NiceGUI admin UI for triggers, queues, jobs, logs, constants, credentials | `python -m OpenOrchestrator o` |
+| **Scheduler** | tkinter runner that polls the DB and launches due processes | `python -m OpenOrchestrator s` |
+| **OrchestratorConnection** | SDK imported by RPA scripts for logging and DB access | `from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConnection` |
+
+Components communicate **only through a shared SQL database** (MSSQL or SQLite). For the data model, trigger lifecycle, and process launch flow, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+### Project layout
+
+```
+OpenOrchestrator/
+├── common/                 Shared utilities (datetime, crypto, NiceGUI connection frame)
+├── database/               SQLAlchemy ORM + query helpers + Alembic data types
+├── orchestrator/           NiceGUI admin app (tabs, popups)
+├── scheduler/              tkinter runner (poll loop, process lifecycle)
+├── orchestrator_connection/  Public SDK consumed by RPA scripts
+└── tests/                  Unit + Selenium UI tests
+```
 
 ## Usage for Orchestrator admins
 
-OpenOrchestrator provides a commandline interface (cli) to start the different parts
-of the application.
+OpenOrchestrator provides a CLI for the deployable parts. For full help run `python -m OpenOrchestrator -h`.
 
-For a full explanation run `python -m OpenOrchestrator -h` in the command line.
-
-The most common commands would be:
-
-`python -m OpenOrchestrator o`  for orchestrator.
-
-`python -m OpenOrchestrator s`  for scheduler.
+```bash
+python -m OpenOrchestrator o    # Start the Orchestrator (web UI)
+python -m OpenOrchestrator s    # Start a Scheduler (worker)
+python -m OpenOrchestrator u <conn_string>   # Apply DB migrations
+```
 
 ## Usage for RPA developers
 
-Import the connection module to your RPA code and get access to the orchestrator methods;
+Import the connection module in your RPA code to access the Orchestrator:
 
-- logging status to OpenOrchestrator
-- getting credentials and constants from OpenOrchestrator
-- creating, getting and updating job elements in a queue
+- log status (trace/info/error)
+- fetch credentials and constants
+- create, read, update queue elements
 
-Run the code with arguments
+Run your script with the arguments the Scheduler passes:
 
 ```bash
 python run.py "<process name>" "<connection string>" "<secret key>" "<arguments>"
@@ -33,100 +53,39 @@ python run.py "<process name>" "<connection string>" "<secret key>" "<arguments>
 
 ```python
 # run.py
-# connect to OpenOrchestrator and log something
 from OpenOrchestrator.orchestrator_connection.connection import OrchestratorConnection
 
 oc = OrchestratorConnection.create_connection_from_args()
-oc.log_trace("open orchestrator connected.")
+oc.log_trace("OpenOrchestrator connected.")
 ```
 
 ## Installation
 
-Requires Python 3.10 or later.
+Requires Python 3.11 or later.
 
-Install using `pip install OpenOrchestrator`
+```bash
+pip install OpenOrchestrator
+```
 
 ### Creating or upgrading a database
 
-If you need to create a new database or upgrade to a new revision follow these steps:
-
-1. Download this repository either via Github or Git.
-2. Open a command line in the project folder.
-3. Run the following commands:
-
 ```bash
 python -m venv .venv
-.venv\scripts\activate
-pip install .[alembic]
+.venv\Scripts\activate
+pip install OpenOrchestrator[alembic]
 
-python -m OpenOrchestrator upgrade "<Your connection string here>"
+python -m OpenOrchestrator upgrade "<connection string>"
 ```
 
-This will automatically bring you to the newest revision of the database.
+This applies all migrations up to the latest revision. Acceptable connection strings:
+
+- `mssql+pyodbc://<host>/<db>?driver=ODBC+Driver+17+for+SQL+Server`
+- `sqlite+pysqlite:///<path>.db`
 
 ## Contributing
 
-### Setup
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code standards, testing, and the migration workflow.
 
-To start developing for OpenOrchestrator pull the current develop branch using GIT.
+## License
 
-In the new folder run the following commands in the command line:
-
-```bash
-python -m venv .venv
-.venv\scripts\activate
-pip install -e .
-```
-
-This will create a new virtual environment and install the project in 'editable' mode.
-This means that any changes to the code is automatically included in the installation.
-
-### Automated Tests
-
-OpenOrchestrator contains automated tests.
-
-Before running the tests you need to define the following environment variables:
-
-```bash
-SET CONN_STRING="<connection string to test db>"
-```
-
-Examples of connection strings:
-
-- mssql+pyodbc://localhost\SQLEXPRESS/OO_Unittest?driver=ODBC+Driver+17+for+SQL+Server
-- sqlite+pysqlite:///test_db.db
-
-To run tests execute the following command from the main directory:
-
-```bash
-python -m unittest discover
-```
-
-### Manual Tests
-
-Not all functionality is covered by automated tests. Especially the Scheduler app is not covered well.
-
-Refer to the `manual_tests.txt` file for a list of things that should be tested.
-
-### Creating new database revisions
-
-If your update requires a change to the database schemas you need to create a new revision schema in the `alembic` folder.
-
-This can mostly be done automatically by the following steps:
-
-1. First make sure your database is on the __previous__ version of the database schema.
-
-2. Make sure any new ORM classes are imported in `alembic/env.py`.
-
-3. Then run the following command (replacing the connection string and message):
-
-    ```bash
-    alembic -x "connection_string" revision --autogenerate -m "Some useful message"
-    ```
-
-    This will create a new file in the `alembic/versions` folder with a random prefix and then your message as the name.
-
-4. Open the file and make sure the contents make sense. Obvious changes are detected automatically
-but some changes might not be.
-
-5. Update the expected revision number in `db_util.py > check_database_revision`.
+[MIT](LICENSE)

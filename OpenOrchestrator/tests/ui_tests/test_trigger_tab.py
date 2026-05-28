@@ -10,21 +10,23 @@ from OpenOrchestrator.common import datetime_util
 from OpenOrchestrator.tests import db_test_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.triggers import SingleTrigger, ScheduledTrigger, QueueTrigger, TriggerStatus
-from OpenOrchestrator.tests.ui_tests import ui_util
+from OpenOrchestrator.tests.ui_tests import test_helper
 
 
 class TestTriggerTab(unittest.TestCase):
     """Test functionality of the trigger tab ui."""
     def setUp(self) -> None:
-        self.browser = ui_util.open_orchestrator()
+        self.browser, self.proc = test_helper.open_orchestrator()
         db_test_util.establish_clean_database()
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab]").click()
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
     def tearDown(self) -> None:
         self.browser.quit()
+        self.proc.terminate()
+        self.proc.wait(timeout=5)
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_single_trigger_creation(self):
         """Test creation of a single trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_single_button]").click()
@@ -40,6 +42,7 @@ class TestTriggerTab(unittest.TestCase):
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_priority_input]").send_keys("5")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_whitelist_input]").send_keys("Scheduler1\nScheduler2\n")
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
+        time.sleep(0.5)
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result
@@ -60,7 +63,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.priority, 5)
         self.assertEqual(trigger.scheduler_whitelist, ["Scheduler1", "Scheduler2"])
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_scheduled_trigger_creation(self):
         """Test creation of a scheduled trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_scheduled_button]").click()
@@ -96,7 +99,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.priority, 5)
         self.assertEqual(trigger.scheduler_whitelist, ["Scheduler1", "Scheduler2"])
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_queue_trigger_creation(self):
         """Test creation of a queue trigger."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_queue_button]").click()
@@ -134,7 +137,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.priority, 5)
         self.assertEqual(trigger.scheduler_whitelist, ["Scheduler1", "Scheduler2"])
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_trigger_table(self):
         """Test that data is shown correctly in the trigger table."""
         # Create some triggers
@@ -144,9 +147,9 @@ class TestTriggerTab(unittest.TestCase):
         db_util.create_scheduled_trigger("B Scheduled trigger", "Scheduled Process", "1 2 3 4 5", tomorrow, "Scheduled path", "Scheduled args", False, False, 0)
         db_util.create_queue_trigger("C Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0)
 
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
-        table_data = ui_util.get_table_data(self.browser, "trigger_tab_trigger_table")
+        table_data = test_helper.get_table_data(self.browser, "trigger_tab_trigger_table")
 
         # Check single trigger
         self.assertEqual(table_data[0][0], "A Single trigger")
@@ -175,18 +178,19 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(table_data[2][5], "Never")
         self.assertEqual(table_data[2][6], "N/A")
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_delete_trigger(self):
         """Test deleting a trigger."""
         # Create a trigger
         db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0)
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
         # Click trigger
-        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
+        test_helper.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Delete trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_delete_button]").click()
+        time.sleep(0.5)
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
 
         # Check result
@@ -194,15 +198,15 @@ class TestTriggerTab(unittest.TestCase):
         triggers = db_util.get_all_triggers()
         self.assertEqual(len(triggers), 0)
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_enable_disable(self):
         """Test disabling and enabling a trigger."""
         # Create a trigger
         db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0)
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
         # Click trigger
-        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
+        test_helper.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Disable trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_disable_button]").click()
@@ -221,14 +225,14 @@ class TestTriggerTab(unittest.TestCase):
         # Close trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_cancel_button]").click()
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_kill_button(self):
         """Test the kill button in the trigger popup."""
         trigger_id = db_util.create_single_trigger("Trigger Name", "Process Name", datetime.now(), "Path", "", False, False, 0, None)
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
         # Check that kill button isn't there when idle
-        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
+        test_helper.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
         buttons = self.browser.find_elements(By.CSS_SELECTOR, "[auto-id=trigger_popup_kill_button]")
         self.assertEqual(len(buttons), 0)
 
@@ -237,23 +241,23 @@ class TestTriggerTab(unittest.TestCase):
 
         # Now when running
         db_util.set_trigger_status(trigger_id, TriggerStatus.RUNNING)
-        ui_util.refresh_ui(self.browser)
-        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
+        test_helper.refresh_ui(self.browser)
+        test_helper.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_kill_button]").click()
         time.sleep(1)
 
         trigger = db_util.get_trigger(trigger_id)
         self.assertEqual(trigger.process_status, TriggerStatus.KILLING)
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_edit_trigger(self):
         """Test editing a trigger."""
         # Create a trigger
         db_util.create_queue_trigger("Queue trigger", "Queue Process", "Queue Name", "Queue path", "Queue args", False, False, 25, 0, ["Scheduler 1"], "Branch1")
-        ui_util.refresh_ui(self.browser)
+        test_helper.refresh_ui(self.browser)
 
         # Click trigger
-        ui_util.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
+        test_helper.click_table_row(self.browser, "trigger_tab_trigger_table", 0)
 
         # Edit trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_trigger_input]").send_keys(" Edit")
@@ -284,7 +288,7 @@ class TestTriggerTab(unittest.TestCase):
         self.assertEqual(trigger.priority, 1)
         self.assertEqual(trigger.min_batch_size, 251)
 
-    @ui_util.screenshot_on_error
+    @test_helper.screenshot_on_error
     def test_whitelist_blur_functionality(self):
         """Test that whitelist chips are added on blur (tab/click away)."""
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_tab_single_button]").click()
@@ -310,6 +314,7 @@ class TestTriggerTab(unittest.TestCase):
 
         # Save trigger
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=trigger_popup_save_button]").click()
+        time.sleep(0.5)
         self.browser.find_element(By.CSS_SELECTOR, "[auto-id=popup_option1_button]").click()
         time.sleep(2)
 

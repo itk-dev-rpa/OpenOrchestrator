@@ -4,7 +4,7 @@ in Orchestrator."""
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 COLUMNS = [
     {'name': "machine_name", 'label': "Machine Name", 'field': "Machine Name", 'align': 'left', 'sortable': True},
@@ -20,7 +20,7 @@ class SchedulerTab():
         with ui.tab_panel(tab_name):
             self.schedulers_table = ui.table(title="Schedulers", columns=COLUMNS, rows=[], row_key='Machine Name', pagination=50).classes("w-full")
             self.add_column_colors()
-        test_helper.set_automation_ids(self, "schedulers_tab")
+        ui_util.set_automation_ids(self, "schedulers_tab")
 
     def update(self):
         """Updates the tables on the tab."""

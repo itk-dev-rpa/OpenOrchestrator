@@ -97,7 +97,7 @@ class OrchestratorConnection:
         """Updates an existing constant with a new value.
 
         Args:
-            name: The name of the constant to update.
+            constant_name: The name of the constant to update.
             new_value: The new value of the constant.
         """
         db_util.update_constant(constant_name, new_value)
@@ -106,7 +106,7 @@ class OrchestratorConnection:
         """Updates an existing credential with a new value.
 
         Args:
-            name: The name of the credential to update.
+            credential_name: The name of the credential to update.
             new_username: The new username of the credential.
             new_password: The new password of the credential.
         """

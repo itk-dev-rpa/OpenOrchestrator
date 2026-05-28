@@ -5,7 +5,7 @@ from typing import Callable
 from nicegui import ui
 
 from OpenOrchestrator.database import db_util
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 COLUMNS = [
     {'name': "job_id", 'label': "ID", 'field': "ID", 'headerClasses': 'hidden', 'classes': 'hidden'},
@@ -25,7 +25,7 @@ class JobsTab:
             self.jobs_table = ui.table(title="Jobs", columns=COLUMNS, rows=[], row_key='job_id', pagination=50).classes("w-full")
             self.jobs_table.on("rowClick", self._row_click)
             self._add_column_colors()
-        test_helper.set_automation_ids(self, "jobs_tab")
+        ui_util.set_automation_ids(self, "jobs_tab")
         self.on_job_click = on_job_click
 
     def update(self):

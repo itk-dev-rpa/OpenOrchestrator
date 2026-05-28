@@ -8,7 +8,7 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.constants import Credential
 from OpenOrchestrator.orchestrator.popups.generic_popups import question_popup
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
@@ -45,7 +45,7 @@ class CredentialPopup():
 
         self._define_validation()
         self._pre_populate()
-        test_helper.set_automation_ids(self, "credential_popup")
+        ui_util.set_automation_ids(self, "credential_popup")
 
     def _define_validation(self):
         """Define validation functions for ui elements."""

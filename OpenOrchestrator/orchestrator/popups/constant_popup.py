@@ -8,7 +8,7 @@ from nicegui import ui
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.database.constants import Constant
 from OpenOrchestrator.orchestrator.popups.generic_popups import question_popup
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 
 if TYPE_CHECKING:
     from OpenOrchestrator.orchestrator.tabs.constants_tab import ConstantTab
@@ -22,6 +22,7 @@ class ConstantPopup():
         If a constant is given it will be updated instead of creating a new constant.
 
         Args:
+            constant_tab: The parent tab that owns this popup.
             constant: The constant to update if any.
         """
         self.constant_tab = constant_tab
@@ -43,7 +44,7 @@ class ConstantPopup():
 
         self._define_validation()
         self._pre_populate()
-        test_helper.set_automation_ids(self, "constant_popup")
+        ui_util.set_automation_ids(self, "constant_popup")
 
     def _define_validation(self):
         """Define validation rules for input elements."""

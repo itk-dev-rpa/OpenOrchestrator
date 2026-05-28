@@ -5,6 +5,7 @@ import socket
 
 from nicegui import ui, app
 
+from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator.tabs.trigger_tab import TriggerTab
 from OpenOrchestrator.orchestrator.tabs.settings_tab import SettingsTab
 from OpenOrchestrator.orchestrator.tabs.logging_tab import LoggingTab
@@ -51,6 +52,9 @@ class Application():
 
     def update_tab(self):
         """Update the date in the currently selected tab."""
+        if not db_util.is_connected():
+            return
+
         match self.tab_panels.value:
             case 'Triggers':
                 self.t_tab.update()

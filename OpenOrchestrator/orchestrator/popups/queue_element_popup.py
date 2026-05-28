@@ -4,7 +4,7 @@ from typing import Callable
 
 from nicegui import ui
 
-from OpenOrchestrator.orchestrator import test_helper
+from OpenOrchestrator.orchestrator import ui_util
 from OpenOrchestrator.database import db_util
 from OpenOrchestrator.orchestrator.popups import generic_popups
 from OpenOrchestrator.orchestrator.datetime_input import DatetimeInput
@@ -19,7 +19,9 @@ class QueueElementPopup():
         """Show a dialogue with details of the row selected.
 
         Args:
-            row_data: Data from the row selected.
+            queue_element: The queue element to display, or None for a new element.
+            on_dialog_close_callback: Callback invoked when the dialog closes.
+            queue_name: The name of the queue this element belongs to.
         """
         self.on_dialog_close_callback = on_dialog_close_callback
         self.queue_element = queue_element
@@ -55,7 +57,7 @@ class QueueElementPopup():
                     self.close_button = ui.button('Close', on_click=self._close_dialog).classes('mt-4')
                     self.delete_button = ui.button(text='Delete', on_click=self._delete_element, color="negative").classes('mt-4')
 
-        test_helper.set_automation_ids(self, "queue_element_popup")
+        ui_util.set_automation_ids(self, "queue_element_popup")
         self.dialog.open()
         self._pre_populate()
 

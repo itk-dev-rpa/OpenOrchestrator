@@ -88,7 +88,7 @@ class RunTab(ttk.Frame):
         Is used to replace the functionality of sys.stdout.write (print).
 
         Args:
-            string: The string to append.
+            text: The text to append.
         """
         # Insert text at the end
         self.text_area.configure(state='normal')

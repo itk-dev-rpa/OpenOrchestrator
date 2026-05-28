@@ -10,6 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Chips on triggers now update on "blur" events, when the user clicks away from the input.
+- New `docs/ARCHITECTURE.md` describing components, data model, and trigger lifecycle.
+- New `CONTRIBUTING.md` with setup, code standards, testing, and Alembic workflow.
+- Typed exception hierarchy in `database/exceptions.py` (`TriggerNotFoundError`, `JobNotFoundError`, `ConstantNotFoundError`, `CredentialNotFoundError`, `QueueElementNotFoundError`). All inherit from `ValueError` for backwards compatibility.
+- Package-level docstrings in all subpackage `__init__.py` files.
+
+### Changed
+
+- README rewritten with an Architecture section and project layout overview. Contributing details moved to `CONTRIBUTING.md`.
+- Database access functions now raise typed exceptions instead of generic `ValueError` (still catchable as `ValueError`).
+- Renamed `orchestrator/test_helper.py` to `orchestrator/ui_util.py` to reflect its role as production UI test instrumentation.
+- Split `database/db_util.py` (1224 lines) into per-domain modules: `trigger_util.py`, `queue_util.py`, `job_util.py`, `log_util.py`, `settings_util.py` (constants + credentials), and `scheduler_util.py`. `db_util.py` is now a slim engine/session module (157 lines) that re-exports every domain function for backwards compatibility — existing `db_util.X(...)` calls continue to work unchanged. New code should import from the domain module directly.
+
+### Fixed
+
+- README stated Python 3.10 was required; corrected to 3.11 to match `pyproject.toml`.
+
+### Removed
+
+- `manual_tests.txt` (was already deprecated; testing approach is now described in `CONTRIBUTING.md`).
 
 ## [3.0.0] - 2026-02-23
 
